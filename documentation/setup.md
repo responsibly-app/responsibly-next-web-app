@@ -1,0 +1,8 @@
+
+# Packages
+
+- Prettier
+    - `pnpm install -D prettier prettier-plugin-tailwindcss`
+    - `pnpm add -D prettier-plugin-organize-imports`
+- ENV
+    - `pnpm add dotenv`
