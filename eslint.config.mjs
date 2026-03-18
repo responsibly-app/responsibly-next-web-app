@@ -1,0 +1,34 @@
+import nextVitals from "eslint-config-next/core-web-vitals";
+import nextTs from "eslint-config-next/typescript";
+import { defineConfig, globalIgnores } from "eslint/config";
+
+const eslintConfig = defineConfig([
+  ...nextVitals,
+  ...nextTs,
+  // Override default ignores of eslint-config-next.
+  globalIgnores([
+    // Default ignores of eslint-config-next:
+    ".next/**",
+    "out/**",
+    "build/**",
+    "next-env.d.ts",
+    "src/app/globals.css",
+    "src/components/tool-ui/**",
+  ]),
+  {
+    rules: {
+      // "@typescript-eslint/no-explicit-any": "off",
+      // "react-hooks/rules-of-hooks": "warn",
+      // "react-hooks/exhaustive-deps": "warn",
+      // "@typescript-eslint/no-unused-vars": [
+      //   "off",
+      //   { argsIgnorePattern: "^_", varsIgnorePattern: "^_" },
+      // ],
+      // "@typescript-eslint/no-non-null-asserted-optional-chain": "warn",
+      "no-unused-vars": "off",
+      "@typescript-eslint/no-unused-vars": "off",
+    },
+  },
+]);
+
+export default eslintConfig;
