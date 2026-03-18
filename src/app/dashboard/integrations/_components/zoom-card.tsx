@@ -137,7 +137,7 @@ export function ZoomCard() {
                             {format(new Date(meeting.start_time), "h:mm a")}
                           </span>
                         )}
-                        {meeting.duration > 0 && (
+                        {meeting.duration! > 0 && (
                           <span className="flex items-center gap-1">
                             <Users className="h-3 w-3" />
                             {meeting.duration} min
