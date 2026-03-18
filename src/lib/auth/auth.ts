@@ -96,12 +96,10 @@ export const auth = betterAuth({
   },
   trustedOrigins: [
     baseURL,
-    "http://localhost:3000",
-    // process.env.BETTER_AUTH_URL!,
+    "exp://",
+    "exp://**",
     // "myapp://",
     // "myapp://*",
-    // "exp://",
-    // "exp://**",
   ],
   advanced: {
     // useSecureCookies: true
