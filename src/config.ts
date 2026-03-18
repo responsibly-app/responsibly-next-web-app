@@ -20,7 +20,7 @@ export const config: { [env: string]: configItem } = {
     },
     prod: {
         app_name: appName,
-        backend_base_url: "https://api.alvintech.ca",
+        backend_base_url: "https://responsibly-next-web-app-yh7q.vercel.app",
         landing_page_url: "https://alvintech.ca",
     },
     local: {
