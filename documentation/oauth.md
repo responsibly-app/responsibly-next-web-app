@@ -7,3 +7,8 @@
 
 ------------------------------------------------------------------
 # Zoom
+- [Zoom Developer Market](https://marketplace.zoom.us/)
+- OAuth Allow Lists
+    - `http://localhost:3000/api/auth/callback/zoom`
+
+------------------------------------------------------------------
