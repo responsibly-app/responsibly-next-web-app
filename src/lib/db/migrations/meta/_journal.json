@@ -5,36 +5,8 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1771828236718,
-      "tag": "0000_secret_nico_minoru",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1771829699774,
-      "tag": "0001_cuddly_random",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1771830581633,
-      "tag": "0002_lyrical_piledriver",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "7",
-      "when": 1771830597256,
-      "tag": "0003_perpetual_lady_ursula",
-      "breakpoints": true
-    },
-    {
-      "idx": 4,
-      "version": "7",
-      "when": 1773085927451,
-      "tag": "0004_wandering_starjammers",
+      "when": 1773805615369,
+      "tag": "0000_short_bishop",
       "breakpoints": true
     }
   ]
