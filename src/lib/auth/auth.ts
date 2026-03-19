@@ -98,8 +98,8 @@ export const auth = betterAuth({
     baseURL,
     "exp://",
     "exp://**",
-    // "myapp://",
-    // "myapp://*",
+    "mobileapp://",
+    "mobileapp://*",
   ],
   advanced: {
     // useSecureCookies: true
