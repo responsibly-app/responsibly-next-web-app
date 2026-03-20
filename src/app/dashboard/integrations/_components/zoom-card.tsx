@@ -35,11 +35,11 @@ export function ZoomCard() {
   );
 
   const queryClient = useQueryClient();
-  const linkSocial = useLinkSocial();
+  const linkZoom = useLinkSocial({ provider: "zoom" });
   const unlinkSocial = useUnlinkSocial();
 
-  function handleConnect() {
-    linkSocial.mutate({ provider: "zoom" }, {
+  function handleZoomConnect() {
+    linkZoom.mutate(undefined, {
       onError: () => {
         toast.error("Failed to connect Zoom. Please try again.");
       },
@@ -186,11 +186,11 @@ export function ZoomCard() {
           <Button
             size="sm"
             className="gap-2"
-            onClick={handleConnect}
-            disabled={linkSocial.isPending}
+            onClick={handleZoomConnect}
+            disabled={linkZoom.isPending}
           >
             <Link2 className="h-4 w-4" />
-            {linkSocial.isPending ? "Connecting…" : "Connect Zoom"}
+            {linkZoom.isPending ? "Connecting…" : "Connect Zoom"}
           </Button>
         )}
       </CardFooter>

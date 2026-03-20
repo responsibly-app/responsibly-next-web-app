@@ -39,9 +39,9 @@ type SocialLoginParams = {
 };
 
 /** Social login hook */
-export function useSocialLogin() {
+export function useSocialLogin({ provider, callbackURL = routes.dashboard.root() }: SocialLoginParams) {
   return useMutation({
-    mutationFn: async ({ provider, callbackURL = routes.dashboard.root() }: SocialLoginParams) => {
+    mutationFn: async () => {
       await authClient.signIn.social({
         provider,
         callbackURL,
@@ -170,9 +170,9 @@ type LinkSocialParams = {
 };
 
 /** Link a social provider to an existing account */
-export function useLinkSocial() {
+export function useLinkSocial({ provider, callbackURL = routes.dashboard.integrations() }: LinkSocialParams) {
   return useMutation({
-    mutationFn: async ({ provider, callbackURL = routes.dashboard.integrations() }: LinkSocialParams) => {
+    mutationFn: async () => {
       const result = await authClient.linkSocial({ provider, callbackURL });
 
       if (result?.error) {

@@ -56,7 +56,7 @@ export function SignUpForm() {
   const router = useRouter();
 
   const emailSignUp = useEmailSignUp();
-  const socialLogin = useSocialLogin();
+  const googleLogin = useSocialLogin({ provider: "google" });
 
   const [formError, setFormError] = useState<string | null>(null);
 
@@ -105,7 +105,7 @@ export function SignUpForm() {
       {
         onSuccess: () => {
           const encodedEmail = encodeURIComponent(parsed.data.email);
-    
+
           router.push(
             `${routes.auth.pendingEmailVerification()}?email=${encodedEmail}`
           );
@@ -113,7 +113,7 @@ export function SignUpForm() {
         onError: (err: any) => {
           const code = err?.code as string | undefined;
           const message = err?.message as string | undefined;
-    
+
           setFormError(message ?? "Unable to sign up. Please try again.");
         },
       }
@@ -121,12 +121,15 @@ export function SignUpForm() {
   }
 
   async function onGoogleLogin() {
-    socialLogin.mutate({ provider: "google" }, {
+    googleLogin.mutate(undefined, {
       onError: () => {
         setFormError("Google login failed. Please try again.");
       },
     });
   }
+
+  const isGoogleLoading = googleLogin.isPending;
+  const isSubmitting = emailSignUp.isPending;
 
   return (
     <AuthContainer>
@@ -240,8 +243,8 @@ export function SignUpForm() {
 
               {/* Submit */}
               <Field>
-                <Button type="submit" disabled={emailSignUp.isPending}>
-                  {emailSignUp.isPending && <Spinner />}
+                <Button type="submit" disabled={isSubmitting}>
+                  {isSubmitting && <Spinner />}
                   Sign up
                 </Button>
 
@@ -250,9 +253,9 @@ export function SignUpForm() {
                   variant="outline"
                   type="button"
                   onClick={onGoogleLogin}
-                  disabled={socialLogin.isPending}
+                  disabled={isGoogleLoading}
                 >
-                  {socialLogin.isPending && <Spinner />}
+                  {isGoogleLoading && <Spinner />}
                   <Image
                     src={googleLogo}
                     alt="Google"

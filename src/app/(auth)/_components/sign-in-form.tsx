@@ -34,7 +34,7 @@ export function LoginForm() {
   const callbackUrl = searchParams.get("callbackUrl") ?? undefined;
 
   const emailSignIn = useEmailSignIn();
-  const socialLogin = useSocialLogin();
+  const googleLogin = useSocialLogin({ provider: "google", callbackURL: callbackUrl });
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -82,7 +82,7 @@ export function LoginForm() {
   }
 
   function onGoogleLogin() {
-    socialLogin.mutate({ provider: "google", callbackURL: callbackUrl }, {
+    googleLogin.mutate(undefined, {
       onError: () => {
         setFormError("Google login failed. Please try again.");
       },
@@ -90,7 +90,7 @@ export function LoginForm() {
   }
 
   const isSubmitting = emailSignIn.isPending;
-  const isGoogleLoading = socialLogin.isPending;
+  const isGoogleLoading = googleLogin.isPending;
 
   return (
     <AuthContainer>
