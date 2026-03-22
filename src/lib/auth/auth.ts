@@ -1,16 +1,14 @@
 import { betterAuth } from "better-auth";
 // import Database from "better-sqlite3";
-import { PasswordResetEmail } from "@/email-templates/password-reset";
-import { VerificationEmail } from "@/email-templates/verification";
 import { db } from "@/lib/db/index";
 import * as schema from "@/lib/db/schema";
-import { sendEmail } from "@/lib/email";
 import { expo } from "@better-auth/expo";
-import { render } from "@react-email/components";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { nextCookies } from "better-auth/next-js";
 import { jwt, openAPI, bearer } from "better-auth/plugins";
 import ENVConfig from "@/config";
+import { sendPasswordResetEmail } from "@/email/email-templates/password-reset";
+import { sendVerificationEmail } from "@/email/email-templates/verification";
 
 const baseURL = ENVConfig.backend_base_url;
 
@@ -27,24 +25,18 @@ export const auth = betterAuth({
     enabled: true,
     requireEmailVerification: true,
     sendResetPassword: async ({ user, url, token }, request) => {
-      await sendEmail({
-        to: user.email,
-        subject: "Verify your email address",
-        html: (await render(PasswordResetEmail({ resetUrl: url }))) as string,
-      });
+      await sendPasswordResetEmail(
+        { userEmail: user.email, resetUrl: url },
+      );
     },
   },
   emailVerification: {
     autoSignInAfterVerification: true,
-    sendVerificationEmail: async ({ user, url, token }, _request) => {
+    sendVerificationEmail: async ({ user, url, token }, request) => {
       // Don't await - prevents timing attacks
-      await sendEmail({
-        to: user.email,
-        subject: "Verify your email address",
-        html: (await render(
-          VerificationEmail({ verificationUrl: url }),
-        )) as string,
-      });
+      await sendVerificationEmail(
+        { userEmail: user.email, verificationUrl: url },
+      );
     },
     async afterEmailVerification(user, request) {
       // Your custom logic here, e.g., grant access to premium features

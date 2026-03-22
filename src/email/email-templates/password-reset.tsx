@@ -14,21 +14,23 @@ import {
   Hr,
   Html,
   Preview,
+  render,
   Tailwind,
   Text,
 } from "@react-email/components";
+import { sendEmail } from "../send-email";
 
-interface PasswordResetEmailProps {
+interface PasswordResetEmailTemplateProps {
   /** URL to reset the password */
   resetUrl: string;
   /** How long until the link expires */
   expiresIn?: string;
 }
 
-export function PasswordResetEmail({
+export function PasswordResetEmailTemplate({
   resetUrl,
   expiresIn = "1 hour",
-}: PasswordResetEmailProps) {
+}: PasswordResetEmailTemplateProps) {
   return (
     <Html lang="en">
       <Head />
@@ -80,9 +82,22 @@ export function PasswordResetEmail({
   );
 }
 
-PasswordResetEmail.PreviewProps = {
+PasswordResetEmailTemplate.PreviewProps = {
   resetUrl: "https://example.com/reset-password?token=abc123xyz",
   expiresIn: "1 hour",
-} satisfies PasswordResetEmailProps;
+} satisfies PasswordResetEmailTemplateProps;
 
-export default PasswordResetEmail;
+export default PasswordResetEmailTemplate;
+
+
+export async function sendPasswordResetEmail(
+  { userEmail, resetUrl }: { userEmail: string; resetUrl: string }
+) {
+  await sendEmail({
+    to: userEmail,
+    subject: "Reset your password",
+    html: (await render(
+      PasswordResetEmailTemplate({ resetUrl: resetUrl })
+    )) as string,
+  });
+}
