@@ -7,7 +7,7 @@ import { CORSPlugin } from '@orpc/server/plugins'
 
 const handler = new OpenAPIHandler(appRouter, {
   plugins: [
-    new CORSPlugin()
+    // new CORSPlugin()
   ],
   interceptors: [
     onError((error) => {

@@ -1,5 +1,5 @@
 import { and, eq } from "drizzle-orm";
-import { account } from "@/lib/auth/auth-schema";
+import { account } from "@/lib/db/schema/better-auth-schema";
 import { auth } from "@/lib/auth/auth";
 import { db } from "@/lib/db/index";
 
@@ -70,7 +70,7 @@ export interface CreateMeetingParams {
   };
 }
 
-export interface UpdateMeetingParams extends Partial<CreateMeetingParams> {}
+export interface UpdateMeetingParams extends Partial<CreateMeetingParams> { }
 
 // ---------------------------------------------------------------------------
 // Client
@@ -79,7 +79,7 @@ export interface UpdateMeetingParams extends Partial<CreateMeetingParams> {}
 const ZOOM_API_BASE = "https://api.zoom.us/v2";
 
 export class ZoomClient {
-  constructor(private readonly accessToken: string) {}
+  constructor(private readonly accessToken: string) { }
 
   private async request<T>(path: string, options: RequestInit = {}): Promise<T> {
     const res = await fetch(`${ZOOM_API_BASE}${path}`, {
