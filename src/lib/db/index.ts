@@ -13,7 +13,7 @@ export const client = postgres(process.env.DATABASE_URL!, { prepare: false });
 export const db = drizzle({ client });
 
 
-import { user } from '@/lib/db/schema';
+import { user } from '@/lib/db/schema/better-auth-schema';
 async function main() {
   await db
     .select()

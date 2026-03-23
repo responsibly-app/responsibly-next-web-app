@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import googleLogo from "@/images/icons/google.svg";
 
-import { useEmailSignUp, useSocialLogin } from "@/lib/auth/hooks/use-auth";
+import { useEmailSignUp, useSocialLogin } from "@/lib/auth/use-auth";
 
 import { routes } from "@/lib/constants/routes";
 import { cn } from "@/lib/utils";

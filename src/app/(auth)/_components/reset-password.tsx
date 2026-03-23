@@ -23,7 +23,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { routes } from "@/lib/constants/routes";
 import { cn } from "@/lib/utils";
 
-import { useRequestPasswordReset } from "@/lib/auth/hooks/use-auth";
+import { useRequestPasswordReset } from "@/lib/auth/use-auth";
 import { authClassNames, AuthContainer } from "./auth-layout";
 
 type Status = {
