@@ -8,11 +8,14 @@ import { DasboardHeader } from "./dashboard-header";
 
 export default function DashboardLayout({
   children,
+  defaultOpen,
 }: {
   children: React.ReactNode;
+  defaultOpen?: boolean;
 }) {
   return (
     <SidebarProvider
+      defaultOpen={defaultOpen}
       style={
         {
           "--sidebar-width": "calc(var(--spacing) * 60)",

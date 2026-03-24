@@ -201,11 +201,12 @@ export function SecurityCard() {
             <div className="text-sm">
               <p className="font-medium">Password managed externally</p>
               <p className="text-muted-foreground">
-                Your password is managed by{" "}
+                {/* Your password is managed by{" "}
                 {socialProviders.length > 0
                   ? socialProviders.join(" and ")
                   : "your sign-in provider"}
-                . To change it, visit your provider&apos;s account settings.
+                . To change it, visit your provider&apos;s account settings. */}
+                Your password is managed by your social sign-in provider. To change it, visit your provider's account settings.
               </p>
             </div>
           </div>

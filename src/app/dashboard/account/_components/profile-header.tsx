@@ -71,7 +71,7 @@ export function ProfileHeader() {
   const uploadAvatar = useUploadAvatar();
   const deleteAvatar = useDeleteAvatar();
 
-  const displayAvatar = previewUrl ?? (user?.image ? (user.image) : undefined);
+  const displayAvatar = previewUrl ?? (user?.image ? proxiedAvatarUrl(user.image) : undefined);
   const initials = getInitials(user?.name ?? "U");
   const memberSince = user?.createdAt ? format(new Date(user.createdAt), "MMMM yyyy") : null;
 
