@@ -1,45 +1,25 @@
 "use client";
 
-import { authClient } from "@/lib/auth/auth-client";
-
-import { useStorageDelete, useStorageUpload } from "../../supabase/hooks/use-storage";
-
-function avatarStoragePath(imageUrl: string): string | null {
-  try {
-    const url = new URL(imageUrl);
-    const match = url.pathname.match(/\/storage\/v1\/object\/public\/avatars\/(.+)/);
-    return match ? match[1] : null;
-  } catch {
-    return null;
-  }
-}
+import { useMutation } from "@tanstack/react-query";
+import { orpcUtils } from "@/lib/orpc/orpc-client";
 
 export function useUploadAvatar() {
-  const { data: session } = authClient.useSession();
-  const storageUpload = useStorageUpload();
+  const mutation = useMutation(orpcUtils.storage.uploadAvatar.mutationOptions());
 
   async function upload(blob: Blob): Promise<string> {
-    const userId = session?.user?.id;
-    if (!userId) throw new Error("Not authenticated");
-
-    const ext = blob.type === "image/png" ? "png" : "webp";
-    const path = `${userId}/avatar.${ext}`;
-
-    const publicUrl = await storageUpload.mutateAsync({ bucket: "avatars", path, blob });
-    return `${publicUrl}?t=${Date.now()}`;
+    const { publicUrl } = await mutation.mutateAsync({ file: blob });
+    return publicUrl;
   }
 
-  return { upload, isPending: storageUpload.isPending };
+  return { upload, isPending: mutation.isPending };
 }
 
 export function useDeleteAvatar() {
-  const storageDelete = useStorageDelete();
+  const mutation = useMutation(orpcUtils.storage.deleteAvatar.mutationOptions());
 
-  async function remove(imageUrl: string): Promise<void> {
-    const path = avatarStoragePath(imageUrl);
-    if (!path) return;
-    await storageDelete.mutateAsync({ bucket: "avatars", paths: [path] });
+  async function remove(): Promise<void> {
+    await mutation.mutateAsync({});
   }
 
-  return { remove, isPending: storageDelete.isPending };
+  return { remove, isPending: mutation.isPending };
 }

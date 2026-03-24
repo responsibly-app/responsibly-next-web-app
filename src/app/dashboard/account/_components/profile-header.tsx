@@ -22,7 +22,6 @@ import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
 import { authClient } from "@/lib/auth/auth-client";
-import { useUpdateUser } from "@/lib/auth/use-auth";
 import { proxiedAvatarUrl } from "@/lib/helpers/image";
 import { useDeleteAvatar, useUploadAvatar } from "@/lib/hooks/use-upload-avatar";
 import { AvatarCropperDialog } from "./avatar-cropper-dialog";
@@ -67,7 +66,6 @@ export function ProfileHeader() {
   const [cropSrc, setCropSrc] = useState<string | null>(null);
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
 
-  const updateUser = useUpdateUser();
   const uploadAvatar = useUploadAvatar();
   const deleteAvatar = useDeleteAvatar();
 
@@ -75,8 +73,8 @@ export function ProfileHeader() {
   const initials = getInitials(user?.name ?? "U");
   const memberSince = user?.createdAt ? format(new Date(user.createdAt), "MMMM yyyy") : null;
 
-  const isSaving = uploadAvatar.isPending || updateUser.isPending;
-  const isDeleting = deleteAvatar.isPending || updateUser.isPending;
+  const isSaving = uploadAvatar.isPending;
+  const isDeleting = deleteAvatar.isPending;
 
   if (isPending) return <ProfileHeaderSkeleton />;
 
@@ -109,43 +107,23 @@ export function ProfileHeader() {
   async function handleSaveImage() {
     if (!pendingBlob) return;
     try {
-      const url = await uploadAvatar.upload(pendingBlob);
-      updateUser.mutate(
-        { image: url },
-        {
-          onSuccess: () => {
-            handleDiscardPending();
-            refetch();
-            toast.success("Profile photo updated.");
-          },
-          onError: (err: { message?: string }) => {
-            toast.error(err?.message ?? "Failed to update photo.");
-          },
-        },
-      );
+      await uploadAvatar.upload(pendingBlob);
+      handleDiscardPending();
+      refetch();
+      toast.success("Profile photo updated.");
     } catch {
-      toast.error("Failed to upload photo.");
+      toast.error("Failed to update photo.");
     }
   }
 
   async function handleDeleteAvatar() {
     if (!user?.image) return;
     try {
-      await deleteAvatar.remove(user.image);
-      updateUser.mutate(
-        { image: "" },
-        {
-          onSuccess: () => {
-            refetch();
-            toast.success("Profile photo removed.");
-          },
-          onError: (err: { message?: string }) => {
-            toast.error(err?.message ?? "Failed to remove photo.");
-          },
-        },
-      );
+      await deleteAvatar.remove();
+      refetch();
+      toast.success("Profile photo removed.");
     } catch {
-      toast.error("Failed to delete photo.");
+      toast.error("Failed to remove photo.");
     }
   }
 
