@@ -1,6 +1,8 @@
 "use client";
 
+import { useState } from "react";
 import { AlertTriangleIcon, Trash2Icon } from "lucide-react";
+import { toast } from "sonner";
 
 import {
   AlertDialog,
@@ -24,20 +26,20 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
+import { useDeleteUser } from "@/lib/auth/use-auth";
 
-type DangerZoneCardProps = {
-  deleteConfirmText: string;
-  onDeleteConfirmTextChange: (v: string) => void;
-  isPending: boolean;
-  onDelete: () => void;
-};
+export function DangerZoneCard() {
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
+  const deleteUser = useDeleteUser();
 
-export function DangerZoneCard({
-  deleteConfirmText,
-  onDeleteConfirmTextChange,
-  isPending,
-  onDelete,
-}: DangerZoneCardProps) {
+  function handleDelete() {
+    deleteUser.mutate(undefined, {
+      onError: (err: { message?: string }) => {
+        toast.error(err?.message ?? "Failed to delete account.");
+      },
+    });
+  }
+
   return (
     <Card className="border-destructive/40">
       <CardHeader className="border-b border-destructive/20">
@@ -88,20 +90,20 @@ export function DangerZoneCard({
                   id="deleteConfirm"
                   placeholder="delete"
                   value={deleteConfirmText}
-                  onChange={(e) => onDeleteConfirmTextChange(e.target.value)}
+                  onChange={(e) => setDeleteConfirmText(e.target.value)}
                 />
               </div>
 
               <AlertDialogFooter>
-                <AlertDialogCancel onClick={() => onDeleteConfirmTextChange("")}>
+                <AlertDialogCancel onClick={() => setDeleteConfirmText("")}>
                   Cancel
                 </AlertDialogCancel>
                 <AlertDialogAction
-                  onClick={onDelete}
-                  disabled={deleteConfirmText !== "delete" || isPending}
+                  onClick={handleDelete}
+                  disabled={deleteConfirmText !== "delete" || deleteUser.isPending}
                   className="bg-destructive text-destructive-foreground hover:bg-destructive/90 focus-visible:ring-destructive/20"
                 >
-                  {isPending ? (
+                  {deleteUser.isPending ? (
                     <Spinner className="mr-1.5 size-3.5" data-icon="inline-start" />
                   ) : (
                     <Trash2Icon className="mr-1.5 size-3.5" data-icon="inline-start" />

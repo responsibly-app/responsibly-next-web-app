@@ -1,6 +1,8 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { EyeIcon, EyeOffIcon, KeyRoundIcon } from "lucide-react";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -13,45 +15,62 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
+import { authClient } from "@/lib/auth/auth-client";
+import { useChangePassword } from "@/lib/auth/use-auth";
 import { cn } from "@/lib/utils";
 
-type SecurityCardProps = {
-  isCredentialUser: boolean;
-  socialProviders: string[];
-  currentPassword: string;
-  newPassword: string;
-  confirmPassword: string;
-  showCurrentPw: boolean;
-  showNewPw: boolean;
-  showConfirmPw: boolean;
-  onCurrentPasswordChange: (v: string) => void;
-  onNewPasswordChange: (v: string) => void;
-  onConfirmPasswordChange: (v: string) => void;
-  onToggleCurrentPw: () => void;
-  onToggleNewPw: () => void;
-  onToggleConfirmPw: () => void;
-  isPending: boolean;
-  onChangePassword: () => void;
-};
+export function SecurityCard() {
+  const { data: session } = authClient.useSession();
+  const user = session?.user;
 
-export function SecurityCard({
-  isCredentialUser,
-  socialProviders,
-  currentPassword,
-  newPassword,
-  confirmPassword,
-  showCurrentPw,
-  showNewPw,
-  showConfirmPw,
-  onCurrentPasswordChange,
-  onNewPasswordChange,
-  onConfirmPasswordChange,
-  onToggleCurrentPw,
-  onToggleNewPw,
-  onToggleConfirmPw,
-  isPending,
-  onChangePassword,
-}: SecurityCardProps) {
+  const [accounts, setAccounts] = useState<Array<{ providerId: string }>>([]);
+
+  useEffect(() => {
+    if (!user?.id) return;
+    authClient.listAccounts().then((result) => {
+      if (result.data) setAccounts(result.data as Array<{ providerId: string }>);
+    });
+  }, [user?.id]);
+
+  const isCredentialUser = accounts.some((a) => a.providerId === "credential");
+  const socialProviders = accounts
+    .filter((a) => a.providerId !== "credential")
+    .map((a) => a.providerId.charAt(0).toUpperCase() + a.providerId.slice(1));
+
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showCurrentPw, setShowCurrentPw] = useState(false);
+  const [showNewPw, setShowNewPw] = useState(false);
+  const [showConfirmPw, setShowConfirmPw] = useState(false);
+
+  const changePassword = useChangePassword();
+
+  function handleChangePassword() {
+    if (newPassword !== confirmPassword) {
+      toast.error("Passwords do not match.");
+      return;
+    }
+    if (newPassword.length < 8) {
+      toast.error("Password must be at least 8 characters.");
+      return;
+    }
+    changePassword.mutate(
+      { currentPassword, newPassword },
+      {
+        onSuccess: () => {
+          setCurrentPassword("");
+          setNewPassword("");
+          setConfirmPassword("");
+          toast.success("Password changed successfully.");
+        },
+        onError: (err: { message?: string }) => {
+          toast.error(err?.message ?? "Failed to change password.");
+        },
+      },
+    );
+  }
+
   return (
     <Card>
       <CardHeader className="border-b">
@@ -80,12 +99,12 @@ export function SecurityCard({
                   type={showCurrentPw ? "text" : "password"}
                   placeholder="Enter current password"
                   value={currentPassword}
-                  onChange={(e) => onCurrentPasswordChange(e.target.value)}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
                   className="pr-10"
                 />
                 <button
                   type="button"
-                  onClick={onToggleCurrentPw}
+                  onClick={() => setShowCurrentPw((v) => !v)}
                   className="text-muted-foreground hover:text-foreground absolute inset-y-0 right-3 flex cursor-pointer items-center transition-colors"
                   tabIndex={-1}
                 >
@@ -103,12 +122,12 @@ export function SecurityCard({
                     type={showNewPw ? "text" : "password"}
                     placeholder="Min. 8 characters"
                     value={newPassword}
-                    onChange={(e) => onNewPasswordChange(e.target.value)}
+                    onChange={(e) => setNewPassword(e.target.value)}
                     className="pr-10"
                   />
                   <button
                     type="button"
-                    onClick={onToggleNewPw}
+                    onClick={() => setShowNewPw((v) => !v)}
                     className="text-muted-foreground hover:text-foreground absolute inset-y-0 right-3 flex cursor-pointer items-center transition-colors"
                     tabIndex={-1}
                   >
@@ -124,7 +143,7 @@ export function SecurityCard({
                     type={showConfirmPw ? "text" : "password"}
                     placeholder="Repeat new password"
                     value={confirmPassword}
-                    onChange={(e) => onConfirmPasswordChange(e.target.value)}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
                     className={cn(
                       "pr-10",
                       confirmPassword && newPassword !== confirmPassword && "border-destructive",
@@ -132,7 +151,7 @@ export function SecurityCard({
                   />
                   <button
                     type="button"
-                    onClick={onToggleConfirmPw}
+                    onClick={() => setShowConfirmPw((v) => !v)}
                     className="text-muted-foreground hover:text-foreground absolute inset-y-0 right-3 flex cursor-pointer items-center transition-colors"
                     tabIndex={-1}
                   >
@@ -164,11 +183,11 @@ export function SecurityCard({
       {isCredentialUser && (
         <div className="flex justify-end border-t px-6 pt-4 pb-6">
           <Button
-            onClick={onChangePassword}
-            disabled={isPending || !currentPassword || !newPassword || !confirmPassword}
+            onClick={handleChangePassword}
+            disabled={changePassword.isPending || !currentPassword || !newPassword || !confirmPassword}
             size="sm"
           >
-            {isPending ? (
+            {changePassword.isPending ? (
               <Spinner className="mr-1.5 size-3.5" data-icon="inline-start" />
             ) : (
               <KeyRoundIcon className="mr-1.5 size-3.5" data-icon="inline-start" />
