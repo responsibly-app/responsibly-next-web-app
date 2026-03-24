@@ -2,9 +2,19 @@
 
 import { useRef, useState } from "react";
 import { format } from "date-fns";
-import { CameraIcon, SaveIcon, ShieldCheckIcon, ShieldOffIcon } from "lucide-react";
+import { CameraIcon, SaveIcon, ShieldCheckIcon, ShieldOffIcon, Trash2Icon } from "lucide-react";
 import { toast } from "sonner";
 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -14,7 +24,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { authClient } from "@/lib/auth/auth-client";
 import { useUpdateUser } from "@/lib/auth/use-auth";
 import { proxiedAvatarUrl } from "@/lib/helpers/image";
-import { useUploadAvatar } from "@/lib/hooks/use-upload-avatar";
+import { useDeleteAvatar, useUploadAvatar } from "@/lib/hooks/use-upload-avatar";
 import { AvatarCropperDialog } from "./avatar-cropper-dialog";
 
 function getInitials(name: string) {
@@ -32,7 +42,7 @@ function ProfileHeaderSkeleton() {
     <Card className="overflow-hidden p-0">
       <div className="from-primary/20 via-primary/10 to-background h-24 bg-linear-to-br" />
       <div className="-mt-12 flex flex-col gap-4 px-6 pb-6 sm:flex-row sm:items-end sm:gap-6">
-        <Skeleton className="size-20 shrink-0 rounded-full" />
+        <Skeleton className="size-30 shrink-0 rounded-full" />
         <div className="flex flex-1 flex-col gap-2 pb-1">
           <div className="flex items-center gap-2">
             <Skeleton className="h-5 w-32" />
@@ -52,15 +62,21 @@ export function ProfileHeader() {
   const { data: session, isPending, refetch } = authClient.useSession();
   const user = session?.user;
 
-  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [pendingBlob, setPendingBlob] = useState<Blob | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [cropSrc, setCropSrc] = useState<string | null>(null);
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
 
   const updateUser = useUpdateUser();
   const uploadAvatar = useUploadAvatar();
+  const deleteAvatar = useDeleteAvatar();
 
-  const displayAvatar = avatarPreview ?? (user?.image ? proxiedAvatarUrl(user.image) : undefined);
+  const displayAvatar = previewUrl ?? (user?.image ? (user.image) : undefined);
   const initials = getInitials(user?.name ?? "U");
   const memberSince = user?.createdAt ? format(new Date(user.createdAt), "MMMM yyyy") : null;
+
+  const isSaving = uploadAvatar.isPending || updateUser.isPending;
+  const isDeleting = deleteAvatar.isPending || updateUser.isPending;
 
   if (isPending) return <ProfileHeaderSkeleton />;
 
@@ -77,27 +93,60 @@ export function ProfileHeader() {
     reader.readAsDataURL(file);
   }
 
-  async function handleCropConfirm(blob: Blob) {
-    const url = await uploadAvatar.upload(blob);
-    setAvatarPreview(url);
+  function handleCropConfirm(blob: Blob) {
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
+    setPendingBlob(blob);
+    setPreviewUrl(URL.createObjectURL(blob));
     setCropSrc(null);
   }
 
-  function handleSaveImage() {
-    if (!avatarPreview) return;
-    updateUser.mutate(
-      { image: avatarPreview },
-      {
-        onSuccess: () => {
-          refetch();
-          setAvatarPreview(null);
-          toast.success("Profile photo updated.");
+  function handleDiscardPending() {
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
+    setPendingBlob(null);
+    setPreviewUrl(null);
+  }
+
+  async function handleSaveImage() {
+    if (!pendingBlob) return;
+    try {
+      const url = await uploadAvatar.upload(pendingBlob);
+      updateUser.mutate(
+        { image: url },
+        {
+          onSuccess: () => {
+            handleDiscardPending();
+            refetch();
+            toast.success("Profile photo updated.");
+          },
+          onError: (err: { message?: string }) => {
+            toast.error(err?.message ?? "Failed to update photo.");
+          },
         },
-        onError: (err: { message?: string }) => {
-          toast.error(err?.message ?? "Failed to update photo.");
+      );
+    } catch {
+      toast.error("Failed to upload photo.");
+    }
+  }
+
+  async function handleDeleteAvatar() {
+    if (!user?.image) return;
+    try {
+      await deleteAvatar.remove(user.image);
+      updateUser.mutate(
+        { image: "" },
+        {
+          onSuccess: () => {
+            refetch();
+            toast.success("Profile photo removed.");
+          },
+          onError: (err: { message?: string }) => {
+            toast.error(err?.message ?? "Failed to remove photo.");
+          },
         },
-      },
-    );
+      );
+    } catch {
+      toast.error("Failed to delete photo.");
+    }
   }
 
   return (
@@ -117,23 +166,58 @@ export function ProfileHeader() {
         onConfirm={handleCropConfirm}
       />
 
+      <AlertDialog open={confirmDeleteOpen} onOpenChange={setConfirmDeleteOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove profile photo?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Your profile photo will be permanently deleted and cannot be recovered.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                setConfirmDeleteOpen(false);
+                handleDeleteAvatar();
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Remove
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <Card className="overflow-hidden p-0">
         <div className="from-primary/20 via-primary/10 to-background h-24 bg-linear-to-br" />
 
         <div className="-mt-12 flex flex-col gap-4 px-6 pb-6 sm:flex-row sm:items-end sm:gap-6">
           <div className="relative w-fit shrink-0">
-            <Avatar className="size-20">
+            <Avatar className="size-30">
               <AvatarImage src={displayAvatar} alt={user?.name} />
               <AvatarFallback className="text-lg font-semibold">{initials}</AvatarFallback>
             </Avatar>
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="bg-background hover:bg-muted border-border absolute -right-1 -bottom-1 flex size-7 cursor-pointer items-center justify-center rounded-full border transition-colors"
+              disabled={isSaving || isDeleting}
+              className="bg-background hover:bg-muted border-border absolute -right-1 -bottom-1 flex size-7 cursor-pointer items-center justify-center rounded-full border transition-colors disabled:pointer-events-none disabled:opacity-50"
               aria-label="Change avatar"
             >
               <CameraIcon className="size-3" />
             </button>
+            {user?.image && !pendingBlob && (
+              <button
+                type="button"
+                onClick={() => setConfirmDeleteOpen(true)}
+                disabled={isDeleting || isSaving}
+                className="bg-background hover:bg-destructive/10 border-border text-destructive absolute -left-1 -bottom-1 flex size-7 cursor-pointer items-center justify-center rounded-full border transition-colors disabled:pointer-events-none disabled:opacity-50"
+                aria-label="Remove avatar"
+              >
+                {isDeleting ? <Spinner className="size-3" /> : <Trash2Icon className="size-3" />}
+              </button>
+            )}
           </div>
 
           <div className="flex flex-1 flex-col gap-1 pb-1">
@@ -158,29 +242,30 @@ export function ProfileHeader() {
           </div>
         </div>
 
-        {avatarPreview && (
+        {pendingBlob && previewUrl && (
           <div className="space-y-3 border-t px-6 pt-3 pb-4">
             <div className="flex items-center gap-3 rounded-xl border border-dashed p-3 text-sm">
               <Avatar className="size-10">
-                <AvatarImage src={avatarPreview} alt="New photo preview" />
+                <AvatarImage src={previewUrl} alt="New photo preview" />
                 <AvatarFallback className="text-xs">{initials}</AvatarFallback>
               </Avatar>
               <div className="flex-1">
                 <p className="font-medium">New photo ready</p>
-                <p className="text-muted-foreground text-xs">Save changes to apply.</p>
+                <p className="text-muted-foreground text-xs">Save changes to upload and apply.</p>
               </div>
               <Button
                 variant="ghost"
                 size="sm"
                 className="text-muted-foreground"
-                onClick={() => setAvatarPreview(null)}
+                disabled={isSaving}
+                onClick={handleDiscardPending}
               >
-                Remove
+                Discard
               </Button>
             </div>
             <div className="flex justify-end">
-              <Button size="sm" onClick={handleSaveImage} disabled={updateUser.isPending}>
-                {updateUser.isPending ? (
+              <Button size="sm" onClick={handleSaveImage} disabled={isSaving}>
+                {isSaving ? (
                   <Spinner className="mr-1.5 size-3.5" data-icon="inline-start" />
                 ) : (
                   <SaveIcon className="mr-1.5 size-3.5" data-icon="inline-start" />

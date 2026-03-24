@@ -2,7 +2,17 @@
 
 import { authClient } from "@/lib/auth/auth-client";
 
-import { useStorageUpload } from "../../supabase/hooks/use-storage";
+import { useStorageDelete, useStorageUpload } from "../../supabase/hooks/use-storage";
+
+function avatarStoragePath(imageUrl: string): string | null {
+  try {
+    const url = new URL(imageUrl);
+    const match = url.pathname.match(/\/storage\/v1\/object\/public\/avatars\/(.+)/);
+    return match ? match[1] : null;
+  } catch {
+    return null;
+  }
+}
 
 export function useUploadAvatar() {
   const { data: session } = authClient.useSession();
@@ -20,4 +30,16 @@ export function useUploadAvatar() {
   }
 
   return { upload, isPending: storageUpload.isPending };
+}
+
+export function useDeleteAvatar() {
+  const storageDelete = useStorageDelete();
+
+  async function remove(imageUrl: string): Promise<void> {
+    const path = avatarStoragePath(imageUrl);
+    if (!path) return;
+    await storageDelete.mutateAsync({ bucket: "avatars", paths: [path] });
+  }
+
+  return { remove, isPending: storageDelete.isPending };
 }

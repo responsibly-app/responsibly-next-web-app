@@ -8,6 +8,11 @@ type StorageUploadParams = {
   blob: Blob;
 };
 
+type StorageDeleteParams = {
+  bucket: string;
+  paths: string[];
+};
+
 export function useStorageUpload() {
   return useMutation({
     mutationFn: async ({ bucket, path, blob }: StorageUploadParams) => {
@@ -20,6 +25,15 @@ export function useStorageUpload() {
 
       const { data } = supabase.storage.from(bucket).getPublicUrl(path);
       return data.publicUrl;
+    },
+  });
+}
+
+export function useStorageDelete() {
+  return useMutation({
+    mutationFn: async ({ bucket, paths }: StorageDeleteParams) => {
+      const { error } = await supabase.storage.from(bucket).remove(paths);
+      if (error) throw error;
     },
   });
 }

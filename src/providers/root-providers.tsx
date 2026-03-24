@@ -6,6 +6,7 @@ import { ThemeProvider } from "@/providers/theme-provider";
 import NextTopLoader from "nextjs-toploader";
 import { Suspense } from "react";
 import { TanstackProvider } from "./tanstack-provider";
+import { Toaster } from "@/components/ui/sonner"
 
 export function Providers({ children }: { children: React.ReactNode }) {
   // For hydration issues, use in specific components causing the issue not globally
@@ -30,6 +31,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
           disableTransitionOnChange
         >
           <NextTopLoader color="var(--primary)" showSpinner={false} />
+          <Toaster />
           <Suspense fallback={<SuspendFallback />}>{children}</Suspense>
         </ThemeProvider>
       </TooltipProvider>
