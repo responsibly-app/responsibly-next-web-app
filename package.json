@@ -9,11 +9,12 @@
     "lint": "eslint",
     "orval:generate": "orval",
     "db:generate-better-auth-schema": "pnpm dlx @better-auth/cli@latest generate --config ./src/lib/auth/auth.ts --output ./src/lib/db/schema/better-auth-schema.ts",
-    "db:generate-migrations": "npx drizzle-kit generate",
-    "db:apply-migrations": "npx drizzle-kit migrate",
+    "db:generate": "npx drizzle-kit generate",
+    "db:migrate": "npx drizzle-kit migrate",
     "db:push": "npx drizzle-kit push",
     "db:pull": "npx drizzle-kit pull",
-    "db:check": "npx drizzle-kit check"
+    "db:check": "npx drizzle-kit check",
+    "db:studio": "npx drizzle-kit studio"
   },
   "dependencies": {
     "@ai-sdk/azure": "^3.0.35",
@@ -62,6 +63,7 @@
     "react": "19.2.3",
     "react-day-picker": "^9.14.0",
     "react-dom": "19.2.3",
+    "react-easy-crop": "^5.5.6",
     "react-resizable-panels": "^4.6.4",
     "react-shiki": "^0.9.1",
     "recharts": "2.15.4",

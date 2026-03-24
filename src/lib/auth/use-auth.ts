@@ -198,3 +198,67 @@ export function useUnlinkSocial() {
     },
   });
 }
+
+type UpdateUserParams = {
+  name?: string;
+  image?: string;
+};
+
+type ChangePasswordParams = {
+  currentPassword: string;
+  newPassword: string;
+};
+
+/** Update user profile (name, image) */
+export function useUpdateUser() {
+  return useMutation({
+    mutationFn: async (params: UpdateUserParams) => {
+      const result = await authClient.updateUser(params);
+
+      if (result.error) {
+        throw result.error;
+      }
+
+      return result;
+    },
+  });
+}
+
+/** Change user password and revoke other sessions */
+export function useChangePassword() {
+  return useMutation({
+    mutationFn: async ({ currentPassword, newPassword }: ChangePasswordParams) => {
+      const result = await authClient.changePassword({
+        currentPassword,
+        newPassword,
+        revokeOtherSessions: true,
+      });
+
+      if (result.error) {
+        throw result.error;
+      }
+
+      return result;
+    },
+  });
+}
+
+/** Permanently delete the current user account */
+export function useDeleteUser() {
+  const router = useRouter();
+
+  return useMutation({
+    mutationFn: async () => {
+      const result = await authClient.deleteUser();
+
+      if (result?.error) {
+        throw result.error;
+      }
+
+      return result;
+    },
+    onSuccess: () => {
+      router.push(routes.auth.signIn());
+    },
+  });
+}

@@ -15,6 +15,6 @@ https://orm.drizzle.team/docs/kit-overview
 - `pnpm tsx src\lib\db\index.ts`
 ---
 ### ENV Variable
-- Supabase: pooler DB
+- Supabase: Connect > Transaction Pooler
 - `DATABASE_URL`=`postgresql://postgres.[PROJECT_SLUG]:[DB_PASSWORD]@aws-1-us-east-1.pooler.supabase.com:6543/postgres`
 ---
