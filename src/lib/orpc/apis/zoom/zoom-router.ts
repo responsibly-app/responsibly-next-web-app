@@ -28,25 +28,25 @@ export const zoomRouter = {
 
     meetings: {
         list: zoomAuthed
-            .route({ method: "GET", path: "/zoom/meetings", summary: "List meetings", tags: ["Zoom Meetings"] })
+            .route({ method: "GET", path: "/zoom/meetings", summary: "List meetings", tags: ["Zoom"] })
             .input(ListMeetingsInputSchema)
             .output(ZoomMeetingsListSchema)
             .handler(async ({ context, input }) => context.zoom.listMeetings("me", input)),
 
         get: zoomAuthed
-            .route({ method: "GET", path: "/zoom/meetings/{meetingId}", summary: "Get a meeting by ID", tags: ["Zoom Meetings"] })
+            .route({ method: "GET", path: "/zoom/meetings/{meetingId}", summary: "Get a meeting by ID", tags: ["Zoom"] })
             .input(MeetingIdSchema)
             .output(ZoomMeetingSchema)
             .handler(async ({ context, input }) => context.zoom.getMeeting(input.meetingId)),
 
         create: zoomAuthed
-            .route({ method: "POST", path: "/zoom/meetings", summary: "Create a new meeting", tags: ["Zoom Meetings"] })
+            .route({ method: "POST", path: "/zoom/meetings", summary: "Create a new meeting", tags: ["Zoom"] })
             .input(CreateMeetingInputSchema)
             .output(ZoomMeetingSchema)
             .handler(async ({ context, input }) => context.zoom.createMeeting(input)),
 
         update: zoomAuthed
-            .route({ method: "PATCH", path: "/zoom/meetings/{meetingId}", summary: "Update an existing meeting", tags: ["Zoom Meetings"] })
+            .route({ method: "PATCH", path: "/zoom/meetings/{meetingId}", summary: "Update an existing meeting", tags: ["Zoom"] })
             .input(UpdateMeetingInputSchema)
             .output(z.void())
             .handler(async ({ context, input }) => {
@@ -55,7 +55,7 @@ export const zoomRouter = {
             }),
 
         delete: zoomAuthed
-            .route({ method: "DELETE", path: "/zoom/meetings/{meetingId}", summary: "Delete a meeting", tags: ["Zoom Meetings"] })
+            .route({ method: "DELETE", path: "/zoom/meetings/{meetingId}", summary: "Delete a meeting", tags: ["Zoom"] })
             .input(MeetingIdSchema)
             .output(z.void())
             .handler(async ({ context, input }) => context.zoom.deleteMeeting(input.meetingId)),

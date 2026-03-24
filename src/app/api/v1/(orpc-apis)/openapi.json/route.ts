@@ -29,8 +29,9 @@ export async function GET() {
       },
     },
     tags: [
+      { name: "Session", description: "Zoom account connection and profile" },
+      { name: "Storage", description: "Zoom account connection and profile" },
       { name: "Zoom", description: "Zoom account connection and profile" },
-      { name: "Zoom Meetings", description: "Manage Zoom meetings" },
     ],
   });
 

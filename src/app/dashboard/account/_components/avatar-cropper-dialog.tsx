@@ -11,6 +11,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Slider } from "@/components/ui/slider";
+import { Spinner } from "@/components/ui/spinner";
 
 // ─── crop image util (mirrored from image-cropper/cropImage) ──────────────────
 
@@ -166,10 +167,10 @@ export function AvatarCropperDialog({ src, open, onClose, onConfirm }: AvatarCro
           </DialogTitle>
         </DialogHeader>
 
-        {step === "crop" && src && ready && (
-          <div className="space-y-5">
+        {step === "crop" && src && (
+          ready ? <div className="space-y-5">
             {/* Cropper canvas */}
-            <div className="relative h-72 overflow-hidden rounded-xl bg-black">
+            <div className="relative h-72 overflow-hidden rounded-xl">
               <Cropper
                 image={src}
                 crop={crop}
@@ -236,7 +237,7 @@ export function AvatarCropperDialog({ src, open, onClose, onConfirm }: AvatarCro
                 Crop photo
               </Button>
             </div>
-          </div>
+          </div> : <div className="flex h-50 items-center justify-center overflow-hidden rounded-xl"><Spinner className="size-20" /></div>
         )}
 
         {step === "confirm" && previewUrl && (
