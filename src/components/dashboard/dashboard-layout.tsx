@@ -2,7 +2,6 @@
 
 import { AppSidebar } from "@/components/dashboard/app-sidebar";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
-// } from "@/components/animate-ui/components/radix/sidebar";
 import { AssistantModal } from "../assistant-ui/assistant-modal";
 import { DasboardHeader } from "./dashboard-header";
 
