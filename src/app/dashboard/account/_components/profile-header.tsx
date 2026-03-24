@@ -9,6 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
 import { authClient } from "@/lib/auth/auth-client";
 import { useUpdateUser } from "@/lib/auth/use-auth";
@@ -26,10 +27,29 @@ function getInitials(name: string) {
     .slice(0, 2);
 }
 
+function ProfileHeaderSkeleton() {
+  return (
+    <Card className="overflow-hidden p-0">
+      <div className="from-primary/20 via-primary/10 to-background h-24 bg-linear-to-br" />
+      <div className="-mt-12 flex flex-col gap-4 px-6 pb-6 sm:flex-row sm:items-end sm:gap-6">
+        <Skeleton className="size-20 shrink-0 rounded-full" />
+        <div className="flex flex-1 flex-col gap-2 pb-1">
+          <div className="flex items-center gap-2">
+            <Skeleton className="h-5 w-32" />
+            <Skeleton className="h-5 w-16 rounded-full" />
+          </div>
+          <Skeleton className="h-4 w-48" />
+          <Skeleton className="h-3 w-36" />
+        </div>
+      </div>
+    </Card>
+  );
+}
+
 export function ProfileHeader() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const { data: session, refetch } = authClient.useSession();
+  const { data: session, isPending, refetch } = authClient.useSession();
   const user = session?.user;
 
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
@@ -38,9 +58,11 @@ export function ProfileHeader() {
   const updateUser = useUpdateUser();
   const uploadAvatar = useUploadAvatar();
 
-  const displayAvatar = avatarPreview ?? (user?.image ? proxiedAvatarUrl(user.image) : "");
+  const displayAvatar = avatarPreview ?? (user?.image ? proxiedAvatarUrl(user.image) : undefined);
   const initials = getInitials(user?.name ?? "U");
   const memberSince = user?.createdAt ? format(new Date(user.createdAt), "MMMM yyyy") : null;
+
+  if (isPending) return <ProfileHeaderSkeleton />;
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];

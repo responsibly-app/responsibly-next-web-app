@@ -14,12 +14,38 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
 import { authClient } from "@/lib/auth/auth-client";
 import { useUpdateUser } from "@/lib/auth/use-auth";
 
+function PersonalInfoCardSkeleton() {
+  return (
+    <Card>
+      <CardHeader className="border-b">
+        <div className="flex items-center gap-3">
+          <Skeleton className="size-9 rounded-xl" />
+          <div className="flex flex-col gap-1.5">
+            <Skeleton className="h-4 w-40" />
+            <Skeleton className="h-3 w-52" />
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent className="pt-6">
+        <div className="grid gap-2">
+          <Skeleton className="h-4 w-20" />
+          <div className="flex gap-2">
+            <Skeleton className="h-9 flex-1" />
+            <Skeleton className="size-9 shrink-0 rounded-md" />
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 export function PersonalInfoCard() {
-  const { data: session, refetch } = authClient.useSession();
+  const { data: session, isPending, refetch } = authClient.useSession();
   const user = session?.user;
 
   const [isEditing, setIsEditing] = useState(false);
@@ -31,6 +57,8 @@ export function PersonalInfoCard() {
 
   const updateUser = useUpdateUser();
   const isDirty = fullName.trim() !== (user?.name ?? "");
+
+  if (isPending) return <PersonalInfoCardSkeleton />;
 
   function handleCancel() {
     setFullName(user?.name ?? "");

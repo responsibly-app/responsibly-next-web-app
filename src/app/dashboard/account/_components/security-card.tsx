@@ -14,21 +14,50 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
 import { authClient } from "@/lib/auth/auth-client";
 import { useChangePassword } from "@/lib/auth/use-auth";
 import { cn } from "@/lib/utils";
 
+function SecurityCardSkeleton() {
+  return (
+    <Card>
+      <CardHeader className="border-b">
+        <div className="flex items-center gap-3">
+          <Skeleton className="size-9 rounded-xl" />
+          <div className="flex flex-col gap-1.5">
+            <Skeleton className="h-4 w-24" />
+            <Skeleton className="h-3 w-72" />
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent className="pt-6">
+        <div className="grid gap-4">
+          {[0, 1, 2].map((i) => (
+            <div key={i} className="grid gap-2">
+              <Skeleton className="h-4 w-36" />
+              <Skeleton className="h-9 w-full" />
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 export function SecurityCard() {
-  const { data: session } = authClient.useSession();
+  const { data: session, isPending } = authClient.useSession();
   const user = session?.user;
 
   const [accounts, setAccounts] = useState<Array<{ providerId: string }>>([]);
+  const [accountsLoading, setAccountsLoading] = useState(true);
 
   useEffect(() => {
     if (!user?.id) return;
     authClient.listAccounts().then((result) => {
       if (result.data) setAccounts(result.data as Array<{ providerId: string }>);
+      setAccountsLoading(false);
     });
   }, [user?.id]);
 
@@ -45,6 +74,8 @@ export function SecurityCard() {
   const [showConfirmPw, setShowConfirmPw] = useState(false);
 
   const changePassword = useChangePassword();
+
+  if (isPending || accountsLoading) return <SecurityCardSkeleton />;
 
   function handleChangePassword() {
     if (newPassword !== confirmPassword) {

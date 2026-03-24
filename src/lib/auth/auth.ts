@@ -21,6 +21,11 @@ export const auth = betterAuth({
     provider: "pg", // or "pg" or "mysql"
     schema: betterAuthSchema,
   }),
+  user: {
+    deleteUser: {
+      enabled: true
+    }
+  },
   emailAndPassword: {
     enabled: true,
     requireEmailVerification: true,
