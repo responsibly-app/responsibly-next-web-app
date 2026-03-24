@@ -59,7 +59,7 @@ export const auth = betterAuth({
       strategy: "jwt", // "compact" or "jwt" or "jwe"
       enabled: true, // Enable caching session in cookie (default: `false`)
       // maxAge: 60 * 60 * 24 * 2, // 2 days (session in coockie without revalidation with database)
-      maxAge: 10 * 60, // 30 seconds for testing
+      maxAge: 1 * 60, // 30 seconds for testing
       // refreshCache: true, // Refresh cookie cache when session is updated via updateAge
     },
   },

@@ -27,3 +27,5 @@
   ```
 
   ---
+
+  `pnpm add orval -D`

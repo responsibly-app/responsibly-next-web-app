@@ -5,7 +5,7 @@ console.log("USING CONFIG ENV:", process.env.NEXT_PUBLIC_ENV);
 import { config } from "./src/config";
 import { defineConfig } from 'orval';
 
-const orvalOutputPath = "src/orval";
+const orvalOutputPath = "./src/orval";
 const backendBaseURL = config[process.env.NEXT_PUBLIC_ENV].backend_base_url;
 
 export default defineConfig({

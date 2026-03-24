@@ -109,7 +109,11 @@ export function ProfileHeader() {
     try {
       await uploadAvatar.upload(pendingBlob);
       handleDiscardPending();
-      refetch();
+      refetch({
+        query: {
+          disableCookieCache: true
+        }
+      });
       toast.success("Profile photo updated.");
     } catch {
       toast.error("Failed to update photo.");
@@ -120,7 +124,11 @@ export function ProfileHeader() {
     if (!user?.image) return;
     try {
       await deleteAvatar.remove();
-      refetch();
+      refetch({
+        query: {
+          disableCookieCache: true
+        }
+      });
       toast.success("Profile photo removed.");
     } catch {
       toast.error("Failed to remove photo.");
