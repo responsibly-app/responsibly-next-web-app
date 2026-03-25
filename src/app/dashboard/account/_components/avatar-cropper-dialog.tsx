@@ -237,7 +237,7 @@ export function AvatarCropperDialog({ src, open, onClose, onConfirm }: AvatarCro
                 Crop photo
               </Button>
             </div>
-          </div> : <div className="flex h-50 items-center justify-center overflow-hidden rounded-xl"><Spinner className="size-20" /></div>
+          </div> : <div className="flex h-50 items-center justify-center overflow-hidden rounded-xl"><Spinner className="text-muted-foreground size-20" /></div>
         )}
 
         {step === "confirm" && previewUrl && (
