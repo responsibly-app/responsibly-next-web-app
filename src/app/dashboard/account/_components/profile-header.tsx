@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import { format } from "date-fns";
-import { CameraIcon, SaveIcon, ShieldCheckIcon, ShieldOffIcon, Trash2Icon } from "lucide-react";
+import { CameraIcon, PencilIcon, RefreshCwIcon, SaveIcon, ShieldCheckIcon, ShieldOffIcon, Trash2Icon } from "lucide-react";
 import { toast } from "sonner";
 
 import {
@@ -19,6 +19,12 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
 import { authClient } from "@/lib/auth/auth-client";
@@ -75,6 +81,16 @@ export function ProfileHeader() {
 
   const isSaving = uploadAvatar.isPending;
   const isDeleting = deleteAvatar.isPending;
+  const [isSyncing, setIsSyncing] = useState(false);
+
+  async function handleSync() {
+    setIsSyncing(true);
+    try {
+      await refetch({ query: { disableCookieCache: true } });
+    } finally {
+      setIsSyncing(false);
+    }
+  }
 
   if (isPending) return <ProfileHeaderSkeleton />;
 
@@ -186,24 +202,40 @@ export function ProfileHeader() {
             </Avatar>
             <button
               type="button"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={isSaving || isDeleting}
-              className="bg-background hover:bg-muted border-border absolute -right-1 -bottom-1 flex size-7 cursor-pointer items-center justify-center rounded-full border transition-colors disabled:pointer-events-none disabled:opacity-50"
-              aria-label="Change avatar"
+              onClick={handleSync}
+              disabled={isSyncing || isSaving || isDeleting}
+              className="bg-background hover:bg-muted border-border absolute -left-1 -bottom-1 flex size-7 cursor-pointer items-center justify-center rounded-full border transition-colors disabled:pointer-events-none disabled:opacity-50"
+              aria-label="Sync profile"
             >
-              <CameraIcon className="size-3" />
+              <RefreshCwIcon className={`size-3 ${isSyncing ? "animate-spin" : ""}`} />
             </button>
-            {user?.image && !pendingBlob && (
-              <button
-                type="button"
-                onClick={() => setConfirmDeleteOpen(true)}
-                disabled={isDeleting || isSaving}
-                className="bg-background hover:bg-destructive/10 border-border text-destructive absolute -left-1 -bottom-1 flex size-7 cursor-pointer items-center justify-center rounded-full border transition-colors disabled:pointer-events-none disabled:opacity-50"
-                aria-label="Remove avatar"
-              >
-                {isDeleting ? <Spinner className="size-3" /> : <Trash2Icon className="size-3" />}
-              </button>
-            )}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  type="button"
+                  disabled={isSaving || isDeleting}
+                  className="bg-background hover:bg-muted border-border absolute -right-1 -bottom-1 flex size-7 cursor-pointer items-center justify-center rounded-full border transition-colors disabled:pointer-events-none disabled:opacity-50"
+                  aria-label="Edit avatar"
+                >
+                  {isDeleting ? <Spinner className="size-3" /> : <PencilIcon className="size-3" />}
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => fileInputRef.current?.click()}>
+                  <CameraIcon className="size-4" />
+                  Upload new photo
+                </DropdownMenuItem>
+                {user?.image && !pendingBlob && (
+                  <DropdownMenuItem
+                    onClick={() => setConfirmDeleteOpen(true)}
+                    className="text-destructive focus:text-destructive"
+                  >
+                    <Trash2Icon className="size-4" />
+                    Delete photo
+                  </DropdownMenuItem>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
 
           <div className="flex flex-1 flex-col gap-1 pb-1">
