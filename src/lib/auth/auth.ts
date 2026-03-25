@@ -53,13 +53,12 @@ export const auth = betterAuth({
   session: {
     // expiresIn: 60 * 60 * 24 * 7, // 7 days
     // updateAge: 60 * 60 * 24, // refresh every 24h
-    expiresIn: 60 * 60 * 24 * 2, // 1 day for testing
-    updateAge: 60 * 60 * 24 * 1, // refresh every 10 seconds for testing
+    expiresIn: 60 * 60 * 24 * 2, // 2 days
+    updateAge: 60 * 60 * 24 * 1, // refresh every day
     cookieCache: {
       strategy: "jwt", // "compact" or "jwt" or "jwe"
       enabled: true, // Enable caching session in cookie (default: `false`)
-      // maxAge: 60 * 60 * 24 * 2, // 2 days (session in coockie without revalidation with database)
-      maxAge: 1 * 60, // 30 seconds for testing
+      maxAge: 60 * 60 * 1, // 1 hour
       // refreshCache: true, // Refresh cookie cache when session is updated via updateAge
     },
   },

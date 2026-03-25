@@ -25,9 +25,8 @@ export const customInstance = async <T>(
     },
   });
 
-  const data = [204, 205, 304].includes(res.status)
-    ? undefined
-    : await res.json();
+  const text = await res.text();
+  const data = text ? JSON.parse(text) : undefined;
 
   if (!res.ok) {
     throw data;

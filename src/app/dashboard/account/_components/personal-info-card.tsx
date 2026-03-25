@@ -70,7 +70,11 @@ export function PersonalInfoCard() {
       { name: fullName.trim() },
       {
         onSuccess: () => {
-          refetch();
+          refetch({
+            query: {
+              disableCookieCache: true
+            }
+          });
           setIsEditing(false);
           toast.success("Name updated successfully.");
         },
