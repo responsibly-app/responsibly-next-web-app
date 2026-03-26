@@ -21,9 +21,9 @@ const emailOTPPlugin = emailOTP({
   expiresIn: 60 * 10, // 10 minutes
   async sendVerificationOTP({ email, otp, type }) {
     if (type === "email-verification") {
-      await sendEmailVerificationOTP({ userEmail: email, otp });
+      await sendEmailVerificationOTP({ userEmail: email, otp: otp, expiresIn: "10 minutes" });
     } else if (type === "forget-password") {
-      await sendPasswordResetOTP({ userEmail: email, otp });
+      await sendPasswordResetOTP({ userEmail: email, otp: otp, expiresIn: "10 minutes" });
     }
   },
 })
@@ -48,18 +48,20 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
     requireEmailVerification: true,
+    expiresIn: 60 * 60 * 1, // 1 hour
     sendResetPassword: async ({ user, url, token }, request) => {
       await sendPasswordResetEmail(
-        { userEmail: user.email, resetUrl: url },
+        { userEmail: user.email, resetUrl: url, expiresIn: "1 hour" },
       );
     },
   },
   emailVerification: {
     autoSignInAfterVerification: true,
+    expiresIn: 60 * 60 * 1, // 1 hour
     sendVerificationEmail: async ({ user, url, token }, request) => {
       // Don't await - prevents timing attacks
       await sendEmailVerification(
-        { userEmail: user.email, verificationUrl: url },
+        { userEmail: user.email, verificationUrl: url, expiresIn: "1 hour" },
       );
     },
     async afterEmailVerification(user, request) {

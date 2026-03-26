@@ -19,17 +19,20 @@ import {
   render
 } from '@react-email/components';
 import { sendEmail } from '../send-email';
+import { appName } from '@/config';
 
 interface EmailVerificationTemplateProps {
   /** URL to verify the email address */
   verificationUrl: string;
   /** How long until the link expires (e.g., "24 hours") */
-  expiresIn?: string;
+  expiresIn: string;
+  companyName: string;
 }
 
 export function EmailVerificationTemplate({
   verificationUrl,
-  expiresIn = '24 hours',
+  expiresIn,
+  companyName,
 }: EmailVerificationTemplateProps) {
   return (
     <Html lang="en">
@@ -39,7 +42,7 @@ export function EmailVerificationTemplate({
       <Tailwind>
         <Body className="bg-white font-sans">
           <Container className="mx-auto py-12 px-4 max-w-xl">
-            <Text className="text-2xl font-bold text-black">Acme</Text>
+            <Text className="text-2xl font-bold text-black">{companyName}</Text>
 
             <Heading className="text-2xl font-bold text-gray-900 mt-8">
               Verify your email
@@ -86,19 +89,28 @@ export function EmailVerificationTemplate({
 EmailVerificationTemplate.PreviewProps = {
   verificationUrl: 'https://example.com/verify?token=abc123xyz',
   expiresIn: '24 hours',
+  companyName: ""
 } satisfies EmailVerificationTemplateProps;
 
 export default EmailVerificationTemplate;
 
 
-export async function sendEmailVerification(
-  { userEmail, verificationUrl }: { userEmail: string; verificationUrl: string }
-) {
+export async function sendEmailVerification({
+  userEmail,
+  verificationUrl,
+  expiresIn = '1 hour',
+  companyName = appName,
+}: {
+  userEmail: string;
+  verificationUrl: string;
+  expiresIn?: string;
+  companyName?: string;
+}) {
   await sendEmail({
     to: userEmail,
     subject: "Verify your email address",
     html: (await render(
-      EmailVerificationTemplate({ verificationUrl: verificationUrl })
+      EmailVerificationTemplate({ verificationUrl, expiresIn, companyName })
     )) as string,
   });
 }

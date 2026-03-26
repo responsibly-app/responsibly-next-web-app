@@ -18,15 +18,18 @@ import {
   Text,
 } from "@react-email/components";
 import { sendEmail } from "../send-email";
+import { appName } from "@/config";
 
 interface PasswordResetOTPTemplateProps {
   otp: string;
-  expiresIn?: string;
+  expiresIn: string;
+  companyName: string;
 }
 
 export function PasswordResetOTPTemplate({
   otp,
-  expiresIn = "10 minutes",
+  expiresIn,
+  companyName,
 }: PasswordResetOTPTemplateProps) {
   return (
     <Html lang="en">
@@ -36,7 +39,7 @@ export function PasswordResetOTPTemplate({
       <Tailwind>
         <Body className="bg-white font-sans">
           <Container className="mx-auto max-w-xl px-4 py-12">
-            <Text className="text-2xl font-bold text-black">Acme</Text>
+            <Text className="text-2xl font-bold text-black">{companyName}</Text>
 
             <Heading className="mt-8 text-2xl font-bold text-gray-900">
               Reset your password
@@ -67,7 +70,7 @@ export function PasswordResetOTPTemplate({
             <div className="mt-6 rounded-md border border-solid border-yellow-200 bg-yellow-50 p-4">
               <Text className="m-0 text-sm text-yellow-800">
                 <strong>Security tip:</strong> Never share this code with
-                anyone. Acme will never ask for your password via email.
+                anyone. {companyName} will never ask for your password via email.
               </Text>
             </div>
           </Container>
@@ -80,6 +83,7 @@ export function PasswordResetOTPTemplate({
 PasswordResetOTPTemplate.PreviewProps = {
   otp: "123456",
   expiresIn: "10 minutes",
+  companyName: ""
 } satisfies PasswordResetOTPTemplateProps;
 
 export default PasswordResetOTPTemplate;
@@ -87,13 +91,17 @@ export default PasswordResetOTPTemplate;
 export async function sendPasswordResetOTP({
   userEmail,
   otp,
+  expiresIn = "10 minutes",
+  companyName = appName,
 }: {
   userEmail: string;
   otp: string;
+  expiresIn?: string;
+  companyName?: string;
 }) {
   await sendEmail({
     to: userEmail,
     subject: "Your password reset code",
-    html: (await render(PasswordResetOTPTemplate({ otp }))) as string,
+    html: (await render(PasswordResetOTPTemplate({ otp, expiresIn, companyName }))) as string,
   });
 }

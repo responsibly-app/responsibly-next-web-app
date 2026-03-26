@@ -18,15 +18,18 @@ import {
   Text,
 } from "@react-email/components";
 import { sendEmail } from "../send-email";
+import { appName } from "@/config";
 
 interface EmailVerificationOTPTemplateProps {
   otp: string;
-  expiresIn?: string;
+  expiresIn: string;
+  companyName: string;
 }
 
 export function EmailVerificationOTPTemplate({
   otp,
-  expiresIn = "10 minutes",
+  expiresIn,
+  companyName,
 }: EmailVerificationOTPTemplateProps) {
   return (
     <Html lang="en">
@@ -36,7 +39,7 @@ export function EmailVerificationOTPTemplate({
       <Tailwind>
         <Body className="bg-white font-sans">
           <Container className="mx-auto max-w-xl px-4 py-12">
-            <Text className="text-2xl font-bold text-black">Acme</Text>
+            <Text className="text-2xl font-bold text-black">{companyName}</Text>
 
             <Heading className="mt-8 text-2xl font-bold text-gray-900">
               Verify your email
@@ -73,6 +76,7 @@ export function EmailVerificationOTPTemplate({
 EmailVerificationOTPTemplate.PreviewProps = {
   otp: "123456",
   expiresIn: "10 minutes",
+  companyName: ""
 } satisfies EmailVerificationOTPTemplateProps;
 
 export default EmailVerificationOTPTemplate;
@@ -80,13 +84,17 @@ export default EmailVerificationOTPTemplate;
 export async function sendEmailVerificationOTP({
   userEmail,
   otp,
+  expiresIn = "10 minutes",
+  companyName = appName,
 }: {
   userEmail: string;
   otp: string;
+  expiresIn?: string;
+  companyName?: string;
 }) {
   await sendEmail({
     to: userEmail,
     subject: "Your email verification code",
-    html: (await render(EmailVerificationOTPTemplate({ otp }))) as string,
+    html: (await render(EmailVerificationOTPTemplate({ otp, expiresIn, companyName }))) as string,
   });
 }

@@ -19,17 +19,20 @@ import {
   Text,
 } from "@react-email/components";
 import { sendEmail } from "../send-email";
+import { appName } from "@/config";
 
 interface DeleteAccountEmailTemplateProps {
   /** URL to confirm account deletion */
   deletionUrl: string;
   /** How long until the link expires */
-  expiresIn?: string;
+  expiresIn: string;
+  companyName: string;
 }
 
 export function DeleteAccountEmailTemplate({
   deletionUrl,
-  expiresIn = "1 hour",
+  expiresIn,
+  companyName,
 }: DeleteAccountEmailTemplateProps) {
   return (
     <Html lang="en">
@@ -39,7 +42,7 @@ export function DeleteAccountEmailTemplate({
       <Tailwind>
         <Body className="bg-white font-sans">
           <Container className="mx-auto max-w-xl px-4 py-12">
-            <Text className="text-2xl font-bold text-black">Acme</Text>
+            <Text className="text-2xl font-bold text-black">{companyName}</Text>
 
             <Heading className="mt-8 text-2xl font-bold text-gray-900">
               Confirm account deletion
@@ -86,19 +89,28 @@ export function DeleteAccountEmailTemplate({
 DeleteAccountEmailTemplate.PreviewProps = {
   deletionUrl: "https://example.com/delete-account?token=abc123xyz",
   expiresIn: "1 hour",
+  companyName: ""
 } satisfies DeleteAccountEmailTemplateProps;
 
 export default DeleteAccountEmailTemplate;
 
 
-export async function sendDeleteAccountEmail(
-  { userEmail, deletionUrl }: { userEmail: string; deletionUrl: string }
-) {
+export async function sendDeleteAccountEmail({
+  userEmail,
+  deletionUrl,
+  expiresIn = "1 hour",
+  companyName = appName,
+}: {
+  userEmail: string;
+  deletionUrl: string;
+  expiresIn?: string;
+  companyName?: string;
+}) {
   await sendEmail({
     to: userEmail,
     subject: "Confirm your account deletion",
     html: (await render(
-      DeleteAccountEmailTemplate({ deletionUrl: deletionUrl })
+      DeleteAccountEmailTemplate({ deletionUrl, expiresIn, companyName })
     )) as string,
   });
 }

@@ -19,17 +19,20 @@ import {
   Text,
 } from "@react-email/components";
 import { sendEmail } from "../send-email";
+import { appName } from "@/config";
 
 interface PasswordResetEmailTemplateProps {
   /** URL to reset the password */
   resetUrl: string;
   /** How long until the link expires */
-  expiresIn?: string;
+  expiresIn: string;
+  companyName: string;
 }
 
 export function PasswordResetEmailTemplate({
   resetUrl,
-  expiresIn = "1 hour",
+  expiresIn,
+  companyName
 }: PasswordResetEmailTemplateProps) {
   return (
     <Html lang="en">
@@ -39,7 +42,7 @@ export function PasswordResetEmailTemplate({
       <Tailwind>
         <Body className="bg-white font-sans">
           <Container className="mx-auto max-w-xl px-4 py-12">
-            <Text className="text-2xl font-bold text-black">Acme</Text>
+            <Text className="text-2xl font-bold text-black">{companyName}</Text>
 
             <Heading className="mt-8 text-2xl font-bold text-gray-900">
               Reset your password
@@ -72,7 +75,7 @@ export function PasswordResetEmailTemplate({
             <div className="mt-6 rounded-md border border-solid border-yellow-200 bg-yellow-50 p-4">
               <Text className="m-0 text-sm text-yellow-800">
                 <strong>Security tip:</strong> Never share this link with
-                anyone. Acme will never ask for your password via email.
+                anyone. {companyName} will never ask for your password via email.
               </Text>
             </div>
           </Container>
@@ -85,19 +88,25 @@ export function PasswordResetEmailTemplate({
 PasswordResetEmailTemplate.PreviewProps = {
   resetUrl: "https://example.com/reset-password?token=abc123xyz",
   expiresIn: "1 hour",
+  companyName: ""
 } satisfies PasswordResetEmailTemplateProps;
 
 export default PasswordResetEmailTemplate;
 
 
 export async function sendPasswordResetEmail(
-  { userEmail, resetUrl }: { userEmail: string; resetUrl: string }
+  { userEmail, resetUrl, expiresIn = "1 hour", companyName = appName }: {
+    userEmail: string;
+    resetUrl: string,
+    expiresIn?: string;
+    companyName?: string;
+  }
 ) {
   await sendEmail({
     to: userEmail,
     subject: "Reset your password",
     html: (await render(
-      PasswordResetEmailTemplate({ resetUrl: resetUrl })
+      PasswordResetEmailTemplate({ resetUrl: resetUrl, expiresIn, companyName })
     )) as string,
   });
 }
