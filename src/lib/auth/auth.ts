@@ -5,13 +5,28 @@ import * as betterAuthSchema from "@/lib/db/schema/better-auth-schema";
 import { expo } from "@better-auth/expo";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { nextCookies } from "better-auth/next-js";
-import { jwt, openAPI, bearer } from "better-auth/plugins";
+import { jwt, openAPI, bearer, emailOTP } from "better-auth/plugins";
 import ENVConfig from "@/config";
 import { sendDeleteAccountEmail } from "@/email/email-templates/delete-account";
 import { sendPasswordResetEmail } from "@/email/email-templates/password-reset";
-import { sendVerificationEmail } from "@/email/email-templates/verification";
+import { sendEmailVerification } from "@/email/email-templates/email-verification";
+import { sendEmailVerificationOTP } from "@/email/email-templates/email-verification-otp";
+import { sendPasswordResetOTP } from "@/email/email-templates/password-reset-otp";
 
 const baseURL = ENVConfig.backend_base_url;
+
+
+const emailOTPPlugin = emailOTP({
+  otpLength: 4,
+  expiresIn: 60 * 10, // 10 minutes
+  async sendVerificationOTP({ email, otp, type }) {
+    if (type === "email-verification") {
+      await sendEmailVerificationOTP({ userEmail: email, otp });
+    } else if (type === "forget-password") {
+      await sendPasswordResetOTP({ userEmail: email, otp });
+    }
+  },
+})
 
 
 export const auth = betterAuth({
@@ -43,7 +58,7 @@ export const auth = betterAuth({
     autoSignInAfterVerification: true,
     sendVerificationEmail: async ({ user, url, token }, request) => {
       // Don't await - prevents timing attacks
-      await sendVerificationEmail(
+      await sendEmailVerification(
         { userEmail: user.email, verificationUrl: url },
       );
     },
@@ -104,7 +119,7 @@ export const auth = betterAuth({
   advanced: {
     // useSecureCookies: true
   },
-  plugins: [nextCookies(), jwt(), bearer(), openAPI(), expo()],
+  plugins: [nextCookies(), jwt(), bearer(), openAPI(), expo(), emailOTPPlugin],
 });
 
 // http://localhost:3000/api/auth/reference

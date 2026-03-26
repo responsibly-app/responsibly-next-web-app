@@ -20,17 +20,17 @@ import {
 } from '@react-email/components';
 import { sendEmail } from '../send-email';
 
-interface VerificationEmailTemplateProps {
+interface EmailVerificationTemplateProps {
   /** URL to verify the email address */
   verificationUrl: string;
   /** How long until the link expires (e.g., "24 hours") */
   expiresIn?: string;
 }
 
-export function VerificationEmailTemplate({
+export function EmailVerificationTemplate({
   verificationUrl,
   expiresIn = '24 hours',
-}: VerificationEmailTemplateProps) {
+}: EmailVerificationTemplateProps) {
   return (
     <Html lang="en">
       <Head />
@@ -83,22 +83,22 @@ export function VerificationEmailTemplate({
   );
 }
 
-VerificationEmailTemplate.PreviewProps = {
+EmailVerificationTemplate.PreviewProps = {
   verificationUrl: 'https://example.com/verify?token=abc123xyz',
   expiresIn: '24 hours',
-} satisfies VerificationEmailTemplateProps;
+} satisfies EmailVerificationTemplateProps;
 
-export default VerificationEmailTemplate;
+export default EmailVerificationTemplate;
 
 
-export async function sendVerificationEmail(
+export async function sendEmailVerification(
   { userEmail, verificationUrl }: { userEmail: string; verificationUrl: string }
 ) {
   await sendEmail({
     to: userEmail,
     subject: "Verify your email address",
     html: (await render(
-      VerificationEmailTemplate({ verificationUrl: verificationUrl })
+      EmailVerificationTemplate({ verificationUrl: verificationUrl })
     )) as string,
   });
 }
