@@ -99,6 +99,15 @@ export function PersonalInfoCard() {
         </div>
       </CardHeader>
       <CardContent className="pt-0">
+        <div className="grid gap-6">
+        <div className="grid gap-2">
+          <Label htmlFor="email">Email address</Label>
+          <Input
+            id="email"
+            value={user?.email ?? ""}
+            disabled
+          />
+        </div>
         <div className="grid gap-2">
           <Label htmlFor="fullName">Full name</Label>
           <div className="flex gap-2">
@@ -130,6 +139,7 @@ export function PersonalInfoCard() {
               </Button>
             )}
           </div>
+        </div>
         </div>
       </CardContent>
       {isEditing && (

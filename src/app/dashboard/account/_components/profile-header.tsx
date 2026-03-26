@@ -46,15 +46,14 @@ function getInitials(name: string) {
 function ProfileHeaderSkeleton() {
   return (
     <Card className="overflow-hidden p-0">
-      <div className="from-primary/20 via-primary/10 to-background h-24 bg-linear-to-br" />
-      <div className="-mt-12 flex flex-col gap-4 px-6 pb-6 sm:flex-row sm:items-end sm:gap-6">
+      <div className="from-primary/20 via-primary/10 to-background h-15 bg-linear-to-br" />
+      <div className="-mt-15 flex flex-col gap-4 px-6 pb-4 sm:flex-row sm:items-end sm:gap-6">
         <Skeleton className="size-30 shrink-0 rounded-full" />
         <div className="flex flex-1 flex-col gap-2 pb-1">
           <div className="flex items-center gap-2">
             <Skeleton className="h-5 w-32" />
             <Skeleton className="h-5 w-16 rounded-full" />
           </div>
-          <Skeleton className="h-4 w-48" />
           <Skeleton className="h-3 w-36" />
         </div>
       </div>
@@ -193,9 +192,9 @@ export function ProfileHeader() {
       </AlertDialog>
 
       <Card className="overflow-hidden p-0">
-        <div className="from-primary/20 via-primary/10 to-background h-24 bg-linear-to-br" />
+        <div className="from-primary/20 via-primary/10 to-background h-15 bg-linear-to-br" />
 
-        <div className="-mt-12 flex flex-col gap-4 px-6 pb-6 sm:flex-row sm:items-end sm:gap-6">
+        <div className="-mt-15 flex flex-col gap-4 px-6 pb-4 sm:flex-row sm:items-end sm:gap-6">
           <div className="relative w-fit shrink-0">
             <Avatar className="size-30">
               <AvatarImage src={displayAvatar} alt={user?.name} />
@@ -260,7 +259,6 @@ export function ProfileHeader() {
                 <TooltipContent>Sync profile</TooltipContent>
               </Tooltip>
             </div>
-            <p className="text-muted-foreground text-sm">{user?.email}</p>
             {memberSince && (
               <p className="text-muted-foreground/70 text-xs">Member since {memberSince}</p>
             )}
