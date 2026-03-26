@@ -1,6 +1,6 @@
 "use client";
 
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth/auth-client";
 import { routes } from "@/lib/constants/routes";
@@ -243,22 +243,46 @@ export function useChangePassword() {
   });
 }
 
+/** List all active sessions for the current user */
+export function useListSessions() {
+  return useQuery({
+    queryKey: ["sessions"],
+    queryFn: async () => {
+      const result = await authClient.listSessions();
+      if (result.error) throw result.error;
+      return result.data ?? [];
+    },
+  });
+}
+
+/** Revoke a specific session by token */
+export function useRevokeSession() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (token: string) => {
+      const result = await authClient.revokeSession({ token });
+      if (result?.error) throw result.error;
+      return result;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["sessions"] });
+    },
+  });
+}
+
 /** Permanently delete the current user account */
 export function useDeleteUser() {
   const router = useRouter();
 
   return useMutation({
     mutationFn: async () => {
-      const result = await authClient.deleteUser();
+      const result = await authClient.deleteUser({ callbackURL: routes.auth.goodbye() });
 
       if (result?.error) {
         throw result.error;
       }
 
       return result;
-    },
-    onSuccess: () => {
-      router.push(routes.auth.signIn());
     },
   });
 }

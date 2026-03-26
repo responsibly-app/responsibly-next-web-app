@@ -18,6 +18,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Card } from "@/components/ui/card";
 import {
   DropdownMenu,
@@ -200,15 +201,6 @@ export function ProfileHeader() {
               <AvatarImage src={displayAvatar} alt={user?.name} />
               <AvatarFallback className="text-lg font-semibold">{initials}</AvatarFallback>
             </Avatar>
-            <button
-              type="button"
-              onClick={handleSync}
-              disabled={isSyncing || isSaving || isDeleting}
-              className="bg-background hover:bg-muted border-border absolute -left-1 -bottom-1 flex size-7 cursor-pointer items-center justify-center rounded-full border transition-colors disabled:pointer-events-none disabled:opacity-50"
-              aria-label="Sync profile"
-            >
-              <RefreshCwIcon className={`size-3 ${isSyncing ? "animate-spin" : ""}`} />
-            </button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button
@@ -252,6 +244,21 @@ export function ProfileHeader() {
                   Unverified
                 </Badge>
               )}
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    type="button"
+                    onClick={handleSync}
+                    disabled={isSyncing || isSaving || isDeleting}
+                    className="text-muted-foreground hover:text-foreground flex cursor-pointer items-center gap-1 transition-colors disabled:pointer-events-none disabled:opacity-50"
+                    aria-label="Sync profile"
+                  >
+                    <RefreshCwIcon className={`size-3.5 ${isSyncing ? "animate-spin" : ""}`} />
+                    {isSyncing && <span className="text-xs">Syncing changes...</span>}
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>Sync profile</TooltipContent>
+              </Tooltip>
             </div>
             <p className="text-muted-foreground text-sm">{user?.email}</p>
             {memberSince && (

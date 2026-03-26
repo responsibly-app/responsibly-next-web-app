@@ -11,5 +11,6 @@ export const routes = {
     pendingEmailVerification: () => "/auth/pending-email-verification",
     resetPassword: () => "/auth/reset-password",
     newPassword: () => "/auth/new-password",
+    goodbye: () => "/auth/goodbye",
   },
 };

@@ -15,6 +15,9 @@ export default async function proxy(req: NextRequest) {
   const isOnPendingEmailVerification = req.nextUrl.pathname.startsWith(
     routes.auth.pendingEmailVerification(),
   );
+  const isOnGoodbye = req.nextUrl.pathname.startsWith(routes.auth.goodbye());
+
+  const isOnRestrictedForAuthenticatedUserPages = isOnSignin || isOnGoodbye
 
   const isRoot = req.nextUrl.pathname === "/";
 
@@ -35,7 +38,7 @@ export default async function proxy(req: NextRequest) {
       );
       return NextResponse.redirect(signInUrl);
     }
-  } else if (isOnAuthPages) {
+  } else if (isOnRestrictedForAuthenticatedUserPages) {
     if (isLoggedIn)
       return NextResponse.redirect(new URL(routes.dashboard.root(), req.nextUrl));
   }

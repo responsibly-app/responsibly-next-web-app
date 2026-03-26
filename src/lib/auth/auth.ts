@@ -7,6 +7,7 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { nextCookies } from "better-auth/next-js";
 import { jwt, openAPI, bearer } from "better-auth/plugins";
 import ENVConfig from "@/config";
+import { sendDeleteAccountEmail } from "@/email/email-templates/delete-account";
 import { sendPasswordResetEmail } from "@/email/email-templates/password-reset";
 import { sendVerificationEmail } from "@/email/email-templates/verification";
 
@@ -23,7 +24,10 @@ export const auth = betterAuth({
   }),
   user: {
     deleteUser: {
-      enabled: true
+      enabled: true,
+      sendDeleteAccountVerification: async ({ user, url }) => {
+        await sendDeleteAccountEmail({ userEmail: user.email, deletionUrl: url });
+      },
     }
   },
   emailAndPassword: {

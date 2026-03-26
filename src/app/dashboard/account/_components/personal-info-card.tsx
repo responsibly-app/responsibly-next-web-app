@@ -31,7 +31,7 @@ function PersonalInfoCardSkeleton() {
           </div>
         </div>
       </CardHeader>
-      <CardContent className="pt-6">
+      <CardContent className="pt-0">
         <div className="grid gap-2">
           <Skeleton className="h-4 w-20" />
           <div className="flex gap-2">
@@ -98,7 +98,7 @@ export function PersonalInfoCard() {
           </div>
         </div>
       </CardHeader>
-      <CardContent className="pt-6">
+      <CardContent className="pt-0">
         <div className="grid gap-2">
           <Label htmlFor="fullName">Full name</Label>
           <div className="flex gap-2">
