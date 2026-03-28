@@ -13,6 +13,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
@@ -31,16 +32,21 @@ export function TypeToConfirmDialog({
   isPending = false,
 }: TypeToConfirmDialogProps) {
   const [value, setValue] = useState("");
+  const [understood, setUnderstood] = useState(false);
 
   function handleOpenChange(next: boolean) {
     if (isPending) return;
     onOpenChange(next);
-    if (!next) setValue("");
+    if (!next) {
+      setValue("");
+      setUnderstood(false);
+    }
   }
 
   function handleConfirm() {
     onConfirm();
     setValue("");
+    setUnderstood(false);
   }
 
   return (
@@ -56,24 +62,39 @@ export function TypeToConfirmDialog({
             This action <strong>cannot be undone</strong>.
           </AlertDialogDescription>
         </AlertDialogHeader>
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="confirm-delete" className="text-sm">
-            Type <strong>delete</strong> to confirm
-          </Label>
-          <Input
-            id="confirm-delete"
-            value={value}
-            onChange={(e) => setValue(e.target.value)}
-            placeholder="delete"
-            autoComplete="off"
-            disabled={isPending}
-          />
+        <div className="flex flex-col gap-3">
+          <div className="flex items-start gap-2.5">
+            <Checkbox
+              id="understood"
+              checked={understood}
+              onCheckedChange={(checked) => setUnderstood(!!checked)}
+              disabled={isPending}
+              className="mt-0.5"
+            />
+            <Label htmlFor="understood" className="text-muted-foreground text-sm font-normal leading-snug">
+              I understand that deleting my account will permanently remove all my data and this
+              action cannot be undone.
+            </Label>
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="confirm-delete" className="text-sm">
+              Type <strong>delete</strong> to confirm
+            </Label>
+            <Input
+              id="confirm-delete"
+              value={value}
+              onChange={(e) => setValue(e.target.value)}
+              placeholder="delete"
+              autoComplete="off"
+              disabled={isPending}
+            />
+          </div>
         </div>
         <AlertDialogFooter>
           <AlertDialogCancel disabled={isPending}>Cancel</AlertDialogCancel>
           <Button
             variant="destructive"
-            disabled={value !== "delete" || isPending}
+            disabled={!understood || value !== "delete" || isPending}
             onClick={handleConfirm}
             className="focus-visible:ring-destructive/20"
           >
