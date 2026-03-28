@@ -8,7 +8,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { routes } from "@/lib/constants/routes";
+import { routes } from "@/routes";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { authClassNames, AuthContainer } from "./auth-layout";

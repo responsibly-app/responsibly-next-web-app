@@ -23,7 +23,7 @@ import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 
 import { useResetPassword } from "@/lib/auth/use-auth";
-import { routes } from "@/lib/constants/routes";
+import { routes } from "@/routes";
 import { cn } from "@/lib/utils";
 import { Eye, EyeOff } from "lucide-react";
 import { authClassNames, AuthContainer } from "./auth-layout";

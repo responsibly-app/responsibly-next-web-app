@@ -20,7 +20,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 
-import { routes } from "@/lib/constants/routes";
+import { routes } from "@/routes";
 import { cn } from "@/lib/utils";
 
 import { useRequestPasswordReset } from "@/lib/auth/use-auth";

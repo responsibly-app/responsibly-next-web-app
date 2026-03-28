@@ -17,7 +17,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import { useResendVerificationEmail } from "@/lib/auth/use-auth";
-import { routes } from "@/lib/constants/routes";
+import { routes } from "@/routes";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";

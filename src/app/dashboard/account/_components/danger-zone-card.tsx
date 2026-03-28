@@ -14,7 +14,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { useDeleteUser } from "@/lib/auth/use-auth";
-import { routes } from "@/lib/constants/routes";
+import { routes } from "@/routes";
 
 import { SendConfirmationDialog, TypeToConfirmDialog } from "./delete-account-dialogs";
 

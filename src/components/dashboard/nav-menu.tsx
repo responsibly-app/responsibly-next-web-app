@@ -9,7 +9,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { routes } from "@/lib/constants/routes";
+import { routes } from "@/routes";
 
 const items = [
   { title: "Dashboard", url: routes.dashboard.root(), icon: LayoutDashboard },

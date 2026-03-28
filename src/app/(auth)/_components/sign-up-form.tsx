@@ -15,7 +15,7 @@ import googleLogo from "@/images/icons/google.svg";
 
 import { useEmailSignUp, useSocialLogin } from "@/lib/auth/use-auth";
 
-import { routes } from "@/lib/constants/routes";
+import { routes } from "@/routes";
 import { cn } from "@/lib/utils";
 import { Eye, EyeOff } from "lucide-react";
 

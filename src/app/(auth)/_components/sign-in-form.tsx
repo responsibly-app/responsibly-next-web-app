@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import googleLogo from "@/images/icons/google.svg";
 import { useEmailSignIn, useSocialLogin } from "@/lib/auth/use-auth";
-import { routes } from "@/lib/constants/routes";
+import { routes } from "@/routes";
 import { cn } from "@/lib/utils";
 import { Eye, EyeOff } from "lucide-react";
 import Image from "next/image";

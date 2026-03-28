@@ -3,7 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth/auth-client";
-import { routes } from "@/lib/constants/routes";
+import { routes } from "@/routes";
 
 type EmailSignUpParams = {
   name: string;

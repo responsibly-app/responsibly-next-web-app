@@ -12,6 +12,6 @@ export const routes = {
     resetPassword: () => "/auth/reset-password",
     newPassword: () => "/auth/new-password",
     goodbye: () => "/auth/goodbye",
-    deleteAccount: () => "/auth/delete-account",
+    deleteAccount: () => "/auth/delete-account", // used only if sendDeleteAccountVerification is provided in auth.ts
   },
 };
