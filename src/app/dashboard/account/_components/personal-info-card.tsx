@@ -113,7 +113,7 @@ export function PersonalInfoCard() {
           <div className="flex gap-2">
             <Input
               id="fullName"
-              placeholder="Your full name"
+              placeholder="Add your full name"
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
               readOnly={!isEditing}

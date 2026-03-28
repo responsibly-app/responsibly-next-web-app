@@ -32,16 +32,7 @@ import { authClient } from "@/lib/auth/auth-client";
 import { proxiedAvatarUrl } from "@/lib/helpers/image";
 import { useDeleteAvatar, useUploadAvatar } from "@/lib/hooks/use-upload-avatar";
 import { AvatarCropperDialog } from "./avatar-cropper-dialog";
-
-function getInitials(name: string) {
-  return name
-    .trim()
-    .split(/\s+/)
-    .map((w) => w[0])
-    .join("")
-    .toUpperCase()
-    .slice(0, 2);
-}
+import { getInitials } from "@/lib/helpers/user";
 
 function ProfileHeaderSkeleton() {
   return (
@@ -76,7 +67,7 @@ export function ProfileHeader() {
   const deleteAvatar = useDeleteAvatar();
 
   const displayAvatar = previewUrl ?? (user?.image ? proxiedAvatarUrl(user.image) : undefined);
-  const initials = getInitials(user?.name ?? "U");
+  const initials = getInitials(user?.name || user?.email || "User");
   const memberSince = user?.createdAt ? format(new Date(user.createdAt), "MMMM yyyy") : null;
 
   const isSaving = uploadAvatar.isPending;
@@ -231,7 +222,7 @@ export function ProfileHeader() {
 
           <div className="flex flex-1 flex-col gap-1 pb-1">
             <div className="flex flex-wrap items-center gap-2">
-              <h2 className="text-lg font-semibold leading-none">{user?.name || "Your Name"}</h2>
+              <h2 className="text-lg font-semibold leading-none">{user?.name || initials}</h2>
               {user?.emailVerified ? (
                 <Badge variant="secondary" className="gap-1 text-xs text-emerald-600 dark:text-emerald-400">
                   <ShieldCheckIcon className="size-3" />

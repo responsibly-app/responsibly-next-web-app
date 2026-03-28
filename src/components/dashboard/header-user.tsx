@@ -22,6 +22,7 @@ import {
   SparklesIcon,
 } from "lucide-react";
 import Link from "next/link";
+import { getInitials } from "@/lib/helpers/user";
 
 export interface NavUserType {
   name: string;
@@ -38,12 +39,8 @@ export function HeaderUserDropdown({
 }) {
   const signOut = useSignOut();
 
-  const userInitials = user.name
-    ?.trim()
-    .split(/\s+/)
-    .map((word) => word[0])
-    .join("")
-    .toUpperCase();
+  const userInitials = getInitials(user?.name ? user?.name : user?.email || "User");
+
 
   return (
     <DropdownMenu>
