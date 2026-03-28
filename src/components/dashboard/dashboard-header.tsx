@@ -55,7 +55,7 @@ export function DasboardHeader() {
               Home
             </Link>
           </Button>
-          <ThemeToggle />
+          {/* <ThemeToggle /> */}
           <HeaderUserDropdown user={user} isPending={isPending} />
         </div>
       </div>

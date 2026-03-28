@@ -13,13 +13,15 @@ import {
 import { Spinner } from "@/components/ui/spinner";
 import { useSignOut } from "@/lib/auth/use-auth";
 import { proxiedAvatarUrl } from "@/lib/helpers/image";
+import { ThemeSwitch } from "@/components/theme-toggle";
 import {
-  BadgeCheckIcon,
   BellIcon,
+  CircleUserRoundIcon,
   CreditCardIcon,
   LogOutIcon,
   SparklesIcon,
 } from "lucide-react";
+import Link from "next/link";
 
 export interface NavUserType {
   name: string;
@@ -64,7 +66,7 @@ export function HeaderUserDropdown({
       </DropdownMenuTrigger>
 
       <DropdownMenuContent
-        className="w-56 bg-popover/70 backdrop-blur"
+        className="w-70 bg-popover/70 backdrop-blur"
         side="bottom"
         align="end"
         sideOffset={10}
@@ -102,9 +104,11 @@ export function HeaderUserDropdown({
         <DropdownMenuSeparator />
 
         <DropdownMenuGroup>
-          <DropdownMenuItem>
-            <BadgeCheckIcon className="mr-2 h-4 w-4" />
-            Account
+          <DropdownMenuItem asChild>
+            <Link href="/dashboard/account">
+              <CircleUserRoundIcon className="mr-2 h-4 w-4" />
+              Account
+            </Link>
           </DropdownMenuItem>
           <DropdownMenuItem>
             <CreditCardIcon className="mr-2 h-4 w-4" />
@@ -115,6 +119,10 @@ export function HeaderUserDropdown({
             Notifications
           </DropdownMenuItem>
         </DropdownMenuGroup>
+
+        <DropdownMenuSeparator />
+
+        <ThemeSwitch />
 
         <DropdownMenuSeparator />
 
