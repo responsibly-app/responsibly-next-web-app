@@ -368,7 +368,7 @@ export function useRevokeSession() {
   });
 }
 
-/** Permanently delete the current user account (sends verification email) */
+/** Permanently delete the current user account (or sends verification email instead if configuered) */
 export function useDeleteUser() {
   return useMutation({
     mutationFn: async () => {

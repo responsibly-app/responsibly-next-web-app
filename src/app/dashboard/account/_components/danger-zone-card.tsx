@@ -1,19 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { AlertTriangleIcon, MailIcon, Trash2Icon } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { AlertTriangleIcon, Trash2Icon } from "lucide-react";
 import { toast } from "sonner";
 
-import {
-  AlertDialog,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -22,28 +13,45 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Spinner } from "@/components/ui/spinner";
 import { useDeleteUser } from "@/lib/auth/use-auth";
+import { routes } from "@/lib/constants/routes";
+
+import { SendConfirmationDialog, TypeToConfirmDialog } from "./delete-account-dialogs";
+
+// Set to true when `sendDeleteAccountVerification` is enabled in auth.ts
+const REQUIRES_EMAIL_CONFIRMATION = false;
 
 export function DangerZoneCard() {
-  const [open, setOpen] = useState(false);
+  const router = useRouter();
+  const [typeOpen, setTypeOpen] = useState(false);
+  const [sendOpen, setSendOpen] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
   const deleteUser = useDeleteUser();
 
-  function handleOpenChange(value: boolean) {
-    setOpen(value);
-    if (!value) setEmailSent(false);
+  function handleTypeConfirm() {
+    deleteUser.mutate(undefined, {
+      onSuccess: () => {
+        setTypeOpen(false);
+        router.replace(routes.auth.goodbye());
+      },
+      onError: (err: { message?: string }) => {
+        toast.error(err?.message ?? "Failed to delete account.");
+      },
+    });
   }
 
   function handleSendVerification() {
     deleteUser.mutate(undefined, {
-      onSuccess: () => {
-        setEmailSent(true);
-      },
+      onSuccess: () => setEmailSent(true),
       onError: (err: { message?: string }) => {
         toast.error(err?.message ?? "Failed to send verification email.");
       },
     });
+  }
+
+  function handleSendOpenChange(value: boolean) {
+    setSendOpen(value);
+    if (!value) setEmailSent(false);
   }
 
   return (
@@ -67,68 +75,31 @@ export function DangerZoneCard() {
               Permanently delete your account and all associated data. This cannot be undone.
             </p>
           </div>
-          <AlertDialog open={open} onOpenChange={handleOpenChange}>
-            <AlertDialogTrigger asChild>
-              <Button variant="destructive" size="sm" className="mt-3 shrink-0 sm:mt-0">
-                <Trash2Icon className="mr-1.5 size-3.5" data-icon="inline-start" />
-                Delete account
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              {emailSent ? (
-                <>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle className="flex items-center gap-2">
-                      <MailIcon className="size-5 text-muted-foreground" />
-                      Check your email
-                    </AlertDialogTitle>
-                    <AlertDialogDescription>
-                      We sent a confirmation link to your email address. Click the link to
-                      permanently delete your account. The link expires in 1 hour.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Close</AlertDialogCancel>
-                  </AlertDialogFooter>
-                </>
-              ) : (
-                <>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle className="flex items-center gap-2">
-                      <AlertTriangleIcon className="size-5 text-destructive" />
-                      Delete your account?
-                    </AlertDialogTitle>
-                    <AlertDialogDescription>
-                      This will permanently delete your account and all associated data. This
-                      action <strong>cannot be undone</strong>.
-                      <br />
-                      <br />
-                      We&apos;ll send a confirmation link to your email address. You must click
-                      it to finalize the deletion.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <Button
-                      variant="destructive"
-                      onClick={handleSendVerification}
-                      disabled={deleteUser.isPending}
-                      className="focus-visible:ring-destructive/20"
-                    >
-                      {deleteUser.isPending ? (
-                        <Spinner className="mr-1.5 size-3.5" data-icon="inline-start" />
-                      ) : (
-                        <MailIcon className="mr-1.5 size-3.5" data-icon="inline-start" />
-                      )}
-                      Send confirmation email
-                    </Button>
-                  </AlertDialogFooter>
-                </>
-              )}
-            </AlertDialogContent>
-          </AlertDialog>
+          <Button
+            variant="destructive"
+            size="sm"
+            className="mt-3 shrink-0 sm:mt-0"
+            onClick={() => REQUIRES_EMAIL_CONFIRMATION ? setSendOpen(true) : setTypeOpen(true)}
+          >
+            <Trash2Icon className="mr-1.5 size-3.5" data-icon="inline-start" />
+            Delete account
+          </Button>
         </div>
       </CardContent>
+
+      <TypeToConfirmDialog
+        open={typeOpen}
+        onOpenChange={setTypeOpen}
+        onConfirm={handleTypeConfirm}
+        isPending={deleteUser.isPending}
+      />
+      <SendConfirmationDialog
+        open={sendOpen}
+        onOpenChange={handleSendOpenChange}
+        isPending={deleteUser.isPending}
+        onSend={handleSendVerification}
+        emailSent={emailSent}
+      />
     </Card>
   );
 }

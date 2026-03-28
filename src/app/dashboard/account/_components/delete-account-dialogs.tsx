@@ -1,0 +1,159 @@
+"use client";
+
+import { useState } from "react";
+import { AlertTriangleIcon, MailIcon } from "lucide-react";
+
+import {
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Spinner } from "@/components/ui/spinner";
+
+interface TypeToConfirmDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onConfirm: () => void;
+  isPending?: boolean;
+}
+
+export function TypeToConfirmDialog({
+  open,
+  onOpenChange,
+  onConfirm,
+  isPending = false,
+}: TypeToConfirmDialogProps) {
+  const [value, setValue] = useState("");
+
+  function handleOpenChange(next: boolean) {
+    if (isPending) return;
+    onOpenChange(next);
+    if (!next) setValue("");
+  }
+
+  function handleConfirm() {
+    onConfirm();
+    setValue("");
+  }
+
+  return (
+    <AlertDialog open={open} onOpenChange={handleOpenChange}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle className="flex items-center gap-2">
+            <AlertTriangleIcon className="size-5 text-destructive" />
+            Delete your account?
+          </AlertDialogTitle>
+          <AlertDialogDescription>
+            This will permanently delete your account and all associated data.
+            This action <strong>cannot be undone</strong>.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="confirm-delete" className="text-sm">
+            Type <strong>delete</strong> to confirm
+          </Label>
+          <Input
+            id="confirm-delete"
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+            placeholder="delete"
+            autoComplete="off"
+            disabled={isPending}
+          />
+        </div>
+        <AlertDialogFooter>
+          <AlertDialogCancel disabled={isPending}>Cancel</AlertDialogCancel>
+          <Button
+            variant="destructive"
+            disabled={value !== "delete" || isPending}
+            onClick={handleConfirm}
+            className="focus-visible:ring-destructive/20"
+          >
+            {isPending ? (
+              <Spinner className="mr-1.5 size-3.5" data-icon="inline-start" />
+            ) : null}
+            Continue
+          </Button>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+}
+
+interface SendConfirmationDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  isPending: boolean;
+  onSend: () => void;
+  emailSent: boolean;
+}
+
+export function SendConfirmationDialog({
+  open,
+  onOpenChange,
+  isPending,
+  onSend,
+  emailSent,
+}: SendConfirmationDialogProps) {
+  return (
+    <AlertDialog open={open} onOpenChange={onOpenChange}>
+      <AlertDialogContent>
+        {emailSent ? (
+          <>
+            <AlertDialogHeader>
+              <AlertDialogTitle className="flex items-center gap-2">
+                <MailIcon className="size-5 text-muted-foreground" />
+                Check your email
+              </AlertDialogTitle>
+              <AlertDialogDescription>
+                We sent a confirmation link to your email address. Click the
+                link to permanently delete your account. The link expires in 1
+                hour.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Close</AlertDialogCancel>
+            </AlertDialogFooter>
+          </>
+        ) : (
+          <>
+            <AlertDialogHeader>
+              <AlertDialogTitle className="flex items-center gap-2">
+                <MailIcon className="size-5 text-muted-foreground" />
+                Send confirmation email
+              </AlertDialogTitle>
+              <AlertDialogDescription>
+                We&apos;ll send a confirmation link to your email address. You
+                must click it to finalize the deletion.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={isPending}>Cancel</AlertDialogCancel>
+              <Button
+                variant="destructive"
+                onClick={onSend}
+                disabled={isPending}
+                className="focus-visible:ring-destructive/20"
+              >
+                {isPending ? (
+                  <Spinner className="mr-1.5 size-3.5" data-icon="inline-start" />
+                ) : (
+                  <MailIcon className="mr-1.5 size-3.5" data-icon="inline-start" />
+                )}
+                Send confirmation email
+              </Button>
+            </AlertDialogFooter>
+          </>
+        )}
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+}

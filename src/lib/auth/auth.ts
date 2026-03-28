@@ -29,7 +29,6 @@ const emailOTPPlugin = emailOTP({
   },
 })
 
-
 export const auth = betterAuth({
   appName: ENVConfig.app_name,
   baseURL: baseURL,
@@ -41,11 +40,11 @@ export const auth = betterAuth({
   user: {
     deleteUser: {
       enabled: true,
-      sendDeleteAccountVerification: async ({ user, token }) => {
-        // await sendDeleteAccountEmail({ userEmail: user.email, deletionUrl: url });
-        const confirmationPageUrl = `${baseURL}/auth/delete-account?token=${token}`;
-        await sendDeleteAccountConfirmPageEmail({ userEmail: user.email, confirmationPageUrl });
-      },
+      // sendDeleteAccountVerification: async ({ user, token }) => {
+      //   // await sendDeleteAccountEmail({ userEmail: user.email, deletionUrl: url });
+      //   const confirmationPageUrl = `${baseURL}/auth/delete-account?token=${token}`;
+      //   await sendDeleteAccountConfirmPageEmail({ userEmail: user.email, confirmationPageUrl });
+      // },
     }
   },
   emailAndPassword: {
