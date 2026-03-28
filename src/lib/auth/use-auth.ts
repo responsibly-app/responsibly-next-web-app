@@ -368,6 +368,24 @@ export function useRevokeSession() {
   });
 }
 
+/** Send a magic link sign-in email */
+export function useSendMagicLink() {
+  return useMutation({
+    mutationFn: async ({ email, callbackURL }: { email: string; callbackURL?: string }) => {
+      const result = await authClient.signIn.magicLink({
+        email,
+        callbackURL: callbackURL ?? routes.dashboard.root(),
+      });
+
+      if (result.error) {
+        throw result.error;
+      }
+
+      return result;
+    },
+  });
+}
+
 /** Permanently delete the current user account (or sends verification email instead if configuered) */
 export function useDeleteUser() {
   return useMutation({

@@ -12,10 +12,10 @@ import {
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import googleLogo from "@/images/icons/google.svg";
-import { useEmailSignIn, useSocialLogin } from "@/lib/auth/use-auth";
+import { useEmailSignIn, useSendMagicLink, useSocialLogin } from "@/lib/auth/use-auth";
 import { routes } from "@/routes";
 import { cn } from "@/lib/utils";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, MailIcon } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -34,6 +34,7 @@ export function LoginForm() {
   const callbackUrl = searchParams.get("callbackUrl") ?? undefined;
 
   const emailSignIn = useEmailSignIn();
+  const sendMagicLink = useSendMagicLink();
   const googleLogin = useSocialLogin({ provider: "google", callbackURL: callbackUrl });
 
   const [email, setEmail] = useState("");
@@ -89,8 +90,20 @@ export function LoginForm() {
     });
   }
 
+  const [magicLinkSent, setMagicLinkSent] = useState(false);
+
   const isSubmitting = emailSignIn.isPending;
   const isGoogleLoading = googleLogin.isPending;
+  const isMagicLinkLoading = sendMagicLink.isPending;
+
+  const isEmailValid = z.email().safeParse(email).success;
+
+  function onSendMagicLink() {
+    sendMagicLink.mutate({ email, callbackURL: callbackUrl }, {
+      onSuccess: () => setMagicLinkSent(true),
+      onError: (err: any) => setFormError(err?.message ?? "Failed to send magic link."),
+    });
+  }
 
   return (
     <AuthContainer>
@@ -178,6 +191,24 @@ export function LoginForm() {
                 >
                   {isSubmitting && <Spinner />}
                   {isSubmitting ? "Logging in..." : "Login"}
+                </Button>
+
+                <Button
+                  variant="outline"
+                  type="button"
+                  onClick={onSendMagicLink}
+                  disabled={!isEmailValid || isMagicLinkLoading || isSubmitting || isGoogleLoading}
+                >
+                  {isMagicLinkLoading ? (
+                    <Spinner />
+                  ) : (
+                    <MailIcon className="h-4 w-4" />
+                  )}
+                  {magicLinkSent
+                    ? "Magic link sent! Check your email"
+                    : isMagicLinkLoading
+                      ? "Sending..."
+                      : "Send magic link"}
                 </Button>
 
                 <Button
