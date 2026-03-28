@@ -11,17 +11,17 @@ import {
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
-import googleLogo from "@/images/icons/google.svg";
-import { useEmailSignIn, useSendMagicLink, useSocialLogin } from "@/lib/auth/use-auth";
+import { useEmailSignIn } from "@/lib/auth/use-auth";
 import { routes } from "@/routes";
 import { cn } from "@/lib/utils";
-import { Eye, EyeOff, MailIcon } from "lucide-react";
-import Image from "next/image";
+import { Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { z } from "zod";
 import { authClassNames, AuthContainer } from "./auth-layout";
+import { MagicLinkButton } from "./magic-link-button";
+import { GoogleLoginButton } from "./google-login-button";
 
 const loginSchema = z.object({
   email: z.email("Invalid email address"),
@@ -34,8 +34,6 @@ export function LoginForm() {
   const callbackUrl = searchParams.get("callbackUrl") ?? undefined;
 
   const emailSignIn = useEmailSignIn();
-  const sendMagicLink = useSendMagicLink();
-  const googleLogin = useSocialLogin({ provider: "google", callbackURL: callbackUrl });
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -82,28 +80,7 @@ export function LoginForm() {
     });
   }
 
-  function onGoogleLogin() {
-    googleLogin.mutate(undefined, {
-      onError: () => {
-        setFormError("Google login failed. Please try again.");
-      },
-    });
-  }
-
-  const [magicLinkSent, setMagicLinkSent] = useState(false);
-
   const isSubmitting = emailSignIn.isPending;
-  const isGoogleLoading = googleLogin.isPending;
-  const isMagicLinkLoading = sendMagicLink.isPending;
-
-  const isEmailValid = z.email().safeParse(email).success;
-
-  function onSendMagicLink() {
-    sendMagicLink.mutate({ email, callbackURL: callbackUrl }, {
-      onSuccess: () => setMagicLinkSent(true),
-      onError: (err: any) => setFormError(err?.message ?? "Failed to send magic link."),
-    });
-  }
 
   return (
     <AuthContainer>
@@ -182,53 +159,15 @@ export function LoginForm() {
 
                 <Button
                   type="submit"
-                  disabled={
-                    !email.trim() ||
-                    !password.trim() ||
-                    isSubmitting ||
-                    isGoogleLoading
-                  }
+                  disabled={!email.trim() || !password.trim() || isSubmitting}
                 >
                   {isSubmitting && <Spinner />}
                   {isSubmitting ? "Logging in..." : "Login"}
                 </Button>
 
-                <Button
-                  variant="outline"
-                  type="button"
-                  onClick={onSendMagicLink}
-                  disabled={!isEmailValid || isMagicLinkLoading || isSubmitting || isGoogleLoading}
-                >
-                  {isMagicLinkLoading ? (
-                    <Spinner />
-                  ) : (
-                    <MailIcon className="h-4 w-4" />
-                  )}
-                  {magicLinkSent
-                    ? "Magic link sent! Check your email"
-                    : isMagicLinkLoading
-                      ? "Sending..."
-                      : "Send magic link"}
-                </Button>
+                <MagicLinkButton />
 
-                <Button
-                  variant="outline"
-                  type="button"
-                  onClick={onGoogleLogin}
-                  disabled={isSubmitting || isGoogleLoading}
-                >
-                  {isGoogleLoading && <Spinner />}
-                  <Image
-                    src={googleLogo}
-                    alt="Google"
-                    width={15}
-                    height={15}
-                    priority
-                  />
-                  {isGoogleLoading
-                    ? "Redirecting to Google..."
-                    : "Login with Google"}
-                </Button>
+                <GoogleLoginButton onError={setFormError} />
 
                 <FieldDescription className="text-center">
                   Don&apos;t have an account?{" "}

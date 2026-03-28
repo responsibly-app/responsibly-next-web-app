@@ -11,15 +11,14 @@ import {
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
-import googleLogo from "@/images/icons/google.svg";
 
-import { useEmailSignUp, useSocialLogin } from "@/lib/auth/use-auth";
+import { useEmailSignUp } from "@/lib/auth/use-auth";
 
 import { routes } from "@/routes";
 import { cn } from "@/lib/utils";
 import { Eye, EyeOff } from "lucide-react";
 
-import Image from "next/image";
+
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -27,6 +26,8 @@ import { SubmitEvent, useState } from "react";
 import { z } from "zod";
 
 import { authClassNames, AuthContainer } from "./auth-layout";
+import { MagicLinkButton } from "./magic-link-button";
+import { GoogleLoginButton } from "./google-login-button";
 
 const signUpSchema = z
   .object({
@@ -56,7 +57,6 @@ export function SignUpForm() {
   const router = useRouter();
 
   const emailSignUp = useEmailSignUp();
-  const googleLogin = useSocialLogin({ provider: "google" });
 
   const [formError, setFormError] = useState<string | null>(null);
 
@@ -120,15 +120,6 @@ export function SignUpForm() {
     );
   }
 
-  async function onGoogleLogin() {
-    googleLogin.mutate(undefined, {
-      onError: () => {
-        setFormError("Google login failed. Please try again.");
-      },
-    });
-  }
-
-  const isGoogleLoading = googleLogin.isPending;
   const isSubmitting = emailSignUp.isPending;
 
   return (
@@ -163,6 +154,18 @@ export function SignUpForm() {
                   name="email"
                   placeholder="email"
                   autoComplete="email"
+                  onChange={() =>
+                    setFieldErrors((prev) => ({ ...prev, email: undefined }))
+                  }
+                  onBlur={(e) => {
+                    const result = z.email().safeParse(e.target.value);
+                    if (!result.success && e.target.value.length > 0) {
+                      setFieldErrors((prev) => ({
+                        ...prev,
+                        email: "Invalid email address",
+                      }));
+                    }
+                  }}
                 />
 
                 {fieldErrors.email && (
@@ -248,23 +251,9 @@ export function SignUpForm() {
                   Sign up
                 </Button>
 
-                {/* Google login */}
-                <Button
-                  variant="outline"
-                  type="button"
-                  onClick={onGoogleLogin}
-                  disabled={isGoogleLoading}
-                >
-                  {isGoogleLoading && <Spinner />}
-                  <Image
-                    src={googleLogo}
-                    alt="Google"
-                    width={15}
-                    height={15}
-                    priority
-                  />
-                  Continue with Google
-                </Button>
+                <MagicLinkButton />
+
+                <GoogleLoginButton onError={setFormError} />
 
                 <FieldDescription className="text-center">
                   Already have an account?{" "}
