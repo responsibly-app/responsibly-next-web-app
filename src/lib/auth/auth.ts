@@ -7,7 +7,8 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { nextCookies } from "better-auth/next-js";
 import { jwt, openAPI, bearer, emailOTP } from "better-auth/plugins";
 import ENVConfig from "@/config";
-import { sendDeleteAccountEmail } from "@/email/email-templates/delete-account";
+// import { sendDeleteAccountEmail } from "@/email/email-templates/delete-account";
+import { sendDeleteAccountConfirmPageEmail } from "@/email/email-templates/delete-account-confirm-page";
 import { sendPasswordResetEmail } from "@/email/email-templates/password-reset";
 import { sendEmailVerification } from "@/email/email-templates/email-verification";
 import { sendEmailVerificationOTP } from "@/email/email-templates/email-verification-otp";
@@ -40,8 +41,10 @@ export const auth = betterAuth({
   user: {
     deleteUser: {
       enabled: true,
-      sendDeleteAccountVerification: async ({ user, url }) => {
-        await sendDeleteAccountEmail({ userEmail: user.email, deletionUrl: url });
+      sendDeleteAccountVerification: async ({ user, token }) => {
+        // await sendDeleteAccountEmail({ userEmail: user.email, deletionUrl: url });
+        const confirmationPageUrl = `${baseURL}/auth/delete-account?token=${token}`;
+        await sendDeleteAccountConfirmPageEmail({ userEmail: user.email, confirmationPageUrl });
       },
     }
   },

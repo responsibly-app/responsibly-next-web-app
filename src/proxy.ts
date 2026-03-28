@@ -16,8 +16,10 @@ export default async function proxy(req: NextRequest) {
     routes.auth.pendingEmailVerification(),
   );
   const isOnGoodbye = req.nextUrl.pathname.startsWith(routes.auth.goodbye());
+  const isOnDeleteAccount = req.nextUrl.pathname.startsWith(routes.auth.deleteAccount());
 
   const isOnRestrictedForAuthenticatedUserPages = isOnSignin || isOnGoodbye
+  const isOnAuthRequiredPages = isOnDashboard || isOnDeleteAccount
 
   const isRoot = req.nextUrl.pathname === "/";
 
@@ -29,7 +31,7 @@ export default async function proxy(req: NextRequest) {
     }
   }
 
-  if (isOnDashboard) {
+  if (isOnAuthRequiredPages) {
     if (!isLoggedIn) {
       const signInUrl = new URL(routes.auth.signIn(), req.nextUrl);
       signInUrl.searchParams.set(

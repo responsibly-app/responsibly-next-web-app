@@ -368,10 +368,8 @@ export function useRevokeSession() {
   });
 }
 
-/** Permanently delete the current user account */
+/** Permanently delete the current user account (sends verification email) */
 export function useDeleteUser() {
-  const router = useRouter();
-
   return useMutation({
     mutationFn: async () => {
       const result = await authClient.deleteUser({ callbackURL: routes.auth.goodbye() });
@@ -381,6 +379,26 @@ export function useDeleteUser() {
       }
 
       return result;
+    },
+  });
+}
+
+/** Confirm and finalize account deletion using the token from the email */
+export function useDeleteUserWithToken() {
+  const router = useRouter();
+
+  return useMutation({
+    mutationFn: async (token: string) => {
+      const result = await authClient.deleteUser({ token });
+
+      if (result?.error) {
+        throw result.error;
+      }
+
+      return result;
+    },
+    onSuccess: () => {
+      router.push(routes.auth.goodbye());
     },
   });
 }
