@@ -37,7 +37,7 @@ export function PasswordResetEmailTemplate({
   return (
     <Html lang="en">
       <Head />
-      <Preview>Reset your password</Preview>
+      <Preview>Create or reset your password</Preview>
 
       <Tailwind>
         <Body className="bg-white font-sans">
@@ -45,11 +45,11 @@ export function PasswordResetEmailTemplate({
             <Text className="text-2xl font-bold text-black">{companyName}</Text>
 
             <Heading className="mt-8 text-2xl font-bold text-gray-900">
-              Reset your password
+              Create or reset your password
             </Heading>
 
             <Text className="text-base leading-6 text-gray-700">
-              We received a request to reset your password. Click the button
+              We received a request to create or reset your password. Click the button
               below to choose a new password.
             </Text>
 
@@ -57,7 +57,7 @@ export function PasswordResetEmailTemplate({
               href={resetUrl}
               className="mt-4 box-border inline-block rounded-md bg-black px-6 py-3 font-medium text-white"
             >
-              Reset Password
+              Set Password
             </Button>
 
             <Text className="mt-4 text-sm text-gray-500">
@@ -104,7 +104,7 @@ export async function sendPasswordResetEmail(
 ) {
   await sendEmail({
     to: userEmail,
-    subject: "Reset your password",
+    subject: "Create or reset your password",
     html: (await render(
       PasswordResetEmailTemplate({ resetUrl: resetUrl, expiresIn, companyName })
     )) as string,
