@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { AlertTriangleIcon, MailIcon } from "lucide-react";
+import { AlertTriangleIcon, LogInIcon, MailIcon, ShieldAlertIcon } from "lucide-react";
 
 import {
   AlertDialog,
@@ -18,6 +18,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
 import { maskEmail } from "@/lib/helpers/user";
+import { useSignOut } from "@/lib/auth/use-auth";
 
 interface TypeToConfirmDialogProps {
   open: boolean;
@@ -25,6 +26,7 @@ interface TypeToConfirmDialogProps {
   onConfirm: () => void;
   isPending?: boolean;
   email?: string;
+  error?: { code?: string; message?: string } | null;
 }
 
 export function TypeToConfirmDialog({
@@ -33,11 +35,14 @@ export function TypeToConfirmDialog({
   onConfirm,
   isPending = false,
   email,
+  error,
 }: TypeToConfirmDialogProps) {
   const [value, setValue] = useState("");
   const [understood, setUnderstood] = useState(false);
+  const signOut = useSignOut();
 
   const maskedEmail = email ? maskEmail(email) : undefined;
+  const isSessionExpired = error?.code === "SESSION_EXPIRED";
 
   function handleOpenChange(next: boolean) {
     if (isPending) return;
@@ -69,13 +74,50 @@ export function TypeToConfirmDialog({
             This action <strong>cannot be undone</strong>.
           </AlertDialogDescription>
         </AlertDialogHeader>
+
+        {error && (
+          <div className={`flex flex-col gap-2 rounded-xl border p-4 ${isSessionExpired ? "border-amber-200 bg-amber-50 dark:border-amber-800/50 dark:bg-amber-950/30" : "border-destructive/30 bg-destructive/5"}`}>
+            <div className="flex items-center gap-2">
+              {isSessionExpired ? (
+                <ShieldAlertIcon className="size-4 shrink-0 text-amber-600 dark:text-amber-400" />
+              ) : (
+                <AlertTriangleIcon className="size-4 shrink-0 text-destructive" />
+              )}
+              <p className={`text-sm font-medium ${isSessionExpired ? "text-amber-800 dark:text-amber-300" : "text-destructive"}`}>
+                {isSessionExpired ? "Fresh sign-in required" : "Something went wrong"}
+              </p>
+            </div>
+            <p className={`text-sm ${isSessionExpired ? "text-amber-700 dark:text-amber-400" : "text-destructive/80"}`}>
+              {isSessionExpired
+                ? "For your security, deleting your account requires a recent sign-in. Please sign out and sign back in to continue."
+                : (error.message ?? "An unexpected error occurred. Please try again.")}
+            </p>
+            {isSessionExpired && (
+              <Button
+                size="sm"
+                variant="outline"
+                className="mt-1 self-start border-amber-300 text-amber-800 hover:bg-amber-100 dark:border-amber-700 dark:text-amber-300 dark:hover:bg-amber-900/40"
+                onClick={() => signOut.mutate()}
+                disabled={signOut.isPending}
+              >
+                {signOut.isPending ? (
+                  <Spinner className="mr-1.5 size-3.5" data-icon="inline-start" />
+                ) : (
+                  <LogInIcon className="mr-1.5 size-3.5" data-icon="inline-start" />
+                )}
+                Sign out & sign back in
+              </Button>
+            )}
+          </div>
+        )}
+
         <div className="flex flex-col gap-3">
           <div className="flex items-start gap-2.5">
             <Checkbox
               id="understood"
               checked={understood}
               onCheckedChange={(checked) => setUnderstood(!!checked)}
-              disabled={isPending}
+              disabled={isPending || !!isSessionExpired}
               className="mt-0.5"
             />
             <Label htmlFor="understood" className="text-muted-foreground text-sm font-normal leading-snug">
@@ -93,7 +135,7 @@ export function TypeToConfirmDialog({
               onChange={(e) => setValue(e.target.value)}
               placeholder={maskedEmail ?? "delete"}
               autoComplete="off"
-              disabled={isPending}
+              disabled={isPending || !!isSessionExpired}
             />
           </div>
         </div>
@@ -101,7 +143,7 @@ export function TypeToConfirmDialog({
           <AlertDialogCancel disabled={isPending}>Cancel</AlertDialogCancel>
           <Button
             variant="destructive"
-            disabled={!understood || !isConfirmed || isPending}
+            disabled={!understood || !isConfirmed || isPending || !!isSessionExpired}
             onClick={handleConfirm}
             className="focus-visible:ring-destructive/20"
           >

@@ -84,6 +84,7 @@ export const auth = betterAuth({
     sendOnSignIn: false,
   },
   session: {
+    freshAge: 60 * 10, // the session is fresh if created within the last freshAge seconds (Set to 0 to disable freshness check)
     // expiresIn: 60 * 60 * 24 * 7, // 7 days
     // updateAge: 60 * 60 * 24, // refresh every 24h
     expiresIn: 60 * 60 * 24 * 2, // 2 days

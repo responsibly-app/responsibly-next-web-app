@@ -3,8 +3,6 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { AlertTriangleIcon, Trash2Icon } from "lucide-react";
-import { toast } from "sonner";
-
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -28,16 +26,18 @@ export function DangerZoneCard() {
   const [typeOpen, setTypeOpen] = useState(false);
   const [sendOpen, setSendOpen] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
+  const [deleteError, setDeleteError] = useState<{ code?: string; message?: string } | null>(null);
   const deleteUser = useDeleteUser();
 
   function handleTypeConfirm() {
+    setDeleteError(null);
     deleteUser.mutate(undefined, {
       onSuccess: () => {
         setTypeOpen(false);
         router.replace(routes.auth.goodbye());
       },
-      onError: (err: { message?: string }) => {
-        toast.error(err?.message ?? "Failed to delete account.");
+      onError: (err: { code?: string; message?: string }) => {
+        setDeleteError(err);
       },
     });
   }
@@ -45,8 +45,8 @@ export function DangerZoneCard() {
   function handleSendVerification() {
     deleteUser.mutate(undefined, {
       onSuccess: () => setEmailSent(true),
-      onError: (err: { message?: string }) => {
-        toast.error(err?.message ?? "Failed to send verification email.");
+      onError: () => {
+        setEmailSent(false);
       },
     });
   }
@@ -54,6 +54,11 @@ export function DangerZoneCard() {
   function handleSendOpenChange(value: boolean) {
     setSendOpen(value);
     if (!value) setEmailSent(false);
+  }
+
+  function handleTypeOpenChange(value: boolean) {
+    setTypeOpen(value);
+    if (!value) setDeleteError(null);
   }
 
   return (
@@ -91,10 +96,11 @@ export function DangerZoneCard() {
 
       <TypeToConfirmDialog
         open={typeOpen}
-        onOpenChange={setTypeOpen}
+        onOpenChange={handleTypeOpenChange}
         onConfirm={handleTypeConfirm}
         isPending={deleteUser.isPending}
         email={session?.user?.email}
+        error={deleteError}
       />
       <SendConfirmationDialog
         open={sendOpen}
