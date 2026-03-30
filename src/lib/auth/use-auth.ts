@@ -386,6 +386,31 @@ export function useSendMagicLink() {
   });
 }
 
+/** List linked accounts for the current user */
+export function useListAccounts() {
+  const { data: session } = authClient.useSession();
+  const userId = session?.user?.id;
+
+  return useQuery({
+    queryKey: ["accounts", userId],
+    queryFn: async () => {
+      const result = await authClient.listAccounts();
+      if (result.error) throw result.error;
+      return (result.data ?? []) as Array<{ providerId: string }>;
+    },
+    enabled: !!userId,
+  });
+}
+
+/** Returns whether the current user has a credential (email/password) account */
+export function useIsCredentialUser() {
+  const { data: accounts, isLoading } = useListAccounts();
+  return {
+    isCredentialUser: accounts?.some((a) => a.providerId === "credential") ?? false,
+    isLoading,
+  };
+}
+
 /** Permanently delete the current user account (or sends verification email instead if configuered) */
 export function useDeleteUser() {
   return useMutation({

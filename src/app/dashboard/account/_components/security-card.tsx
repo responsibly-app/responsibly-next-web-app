@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { KeyRoundIcon } from "lucide-react";
 import { toast } from "sonner";
 
@@ -15,7 +14,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
 import { authClient } from "@/lib/auth/auth-client";
-import { useRequestPasswordReset } from "@/lib/auth/use-auth";
+import { useIsCredentialUser, useRequestPasswordReset } from "@/lib/auth/use-auth";
 
 function SecurityCardSkeleton() {
   return (
@@ -47,18 +46,7 @@ export function SecurityCard() {
   const { data: session, isPending } = authClient.useSession();
   const user = session?.user;
 
-  const [accounts, setAccounts] = useState<Array<{ providerId: string }>>([]);
-  const [accountsLoading, setAccountsLoading] = useState(true);
-
-  useEffect(() => {
-    if (!user?.id) return;
-    authClient.listAccounts().then((result) => {
-      if (result.data) setAccounts(result.data as Array<{ providerId: string }>);
-      setAccountsLoading(false);
-    });
-  }, [user?.id]);
-
-  const isCredentialUser = accounts.some((a) => a.providerId === "credential");
+  const { isCredentialUser, isLoading: accountsLoading } = useIsCredentialUser();
   const requestPasswordReset = useRequestPasswordReset();
 
   if (isPending || accountsLoading) return <SecurityCardSkeleton />;
