@@ -17,12 +17,14 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
+import { maskEmail } from "@/lib/helpers/user";
 
 interface TypeToConfirmDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onConfirm: () => void;
   isPending?: boolean;
+  email?: string;
 }
 
 export function TypeToConfirmDialog({
@@ -30,9 +32,12 @@ export function TypeToConfirmDialog({
   onOpenChange,
   onConfirm,
   isPending = false,
+  email,
 }: TypeToConfirmDialogProps) {
   const [value, setValue] = useState("");
   const [understood, setUnderstood] = useState(false);
+
+  const maskedEmail = email ? maskEmail(email) : undefined;
 
   function handleOpenChange(next: boolean) {
     if (isPending) return;
@@ -45,9 +50,11 @@ export function TypeToConfirmDialog({
 
   function handleConfirm() {
     onConfirm();
-    setValue("");
-    setUnderstood(false);
+    // setValue("");
+    // setUnderstood(false);
   }
+
+  const isConfirmed = email ? value === email : value === "delete";
 
   return (
     <AlertDialog open={open} onOpenChange={handleOpenChange}>
@@ -78,13 +85,13 @@ export function TypeToConfirmDialog({
           </div>
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="confirm-delete" className="text-sm">
-              Type <strong>delete</strong> to confirm
+              {email ? <>Type your email to confirm</> : <>Type <strong>delete</strong> to confirm</>}
             </Label>
             <Input
               id="confirm-delete"
               value={value}
               onChange={(e) => setValue(e.target.value)}
-              placeholder="delete"
+              placeholder={maskedEmail ?? "delete"}
               autoComplete="off"
               disabled={isPending}
             />
@@ -94,7 +101,7 @@ export function TypeToConfirmDialog({
           <AlertDialogCancel disabled={isPending}>Cancel</AlertDialogCancel>
           <Button
             variant="destructive"
-            disabled={!understood || value !== "delete" || isPending}
+            disabled={!understood || !isConfirmed || isPending}
             onClick={handleConfirm}
             className="focus-visible:ring-destructive/20"
           >

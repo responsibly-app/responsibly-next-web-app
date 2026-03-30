@@ -13,6 +13,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { authClient } from "@/lib/auth/auth-client";
 import { useDeleteUser } from "@/lib/auth/use-auth";
 import { routes } from "@/routes";
 
@@ -23,6 +24,7 @@ const REQUIRES_EMAIL_CONFIRMATION = false;
 
 export function DangerZoneCard() {
   const router = useRouter();
+  const { data: session } = authClient.useSession();
   const [typeOpen, setTypeOpen] = useState(false);
   const [sendOpen, setSendOpen] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
@@ -92,6 +94,7 @@ export function DangerZoneCard() {
         onOpenChange={setTypeOpen}
         onConfirm={handleTypeConfirm}
         isPending={deleteUser.isPending}
+        email={session?.user?.email}
       />
       <SendConfirmationDialog
         open={sendOpen}
