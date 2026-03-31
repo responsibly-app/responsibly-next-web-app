@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
-import { useEmailSignIn } from "@/lib/auth/use-auth";
+import { useEmailSignIn } from "@/lib/auth/hooks";
 import { routes } from "@/routes";
 import { cn } from "@/lib/utils";
 import { Eye, EyeOff } from "lucide-react";

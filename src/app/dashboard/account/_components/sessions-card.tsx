@@ -14,7 +14,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
 import { authClient } from "@/lib/auth/auth-client";
-import { useListSessions, useRevokeSession, useSignOut } from "@/lib/auth/use-auth";
+import { useListSessions, useRevokeSession, useSignOut } from "@/lib/auth/hooks";
 
 function parseUserAgent(ua: string | null): { label: string; isMobile: boolean } {
   if (!ua) return { label: "Unknown device", isMobile: false };

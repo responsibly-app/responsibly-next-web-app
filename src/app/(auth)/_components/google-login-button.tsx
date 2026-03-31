@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import googleLogo from "@/images/icons/google.svg";
-import { useSocialLogin } from "@/lib/auth/use-auth";
+import { useSocialLogin } from "@/lib/auth/hooks";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 

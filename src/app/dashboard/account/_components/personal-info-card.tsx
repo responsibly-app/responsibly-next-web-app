@@ -17,7 +17,7 @@ import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
 import { authClient } from "@/lib/auth/auth-client";
-import { useUpdateUser } from "@/lib/auth/use-auth";
+import { useUpdateUser } from "@/lib/auth/hooks";
 
 function PersonalInfoCardSkeleton() {
   return (

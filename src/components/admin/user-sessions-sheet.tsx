@@ -1,7 +1,8 @@
 "use client";
 
+import { useState } from "react";
 import { format } from "date-fns";
-import { MonitorSmartphone, Trash2 } from "lucide-react";
+import { Eye, EyeOff, MonitorSmartphone, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -23,6 +24,15 @@ export function UserSessionsSheet({ userId, userName, open, onOpenChange }: Prop
   const { data: sessions, isLoading } = useAdminListUserSessions(userId);
   const revokeSession = useAdminRevokeUserSession();
   const revokeAll = useAdminRevokeUserSessions();
+  const [visibleTokens, setVisibleTokens] = useState<Set<string>>(new Set());
+
+  function toggleToken(token: string) {
+    setVisibleTokens((prev) => {
+      const next = new Set(prev);
+      next.has(token) ? next.delete(token) : next.add(token);
+      return next;
+    });
+  }
 
   function handleRevoke(token: string) {
     revokeSession.mutate(token, {
@@ -50,7 +60,7 @@ export function UserSessionsSheet({ userId, userName, open, onOpenChange }: Prop
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
+      <SheetContent className="w-full sm:max-w-2xl overflow-y-auto">
         <SheetHeader>
           <SheetTitle>Sessions</SheetTitle>
           <SheetDescription>
@@ -58,7 +68,7 @@ export function UserSessionsSheet({ userId, userName, open, onOpenChange }: Prop
           </SheetDescription>
         </SheetHeader>
 
-        <div className="mt-6 flex flex-col gap-4">
+        <div className="mt-6 p-2 flex flex-col gap-4">
           {sessions && sessions.length > 0 && (
             <Button
               variant="destructive"
@@ -77,7 +87,7 @@ export function UserSessionsSheet({ userId, userName, open, onOpenChange }: Prop
           )}
 
           {isLoading && (
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-3 p-2">
               {Array.from({ length: 3 }).map((_, i) => (
                 <Skeleton key={i} className="h-20 w-full rounded-lg" />
               ))}
@@ -102,28 +112,50 @@ export function UserSessionsSheet({ userId, userName, open, onOpenChange }: Prop
             return (
               <div
                 key={s.token}
-                className="bg-muted/40 flex items-start justify-between gap-3 rounded-lg border p-3"
+                className="bg-muted/40 flex flex-col gap-3 rounded-lg border p-3 sm:flex-row sm:items-start sm:justify-between"
               >
-                <div className="flex flex-col gap-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <Badge variant="secondary" className="font-mono text-xs">
-                      {String(s.token).slice(0, 12)}…
-                    </Badge>
+                <div className="flex flex-col gap-1.5 min-w-0">
+                  <div className="flex items-start gap-2 flex-wrap">
+                    <span className="text-xs text-muted-foreground font-medium shrink-0 mt-0.5">Token:</span>
+                    <div className="flex items-start gap-1 min-w-0">
+                      <Badge variant="secondary" className="font-mono text-xs break-all">
+                        {visibleTokens.has(s.token) ? String(s.token) : "••••••••••••••••"}
+                      </Badge>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="size-5 shrink-0"
+                        onClick={() => toggleToken(s.token)}
+                      >
+                        {visibleTokens.has(s.token) ? <EyeOff className="size-3" /> : <Eye className="size-3" />}
+                      </Button>
+                    </div>
                   </div>
                   {s.ipAddress && (
-                    <p className="text-muted-foreground text-xs">{s.ipAddress}</p>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-xs text-muted-foreground font-medium">IP:</span>
+                      <p className="text-xs">{s.ipAddress}</p>
+                    </div>
                   )}
                   {s.userAgent && (
-                    <p className="text-muted-foreground truncate text-xs">{s.userAgent}</p>
+                    <div className="flex items-start gap-2">
+                      <span className="text-xs text-muted-foreground font-medium shrink-0">Agent:</span>
+                      <p className="text-xs break-all">{s.userAgent}</p>
+                    </div>
                   )}
-                  <p className="text-muted-foreground text-xs">
-                    Expires {format(new Date(s.expiresAt), "MMM d, yyyy HH:mm")}
-                  </p>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-xs text-muted-foreground font-medium">Created:</span>
+                    <p className="text-xs">{format(new Date(s.createdAt), "MMM d, yyyy HH:mm")}</p>
+                  </div>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-xs text-muted-foreground font-medium">Expires:</span>
+                    <p className="text-xs">{format(new Date(s.expiresAt), "MMM d, yyyy HH:mm")}</p>
+                  </div>
                 </div>
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="text-destructive hover:text-destructive shrink-0"
+                  className="text-destructive hover:text-destructive shrink-0 self-end sm:self-start"
                   onClick={() => handleRevoke(s.token)}
                   disabled={revokeSession.isPending}
                 >

@@ -12,7 +12,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { authClient } from "@/lib/auth/auth-client";
-import { useDeleteUser } from "@/lib/auth/use-auth";
+import { useDeleteUser } from "@/lib/auth/hooks";
 import { routes } from "@/routes";
 
 import { SendConfirmationDialog, TypeToConfirmDialog } from "./delete-account-dialogs";

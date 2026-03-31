@@ -18,7 +18,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
 import { maskEmail } from "@/lib/helpers/user";
-import { useSignOut } from "@/lib/auth/use-auth";
+import { useSignOut } from "@/lib/auth/hooks";
 
 interface TypeToConfirmDialogProps {
   open: boolean;

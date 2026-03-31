@@ -14,7 +14,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
 import { authClient } from "@/lib/auth/auth-client";
-import { useIsCredentialUser, useRequestPasswordReset } from "@/lib/auth/use-auth";
+import { useIsCredentialUser, useRequestPasswordReset } from "@/lib/auth/hooks";
 
 function SecurityCardSkeleton() {
   return (

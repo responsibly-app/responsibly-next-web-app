@@ -12,7 +12,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 
-import { useEmailSignUp } from "@/lib/auth/use-auth";
+import { useEmailSignUp } from "@/lib/auth/hooks";
 
 import { routes } from "@/routes";
 import { cn } from "@/lib/utils";

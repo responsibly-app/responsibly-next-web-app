@@ -13,7 +13,7 @@ import {
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
-import { useSendMagicLink } from "@/lib/auth/use-auth";
+import { useSendMagicLink } from "@/lib/auth/hooks";
 import { MailIcon } from "lucide-react";
 import { useState } from "react";
 import { z } from "zod";

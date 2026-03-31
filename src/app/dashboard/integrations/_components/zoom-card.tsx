@@ -14,7 +14,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { orpcUtils } from "@/lib/orpc/orpc-client";
-import { useLinkSocial, useUnlinkSocial } from "@/lib/auth/use-auth";
+import { useLinkSocial, useUnlinkSocial } from "@/lib/auth/hooks";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { Calendar, Clock, ExternalLink, Link2, Link2Off, Users, Video } from "lucide-react";

@@ -11,7 +11,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Spinner } from "@/components/ui/spinner";
-import { useSignOut } from "@/lib/auth/use-auth";
+import { useSignOut } from "@/lib/auth/hooks";
 import { proxiedAvatarUrl } from "@/lib/helpers/image";
 import { ThemeSwitch } from "@/components/theme-toggle";
 import {
