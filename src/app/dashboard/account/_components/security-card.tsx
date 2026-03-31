@@ -57,7 +57,7 @@ export function SecurityCard() {
       { email: user!.email },
       {
         onSuccess: () => {
-          toast.success("Password set/reset email sent. Please check your inbox.");
+          toast.success("Password reset email sent. Please check your inbox.");
         },
         onError: (err: { message?: string }) => {
           toast.error(err?.message ?? "Failed to send password reset email.");

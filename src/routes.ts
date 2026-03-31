@@ -4,6 +4,10 @@ export const routes = {
     integrations: () => "/dashboard/integrations",
     account: () => "/dashboard/account",
   },
+  admin: {
+    root: () => "/admin",
+    users: () => "/admin/users",
+  },
   authParent: () => "/auth",
   auth: {
     signIn: () => "/auth/sign-in",

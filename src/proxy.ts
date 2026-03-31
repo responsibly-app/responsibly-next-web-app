@@ -7,43 +7,43 @@ export default async function proxy(req: NextRequest) {
     headers: req.headers,
   });
 
-  const isLoggedIn = session;
-  const isOnDashboard = req.nextUrl.pathname.startsWith(routes.dashboard.root());
-  const isOnAuthPages = req.nextUrl.pathname.startsWith(routes.authParent());
-  const isOnSignin = req.nextUrl.pathname.startsWith(routes.auth.signIn());
-  const isOnSignUp = req.nextUrl.pathname.startsWith(routes.auth.signUp());
-  const isOnPendingEmailVerification = req.nextUrl.pathname.startsWith(
-    routes.auth.pendingEmailVerification(),
-  );
-  const isOnGoodbye = req.nextUrl.pathname.startsWith(routes.auth.goodbye());
-  const isOnDeleteAccount = req.nextUrl.pathname.startsWith(routes.auth.deleteAccount());
+  const { pathname } = req.nextUrl;
+  const isLoggedIn = !!session;
 
-  const isOnRestrictedForAuthenticatedUserPages = isOnSignin || isOnGoodbye
-  const isOnAuthRequiredPages = isOnDashboard || isOnDeleteAccount
+  const isRoot = pathname === "/";
+  const isOnDashboard = pathname.startsWith(routes.dashboard.root());
+  const isOnAdmin = pathname.startsWith(routes.admin.root());
+  const isOnSignin = pathname.startsWith(routes.auth.signIn());
+  const isOnGoodbye = pathname.startsWith(routes.auth.goodbye());
+  const isOnDeleteAccount = pathname.startsWith(routes.auth.deleteAccount());
 
-  const isRoot = req.nextUrl.pathname === "/";
+  const isOnAuthRequiredPages = isOnDashboard || isOnDeleteAccount || isOnAdmin;
+  const isOnAuthRestrictedPages = isOnSignin || isOnGoodbye;
 
+  // Root path: redirect to dashboard if logged in, otherwise to sign-in
   if (isRoot) {
-    if (isLoggedIn) {
-      return NextResponse.redirect(new URL(routes.dashboard.root(), req.nextUrl));
-    } else {
-      return NextResponse.redirect(new URL(routes.auth.signIn(), req.nextUrl));
-    }
+    return NextResponse.redirect(
+      new URL(isLoggedIn ? routes.dashboard.root() : routes.auth.signIn(), req.nextUrl),
+    );
   }
 
-  if (isOnAuthRequiredPages) {
-    if (!isLoggedIn) {
-      const signInUrl = new URL(routes.auth.signIn(), req.nextUrl);
-      signInUrl.searchParams.set(
-        "callbackUrl",
-        req.nextUrl.pathname + req.nextUrl.search,
-      );
-      return NextResponse.redirect(signInUrl);
-    }
-  } else if (isOnRestrictedForAuthenticatedUserPages) {
-    if (isLoggedIn)
-      return NextResponse.redirect(new URL(routes.dashboard.root(), req.nextUrl));
+  // Auth-required pages: must be logged in
+  if (isOnAuthRequiredPages && !isLoggedIn) {
+    const signInUrl = new URL(routes.auth.signIn(), req.nextUrl);
+    signInUrl.searchParams.set("callbackUrl", pathname + req.nextUrl.search);
+    return NextResponse.redirect(signInUrl);
   }
+
+  // Admin pages: must have admin role
+  if (isOnAdmin && session?.user.role !== "admin") {
+    return NextResponse.redirect(new URL(routes.dashboard.root(), req.nextUrl));
+  }
+
+  // Pages restricted for authenticated users (e.g. sign-in, goodbye)
+  if (isOnAuthRestrictedPages && isLoggedIn) {
+    return NextResponse.redirect(new URL(routes.dashboard.root(), req.nextUrl));
+  }
+
   return NextResponse.next();
 }
 

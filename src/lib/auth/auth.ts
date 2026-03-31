@@ -5,7 +5,7 @@ import * as betterAuthSchema from "@/lib/db/schema/better-auth-schema";
 import { expo } from "@better-auth/expo";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { nextCookies } from "better-auth/next-js";
-import { jwt, openAPI, bearer, emailOTP, magicLink } from "better-auth/plugins";
+import { admin, jwt, openAPI, bearer, emailOTP, magicLink } from "better-auth/plugins";
 import ENVConfig from "@/config";
 // import { sendDeleteAccountEmail } from "@/email/email-templates/delete-account";
 import { sendDeleteAccountConfirmPageEmail } from "@/email/email-templates/delete-account-confirm-page";
@@ -136,6 +136,7 @@ export const auth = betterAuth({
   },
   plugins: [
     nextCookies(),
+    admin(),
     jwt(),
     bearer(),
     openAPI(),
