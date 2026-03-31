@@ -5,7 +5,7 @@ import * as betterAuthSchema from "@/lib/db/schema/better-auth-schema";
 import { expo } from "@better-auth/expo";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { nextCookies } from "better-auth/next-js";
-import { admin, jwt, openAPI, bearer, emailOTP, magicLink } from "better-auth/plugins";
+import { admin, organization, jwt, openAPI, bearer, emailOTP, magicLink } from "better-auth/plugins";
 import ENVConfig from "@/config";
 // import { sendDeleteAccountEmail } from "@/email/email-templates/delete-account";
 import { sendDeleteAccountConfirmPageEmail } from "@/email/email-templates/delete-account-confirm-page";
@@ -38,6 +38,11 @@ const magicLinkPlugin = magicLink({
     await sendMagicLinkEmail({ userEmail: email, magicLinkUrl: url });
   },
 })
+
+const organizationPlugin = organization(
+  { teams: { enabled: true } }
+)
+
 
 export const auth = betterAuth({
   appName: ENVConfig.app_name,
@@ -142,7 +147,8 @@ export const auth = betterAuth({
     openAPI(),
     expo(),
     emailOTPPlugin,
-    magicLinkPlugin
+    magicLinkPlugin,
+    organizationPlugin,
   ],
 });
 
