@@ -8,7 +8,7 @@ import { nextCookies } from "better-auth/next-js";
 import { admin, organization, jwt, openAPI, bearer, emailOTP, magicLink } from "better-auth/plugins";
 import ENVConfig from "@/config";
 // import { sendDeleteAccountEmail } from "@/email/email-templates/delete-account";
-import { sendDeleteAccountConfirmPageEmail } from "@/email/email-templates/delete-account-confirm-page";
+// import { sendDeleteAccountConfirmPageEmail } from "@/email/email-templates/delete-account-confirm-page";
 import { sendPasswordResetEmail } from "@/email/email-templates/password-reset";
 import { sendEmailVerification } from "@/email/email-templates/email-verification";
 import { sendEmailVerificationOTP } from "@/email/email-templates/email-verification-otp";
@@ -20,6 +20,10 @@ import { routes } from "@/routes";
 
 const baseURL = ENVConfig.backend_base_url;
 
+const drizzleDatabase = drizzleAdapter(db, {
+  provider: "pg", // or "pg" or "mysql"
+  schema: betterAuthSchema,
+})
 
 const emailOTPPlugin = emailOTP({
   otpLength: 4,
@@ -59,11 +63,12 @@ const organizationPlugin = organization({
 export const auth = betterAuth({
   appName: ENVConfig.app_name,
   baseURL: baseURL,
-  // database: new Database("./sqlite.db"),
-  database: drizzleAdapter(db, {
-    provider: "pg", // or "pg" or "mysql"
-    schema: betterAuthSchema,
-  }),
+  database: drizzleDatabase,
+  rateLimit: {
+    enabled: true,
+    window: 10, // time window in seconds
+    max: 100, // max requests in the window
+  },
   user: {
     deleteUser: {
       enabled: true,
