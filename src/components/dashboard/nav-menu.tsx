@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { MessageSquare, Plug, LayoutDashboard, User } from "lucide-react";
+import { MessageSquare, Plug, LayoutDashboard, User, Building2 } from "lucide-react";
 import {
   SidebarGroup,
   SidebarMenu,
@@ -14,6 +14,7 @@ import { routes } from "@/routes";
 const items = [
   { title: "Dashboard", url: routes.dashboard.root(), icon: LayoutDashboard },
   { title: "Chat", url: "/chat", icon: MessageSquare },
+  { title: "Organizations", url: routes.dashboard.organizations(), icon: Building2 },
   { title: "Integrations", url: routes.dashboard.integrations(), icon: Plug },
   { title: "Account", url: routes.dashboard.account(), icon: User },
 ];

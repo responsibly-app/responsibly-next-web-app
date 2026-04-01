@@ -3,6 +3,8 @@ export const routes = {
     root: () => "/dashboard",
     integrations: () => "/dashboard/integrations",
     account: () => "/dashboard/account",
+    organizations: () => "/dashboard/organizations",
+    acceptInvitation: (invitationId: string) => `/dashboard/organizations/accept-invitation/${invitationId}`,
   },
   admin: {
     root: () => "/admin",

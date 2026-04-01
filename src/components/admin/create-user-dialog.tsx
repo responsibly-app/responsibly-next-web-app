@@ -79,7 +79,7 @@ export function CreateUserDialog({ open, onOpenChange }: Props) {
             <Label htmlFor="create-email">Email address</Label>
             <Input
               id="create-email"
-              type="email"
+              // type="email"
               placeholder="jane@example.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -89,7 +89,7 @@ export function CreateUserDialog({ open, onOpenChange }: Props) {
             <Label htmlFor="create-password">Password <span className="text-muted-foreground">(optional)</span></Label>
             <Input
               id="create-password"
-              type="password"
+              // type="password"
               placeholder="Leave blank to send invite"
               value={password}
               onChange={(e) => setPassword(e.target.value)}

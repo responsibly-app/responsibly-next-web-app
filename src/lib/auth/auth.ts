@@ -15,6 +15,8 @@ import { sendEmailVerificationOTP } from "@/email/email-templates/email-verifica
 import { sendPasswordResetOTP } from "@/email/email-templates/password-reset-otp";
 import { sendMagicLinkEmail } from "@/email/email-templates/magic-link";
 import { sendSignInVerificationOTP } from "@/email/email-templates/sign-in-otp";
+import { sendOrganizationInvitation } from "@/email/email-templates/organization/organization-invitation";
+import { routes } from "@/routes";
 
 const baseURL = ENVConfig.backend_base_url;
 
@@ -39,9 +41,19 @@ const magicLinkPlugin = magicLink({
   },
 })
 
-const organizationPlugin = organization(
-  { teams: { enabled: true } }
-)
+const organizationPlugin = organization({
+  teams: { enabled: true, defaultTeam: { enabled: false } },
+  async sendInvitationEmail(data) {
+    const inviteLink = `${baseURL}${routes.dashboard.acceptInvitation(data.id)}`;
+    await sendOrganizationInvitation({
+      email: data.email,
+      invitedByUsername: data.inviter.user.name,
+      invitedByEmail: data.inviter.user.email,
+      organizationName: data.organization.name,
+      inviteLink,
+    });
+  },
+})
 
 
 export const auth = betterAuth({
