@@ -1,12 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { Building2, Plus, MoreHorizontal, LogOut, Trash2 } from "lucide-react";
+import Link from "next/link";
+import { Building2, Plus, MoreHorizontal, LogOut, Trash2, Search } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -25,6 +26,14 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
   useListOrganizations,
   useActiveOrganization,
   useSetActiveOrganization,
@@ -32,20 +41,48 @@ import {
   useLeaveOrganization,
   useGetActiveMemberRole,
 } from "@/lib/auth/hooks";
+import { authClient } from "@/lib/auth/auth-client";
 import { CreateOrganizationDialog } from "./create-organization-dialog";
 
 type OrgAction = { type: "leave" | "delete"; orgId: string; orgName: string } | null;
 
+const ROLE_LABELS: Record<string, string> = {
+  owner: "Owner",
+  admin: "Admin",
+  assistant: "Assistant",
+  member: "Member",
+};
+
+function roleBadgeVariant(role: string) {
+  if (role === "owner") return "default" as const;
+  if (role === "admin") return "secondary" as const;
+  return "outline" as const;
+}
+
 export function OrganizationsList() {
   const [createOpen, setCreateOpen] = useState(false);
   const [pendingAction, setPendingAction] = useState<OrgAction>(null);
+  const [search, setSearch] = useState("");
 
   const { data: organizations, isPending } = useListOrganizations();
   const { data: activeOrg } = useActiveOrganization();
   const { data: activeRole } = useGetActiveMemberRole();
+  const { data: session } = authClient.useSession();
   const setActive = useSetActiveOrganization();
   const deleteOrg = useDeleteOrganization();
   const leaveOrg = useLeaveOrganization();
+
+  const currentUserId = session?.user?.id;
+
+  const filtered = (organizations ?? []).filter((org) =>
+    org.name.toLowerCase().includes(search.toLowerCase())
+  );
+
+  function getRoleForOrg(org: { id: string; members?: Array<{ userId: string; role: string }> }): string | undefined {
+    if (org.id === activeOrg?.id && activeRole) return activeRole;
+    if (!currentUserId || !org.members) return undefined;
+    return org.members.find((m) => m.userId === currentUserId)?.role;
+  }
 
   function handleConfirm() {
     if (!pendingAction) return;
@@ -81,10 +118,20 @@ export function OrganizationsList() {
         </Button>
       </div>
 
+      <div className="relative">
+        <Search className="text-muted-foreground absolute left-3 top-1/2 size-4 -translate-y-1/2" />
+        <Input
+          placeholder="Search organizations..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="pl-9"
+        />
+      </div>
+
       {isPending ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="space-y-3">
           {Array.from({ length: 3 }).map((_, i) => (
-            <Skeleton key={i} className="h-32 rounded-xl" />
+            <Skeleton key={i} className="h-14 w-full rounded-md" />
           ))}
         </div>
       ) : !organizations || organizations.length === 0 ? (
@@ -97,85 +144,112 @@ export function OrganizationsList() {
             New Organization
           </Button>
         </div>
+      ) : filtered.length === 0 ? (
+        <div className="flex flex-col items-center justify-center rounded-xl border border-dashed py-12 text-center">
+          <p className="text-muted-foreground text-sm">No organizations match your search.</p>
+        </div>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {organizations.map((org) => {
-            const isActive = activeOrg?.id === org.id;
-            const isOwner = isActive && activeRole === "owner";
-            return (
-              <Card
-                key={org.id}
-                className={isActive ? "ring-primary ring-2" : undefined}
-              >
-                <CardHeader className="pb-2">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex items-center gap-2">
-                      {org.logo ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={org.logo} alt={org.name} className="size-8 rounded-md object-cover" />
-                      ) : (
-                        <div className="bg-muted flex size-8 items-center justify-center rounded-md">
-                          <Building2 className="text-muted-foreground size-4" />
+        <div className="rounded-md border">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Organization</TableHead>
+                <TableHead>Role</TableHead>
+                <TableHead className="w-12" />
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filtered.map((org) => {
+                const isActive = activeOrg?.id === org.id;
+                const role = getRoleForOrg(org as { id: string; members?: Array<{ userId: string; role: string }> });
+                const isOwner = role === "owner";
+
+                return (
+                  <TableRow key={org.id}>
+                    <TableCell>
+                      <Link
+                        href={`/dashboard/organizations/${org.id}`}
+                        className="flex items-center gap-3 hover:opacity-80"
+                      >
+                        {org.logo ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={org.logo} alt={org.name} className="size-8 rounded-md object-cover" />
+                        ) : (
+                          <div className="bg-muted flex size-8 items-center justify-center rounded-md">
+                            <Building2 className="text-muted-foreground size-4" />
+                          </div>
+                        )}
+                        <div className="leading-tight">
+                          <div className="flex items-center gap-2">
+                            <p className="text-sm font-medium">{org.name}</p>
+                            {isActive && (
+                              <Badge variant="secondary" className="text-xs">Active</Badge>
+                            )}
+                          </div>
+                          <p className="text-muted-foreground text-xs">/{org.slug}</p>
                         </div>
+                      </Link>
+                    </TableCell>
+                    <TableCell>
+                      {role && (
+                        <Badge variant={roleBadgeVariant(role)}>
+                          {ROLE_LABELS[role] ?? role}
+                        </Badge>
                       )}
-                      <CardTitle className="text-base">{org.name}</CardTitle>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      {isActive && <Badge variant="secondary">Active</Badge>}
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="size-7">
-                            <MoreHorizontal className="size-4" />
-                            <span className="sr-only">Organization actions</span>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center justify-end gap-2">
+                        {!isActive && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            disabled={setActive.isPending}
+                            onClick={() => setActive.mutate(org.id)}
+                          >
+                            Set Active
                           </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          {isOwner ? (
-                            <>
-                              <DropdownMenuSeparator />
+                        )}
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="size-8">
+                              <MoreHorizontal className="size-4" />
+                              <span className="sr-only">Organization actions</span>
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            {isOwner ? (
+                              <>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem
+                                  className="text-destructive focus:text-destructive"
+                                  onClick={() =>
+                                    setPendingAction({ type: "delete", orgId: org.id, orgName: org.name })
+                                  }
+                                >
+                                  <Trash2 className="mr-2 size-4" />
+                                  Delete Organization
+                                </DropdownMenuItem>
+                              </>
+                            ) : (
                               <DropdownMenuItem
                                 className="text-destructive focus:text-destructive"
                                 onClick={() =>
-                                  setPendingAction({ type: "delete", orgId: org.id, orgName: org.name })
+                                  setPendingAction({ type: "leave", orgId: org.id, orgName: org.name })
                                 }
                               >
-                                <Trash2 className="mr-2 size-4" />
-                                Delete Organization
+                                <LogOut className="mr-2 size-4" />
+                                Leave Organization
                               </DropdownMenuItem>
-                            </>
-                          ) : (
-                            <DropdownMenuItem
-                              className="text-destructive focus:text-destructive"
-                              onClick={() =>
-                                setPendingAction({ type: "leave", orgId: org.id, orgName: org.name })
-                              }
-                            >
-                              <LogOut className="mr-2 size-4" />
-                              Leave Organization
-                            </DropdownMenuItem>
-                          )}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
-                  </div>
-                  <CardDescription className="text-xs">/{org.slug}</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {!isActive && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="w-full"
-                      disabled={setActive.isPending}
-                      onClick={() => setActive.mutate(org.id)}
-                    >
-                      Set as Active
-                    </Button>
-                  )}
-                </CardContent>
-              </Card>
-            );
-          })}
+                            )}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
         </div>
       )}
 

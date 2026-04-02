@@ -13,7 +13,7 @@ import { routes } from "@/routes";
 
 const items = [
   { title: "Dashboard", url: routes.dashboard.root(), icon: LayoutDashboard },
-  { title: "Chat", url: "/chat", icon: MessageSquare },
+  // { title: "Chat", url: "/chat", icon: MessageSquare },
   { title: "Organizations", url: routes.dashboard.organizations(), icon: Building2 },
   { title: "Integrations", url: routes.dashboard.integrations(), icon: Plug },
   { title: "Account", url: routes.dashboard.account(), icon: User },
