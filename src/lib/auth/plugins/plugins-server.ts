@@ -1,0 +1,22 @@
+import { expo } from "@better-auth/expo";
+import { nextCookies } from "better-auth/next-js";
+import { admin, jwt, openAPI, bearer } from "better-auth/plugins";
+import { emailOTPPlugin } from "./emailOTPPlugin";
+import { magicLinkPlugin } from "./magicLinkPlugin";
+import { organizationPlugin } from "./organizationPlugin";
+import { agentAuthPlugin } from "./agentAuthPlugin";
+import { BetterAuthPlugin } from "better-auth/types";
+
+export const serverPlugins = [
+    nextCookies(),
+    admin(),
+    jwt(),
+    bearer(),
+    openAPI(),
+    expo(),
+    emailOTPPlugin,
+    magicLinkPlugin,
+    organizationPlugin,
+    agentAuthPlugin,
+] as const satisfies BetterAuthPlugin[]
+

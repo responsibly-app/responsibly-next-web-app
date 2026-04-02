@@ -1,10 +1,10 @@
 "use client";
 
-export * from "./use-sign-in";
-export * from "./use-sign-up";
-export * from "./use-password";
-export * from "./use-otp";
-export * from "./use-session";
-export * from "./use-account";
-export * from "./use-admin";
+export * from "./authentication/use-sign-in";
+export * from "./authentication/use-sign-up";
+export * from "./authentication/use-password";
+export * from "./authentication/use-otp";
+export * from "./authentication/use-session";
+export * from "./authentication/use-account";
+export * from "./authentication/use-admin";
 export * from "./oraganization";

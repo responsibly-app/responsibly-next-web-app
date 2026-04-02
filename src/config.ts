@@ -30,7 +30,7 @@ export const config: { [env: string]: configItem } = {
     },
     ngrok: {
         app_name: appName,
-        backend_base_url: "https://3144-2001-569-7bfc-3a00-f1f4-1327-a19e-63c9.ngrok-free.app",
+        backend_base_url: "https://d984-2001-569-7bb5-9600-dd7b-2aca-135d-6dcb.ngrok-free.app",
         landing_page_url: "",
     },
 };
