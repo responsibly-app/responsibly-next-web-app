@@ -4,6 +4,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth/auth-client";
 import { routes } from "@/routes";
+import { toast } from "sonner";
 
 type SocialProvider = "google" | "github" | "zoom";
 
@@ -36,6 +37,8 @@ export function useLinkSocial({ provider, callbackURL = routes.dashboard.integra
 export function useUnlinkSocial() {
   return useMutation({
     mutationFn: async (provider: SocialProvider) => {
+      // ensure we have the latest fresh session data before unlinking
+      await authClient.getSession({ query: { disableCookieCache: true } });
       const result = await authClient.unlinkAccount({ providerId: provider });
 
       if (result?.error) {
@@ -43,6 +46,13 @@ export function useUnlinkSocial() {
       }
 
       return result;
+    },
+    onError: (error: { code?: string }) => {
+      if (error?.code === "SESSION_NOT_FRESH") {
+        toast.error("For your security, please sign out and sign in again before disconnecting an account.");
+      } else {
+        toast.error("Failed to disconnect. Please try again.");
+      }
     },
   });
 }

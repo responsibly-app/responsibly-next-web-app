@@ -1,6 +1,7 @@
 import ENVConfig from "@/config";
 import { adminClient, organizationClient, jwtClient, emailOTPClient, magicLinkClient } from "better-auth/client/plugins";
 import { createAuthClient } from "better-auth/react";
+import { accessControl } from "./hooks/oraganization/permissions";
 
 const baseURL = ENVConfig.backend_base_url;
 
@@ -10,7 +11,10 @@ export const authClient = createAuthClient({
   baseURL: baseURL,
   plugins: [
     adminClient(),
-    organizationClient({ teams: { enabled: true } }),
+    organizationClient({
+      ...accessControl,
+      teams: { enabled: true }
+    }),
     jwtClient(),
     emailOTPClient(),
     magicLinkClient()

@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/select";
 import { Spinner } from "@/components/ui/spinner";
 import { useInviteMember } from "@/lib/auth/hooks";
-import type { OrgRole } from "@/lib/auth/hooks";
+import type { InvitationRole, OrgRole } from "@/lib/auth/hooks";
 
 type Props = {
   open: boolean;
@@ -33,7 +33,7 @@ type Props = {
 export function InviteMemberDialog({ open, onOpenChange, organizationId }: Props) {
   const inviteMember = useInviteMember();
   const [email, setEmail] = useState("");
-  const [role, setRole] = useState<OrgRole>("member");
+  const [role, setRole] = useState<InvitationRole>("member");
 
   function handleClose() {
     onOpenChange(false);
@@ -78,8 +78,8 @@ export function InviteMemberDialog({ open, onOpenChange, organizationId }: Props
           </div>
           <div className="grid gap-2">
             <Label htmlFor="invite-role">Role</Label>
-            <Select value={role} onValueChange={(v) => setRole(v as OrgRole)}>
-              <SelectTrigger id="invite-role">
+            <Select value={role} onValueChange={(v) => setRole(v as InvitationRole)}>
+              <SelectTrigger id="invite-role" className="w-40">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>

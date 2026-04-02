@@ -5,6 +5,18 @@ import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth/auth-client";
 import { routes } from "@/routes";
 
+export function useLatestSession() {
+  // usage: const { data: latestSession } = useLatestSession()
+  return useQuery({
+    queryKey: ["session"],
+    queryFn: async () => {
+      const result = await authClient.getSession({ query: { disableCookieCache: true } });
+      if (result.error) throw result.error;
+      return result.data;
+    },
+  });
+}
+
 /** Sign-out hook */
 export function useSignOut() {
   const router = useRouter();

@@ -2,11 +2,12 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { authClient } from "@/lib/auth/auth-client";
-import { OrgRole } from "./use-organization";
+
+export type InvitationRole = "owner" | "admin" | "member";
 
 type InviteMemberParams = {
     email: string;
-    role: OrgRole;
+    role: InvitationRole;
     organizationId?: string;
 };
 

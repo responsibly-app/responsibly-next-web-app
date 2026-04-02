@@ -53,9 +53,6 @@ export function ZoomCard() {
         queryClient.removeQueries({ queryKey: orpcUtils.zoom.meetings.key() });
         toast.success("Zoom disconnected.");
       },
-      onError: () => {
-        toast.error("Failed to disconnect Zoom. Please try again.");
-      },
     });
   }
 
