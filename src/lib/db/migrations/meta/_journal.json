@@ -22,6 +22,41 @@
       "when": 1774980516606,
       "tag": "0002_bent_bloodaxe",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1775112528878,
+      "tag": "0003_sturdy_morgan_stark",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1775126151591,
+      "tag": "0004_wonderful_firedrake",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1775126300998,
+      "tag": "0005_closed_red_wolf",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1775126358088,
+      "tag": "0006_stiff_daredevil",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1775128908060,
+      "tag": "0007_lyrical_whistler",
+      "breakpoints": true
     }
   ]
 }
