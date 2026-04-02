@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Building2, Plus, MoreHorizontal, LogOut, Trash2, Search } from "lucide-react";
+import { Building2, Plus, MoreHorizontal, LogOut, Pencil, Trash2, Search } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -43,8 +43,10 @@ import {
 } from "@/lib/auth/hooks";
 import { authClient } from "@/lib/auth/auth-client";
 import { CreateOrganizationDialog } from "./create-organization-dialog";
+import { EditOrganizationDialog } from "./edit-organization-dialog";
 
 type OrgAction = { type: "leave" | "delete"; orgId: string; orgName: string } | null;
+type EditTarget = { id: string; name: string; slug: string } | null;
 
 const ROLE_LABELS: Record<string, string> = {
   owner: "Owner",
@@ -61,6 +63,7 @@ function roleBadgeVariant(role: string) {
 
 export function OrganizationsList() {
   const [createOpen, setCreateOpen] = useState(false);
+  const [editTarget, setEditTarget] = useState<EditTarget>(null);
   const [pendingAction, setPendingAction] = useState<OrgAction>(null);
   const [search, setSearch] = useState("");
 
@@ -219,6 +222,14 @@ export function OrganizationsList() {
                           <DropdownMenuContent align="end">
                             {isOwner ? (
                               <>
+                                <DropdownMenuItem
+                                  onClick={() =>
+                                    setEditTarget({ id: org.id, name: org.name, slug: org.slug })
+                                  }
+                                >
+                                  <Pencil className="mr-2 size-4" />
+                                  Edit Organization
+                                </DropdownMenuItem>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem
                                   className="text-destructive focus:text-destructive"
@@ -254,6 +265,13 @@ export function OrganizationsList() {
       )}
 
       <CreateOrganizationDialog open={createOpen} onOpenChange={setCreateOpen} />
+      {editTarget && (
+        <EditOrganizationDialog
+          open={!!editTarget}
+          onOpenChange={(open) => !open && setEditTarget(null)}
+          organization={editTarget}
+        />
+      )}
 
       <AlertDialog open={!!pendingAction} onOpenChange={(open) => !open && setPendingAction(null)}>
         <AlertDialogContent>

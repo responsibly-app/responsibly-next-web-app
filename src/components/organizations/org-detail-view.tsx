@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Building2, LogOut, Mail, MoreHorizontal, Trash2, UserPlus, UserRound } from "lucide-react";
+import { ArrowLeft, Building2, LogOut, Mail, MoreHorizontal, Pencil, Trash2, UserPlus, UserRound } from "lucide-react";
 import { toast } from "sonner";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -49,9 +49,11 @@ import {
 } from "@/lib/auth/hooks";
 import { authClient } from "@/lib/auth/auth-client";
 import { InviteMemberDialog } from "./invite-member-dialog";
+import { EditOrganizationDialog } from "./edit-organization-dialog";
 import type { OrgRole } from "@/lib/auth/hooks";
 
 type ConfirmAction = { type: "delete" | "leave" } | null;
+type EditTarget = { id: string; name: string; slug: string } | null;
 
 const ROLE_LABELS: Record<string, string> = {
   owner: "Owner",
@@ -94,6 +96,7 @@ type Invitation = {
 
 export function OrgDetailView({ orgId }: { orgId: string }) {
   const [inviteOpen, setInviteOpen] = useState(false);
+  const [editTarget, setEditTarget] = useState<EditTarget>(null);
   const [confirmAction, setConfirmAction] = useState<ConfirmAction>(null);
 
   const { data: activeOrg } = useActiveOrganization();
@@ -257,6 +260,14 @@ export function OrgDetailView({ orgId }: { orgId: string }) {
               <DropdownMenuContent align="end">
                 {isOwner ? (
                   <>
+                    <DropdownMenuItem
+                      onClick={() =>
+                        setEditTarget({ id: orgId, name: fullOrg.name, slug: fullOrg.slug })
+                      }
+                    >
+                      <Pencil className="mr-2 size-4" />
+                      Edit Organization
+                    </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem
                       className="text-destructive focus:text-destructive"
@@ -464,6 +475,13 @@ export function OrgDetailView({ orgId }: { orgId: string }) {
       </div>
 
       <InviteMemberDialog open={inviteOpen} onOpenChange={setInviteOpen} organizationId={orgId} />
+      {editTarget && (
+        <EditOrganizationDialog
+          open={!!editTarget}
+          onOpenChange={(open) => !open && setEditTarget(null)}
+          organization={editTarget}
+        />
+      )}
 
       <AlertDialog open={!!confirmAction} onOpenChange={(open) => !open && setConfirmAction(null)}>
         <AlertDialogContent>
