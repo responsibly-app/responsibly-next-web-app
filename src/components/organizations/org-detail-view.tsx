@@ -7,9 +7,10 @@ import { toast } from "sonner";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -291,187 +292,199 @@ export function OrgDetailView({ orgId }: { orgId: string }) {
           </div>
         </div>
 
-        {/* Members */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-3">
-            <CardTitle className="text-base font-semibold">
-              Members
-              {members.length > 0 && (
-                <span className="text-muted-foreground ml-2 font-normal">({members.length})</span>
+        {/* Tabs: Members & Invitations */}
+        <Tabs defaultValue="members">
+          <div className="flex items-center justify-between gap-4">
+            <TabsList>
+              <TabsTrigger value="members">
+                Members
+                {members.length > 0 && (
+                  <span className="bg-muted text-muted-foreground ml-1.5 rounded px-1.5 py-0.5 text-xs font-normal">
+                    {members.length}
+                  </span>
+                )}
+              </TabsTrigger>
+              {canManage && (
+                <TabsTrigger value="invitations">
+                  Invitations
+                  {invitations.length > 0 && (
+                    <span className="bg-muted text-muted-foreground ml-1.5 rounded px-1.5 py-0.5 text-xs font-normal">
+                      {invitations.length}
+                    </span>
+                  )}
+                </TabsTrigger>
               )}
-            </CardTitle>
+            </TabsList>
             {canManage && (
               <Button size="sm" onClick={() => setInviteOpen(true)}>
                 <UserPlus className="mr-1.5 size-3.5" />
                 Invite Member
               </Button>
             )}
-          </CardHeader>
-          <CardContent className="p-0">
-            {membersPending ? (
-              <div className="space-y-3 px-6 pb-6">
-                {Array.from({ length: 3 }).map((_, i) => (
-                  <Skeleton key={i} className="h-10 w-full rounded-md" />
-                ))}
-              </div>
-            ) : members.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-12 text-center">
-                <UserRound className="text-muted-foreground mb-3 size-8" />
-                <p className="text-muted-foreground text-sm">No members yet</p>
-              </div>
-            ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Member</TableHead>
-                    <TableHead>Role</TableHead>
-                    {canManage && <TableHead className="w-12" />}
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {members.map((member) => {
-                    const isSelf = currentUserId === member.userId;
-                    const memberIsOwner = member.role === "owner";
-                    return (
-                      <TableRow key={member.id}>
-                        <TableCell>
-                          <div className="flex items-center gap-3">
-                            <Avatar className="size-8">
-                              <AvatarImage src={member.user?.image ?? undefined} />
-                              <AvatarFallback className="text-xs">
-                                {member.user?.name ? initials(member.user.name) : "?"}
-                              </AvatarFallback>
-                            </Avatar>
-                            <div className="leading-tight">
-                              <p className="text-sm font-medium">
-                                {member.user?.name}
-                                {isSelf && (
-                                  <span className="text-muted-foreground ml-1.5 text-xs font-normal">(you)</span>
-                                )}
-                              </p>
-                              <p className="text-muted-foreground text-xs">{member.user?.email}</p>
-                            </div>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={roleBadgeVariant(member.role)}>
-                            {ROLE_LABELS[member.role] ?? member.role}
-                          </Badge>
-                        </TableCell>
-                        {canManage && (
-                          <TableCell>
-                            {!isSelf && !memberIsOwner && (
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                  <Button variant="ghost" size="icon" className="size-8">
-                                    <MoreHorizontal className="size-4" />
-                                    <span className="sr-only">Actions</span>
-                                  </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                  {currentRole === "owner" && (
-                                    <>
-                                      {member.role !== "admin" && (
-                                        <DropdownMenuItem onClick={() => handleRoleChange(member.id, "admin")}>
-                                          Make Admin
-                                        </DropdownMenuItem>
-                                      )}
-                                      {member.role !== "member" && (
-                                        <DropdownMenuItem onClick={() => handleRoleChange(member.id, "member")}>
-                                          Make Member
-                                        </DropdownMenuItem>
-                                      )}
-                                      <DropdownMenuSeparator />
-                                    </>
-                                  )}
-                                  <DropdownMenuItem
-                                    className="text-destructive focus:text-destructive"
-                                    onClick={() => handleRemove(member.id, member.user?.email ?? member.id)}
-                                  >
-                                    Remove
-                                  </DropdownMenuItem>
-                                </DropdownMenuContent>
-                              </DropdownMenu>
-                            )}
-                          </TableCell>
-                        )}
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            )}
-          </CardContent>
-        </Card>
+          </div>
 
-        {/* Pending Invitations */}
-        {canManage && (
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base font-semibold">
-                Pending Invitations
-                {invitations.length > 0 && (
-                  <span className="text-muted-foreground ml-2 font-normal">({invitations.length})</span>
-                )}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-0">
-              {invitationsPending ? (
-                <div className="space-y-3 px-6 pb-6">
-                  {Array.from({ length: 2 }).map((_, i) => (
-                    <Skeleton key={i} className="h-10 w-full rounded-md" />
-                  ))}
-                </div>
-              ) : invitations.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-12 text-center">
-                  <Mail className="text-muted-foreground mb-3 size-8" />
-                  <p className="text-muted-foreground text-sm">No pending invitations</p>
-                </div>
-              ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Email</TableHead>
-                      <TableHead>Role</TableHead>
-                      <TableHead className="w-24" />
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {invitations.map((inv) => (
-                      <TableRow key={inv.id}>
-                        <TableCell className="text-sm">{inv.email}</TableCell>
-                        <TableCell>
-                          <Badge variant="outline">{ROLE_LABELS[inv.role] ?? inv.role}</Badge>
-                        </TableCell>
-                        <TableCell>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="text-destructive hover:text-destructive h-7 px-2 text-xs"
-                            disabled={cancelInvitation.isPending && cancelInvitation.variables === inv.id}
-                            onClick={() =>
-                              cancelInvitation.mutate(inv.id, {
-                                onSuccess: () => toast.success(`Invitation to ${inv.email} cancelled.`),
-                                onError: (err: { message?: string }) =>
-                                  toast.error(err?.message ?? "Failed to cancel invitation."),
-                              })
-                            }
-                          >
-                            {cancelInvitation.isPending && cancelInvitation.variables === inv.id ? (
-                              <Spinner className="size-3" />
-                            ) : (
-                              "Cancel"
-                            )}
-                          </Button>
-                        </TableCell>
-                      </TableRow>
+          <TabsContent value="members" className="mt-4">
+            <Card>
+              <CardContent className="p-0">
+                {membersPending ? (
+                  <div className="space-y-3 px-6 py-6">
+                    {Array.from({ length: 3 }).map((_, i) => (
+                      <Skeleton key={i} className="h-10 w-full rounded-md" />
                     ))}
-                  </TableBody>
-                </Table>
-              )}
-            </CardContent>
-          </Card>
-        )}
+                  </div>
+                ) : members.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-12 text-center">
+                    <UserRound className="text-muted-foreground mb-3 size-8" />
+                    <p className="text-muted-foreground text-sm">No members yet</p>
+                  </div>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Member</TableHead>
+                        <TableHead>Role</TableHead>
+                        {canManage && <TableHead className="w-12" />}
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {members.map((member) => {
+                        const isSelf = currentUserId === member.userId;
+                        const memberIsOwner = member.role === "owner";
+                        return (
+                          <TableRow key={member.id}>
+                            <TableCell>
+                              <div className="flex items-center gap-3">
+                                <Avatar className="size-8">
+                                  <AvatarImage src={member.user?.image ?? undefined} />
+                                  <AvatarFallback className="text-xs">
+                                    {member.user?.name ? initials(member.user.name) : "?"}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <div className="leading-tight">
+                                  <p className="text-sm font-medium">
+                                    {member.user?.name}
+                                    {isSelf && (
+                                      <span className="text-muted-foreground ml-1.5 text-xs font-normal">(you)</span>
+                                    )}
+                                  </p>
+                                  <p className="text-muted-foreground text-xs">{member.user?.email}</p>
+                                </div>
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant={roleBadgeVariant(member.role)}>
+                                {ROLE_LABELS[member.role] ?? member.role}
+                              </Badge>
+                            </TableCell>
+                            {canManage && (
+                              <TableCell>
+                                {!isSelf && !memberIsOwner && (
+                                  <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                      <Button variant="ghost" size="icon" className="size-8">
+                                        <MoreHorizontal className="size-4" />
+                                        <span className="sr-only">Actions</span>
+                                      </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end">
+                                      {currentRole === "owner" && (
+                                        <>
+                                          {member.role !== "admin" && (
+                                            <DropdownMenuItem onClick={() => handleRoleChange(member.id, "admin")}>
+                                              Make Admin
+                                            </DropdownMenuItem>
+                                          )}
+                                          {member.role !== "member" && (
+                                            <DropdownMenuItem onClick={() => handleRoleChange(member.id, "member")}>
+                                              Make Member
+                                            </DropdownMenuItem>
+                                          )}
+                                          <DropdownMenuSeparator />
+                                        </>
+                                      )}
+                                      <DropdownMenuItem
+                                        className="text-destructive focus:text-destructive"
+                                        onClick={() => handleRemove(member.id, member.user?.email ?? member.id)}
+                                      >
+                                        Remove
+                                      </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                  </DropdownMenu>
+                                )}
+                              </TableCell>
+                            )}
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {canManage && (
+            <TabsContent value="invitations" className="mt-4">
+              <Card>
+                <CardContent className="p-0">
+                  {invitationsPending ? (
+                    <div className="space-y-3 px-6 py-6">
+                      {Array.from({ length: 2 }).map((_, i) => (
+                        <Skeleton key={i} className="h-10 w-full rounded-md" />
+                      ))}
+                    </div>
+                  ) : invitations.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-12 text-center">
+                      <Mail className="text-muted-foreground mb-3 size-8" />
+                      <p className="text-muted-foreground text-sm">No pending invitations</p>
+                    </div>
+                  ) : (
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Email</TableHead>
+                          <TableHead>Role</TableHead>
+                          <TableHead className="w-24" />
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {invitations.map((inv) => (
+                          <TableRow key={inv.id}>
+                            <TableCell className="text-sm">{inv.email}</TableCell>
+                            <TableCell>
+                              <Badge variant="outline">{ROLE_LABELS[inv.role] ?? inv.role}</Badge>
+                            </TableCell>
+                            <TableCell>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="text-destructive hover:text-destructive h-7 px-2 text-xs"
+                                disabled={cancelInvitation.isPending && cancelInvitation.variables === inv.id}
+                                onClick={() =>
+                                  cancelInvitation.mutate(inv.id, {
+                                    onSuccess: () => toast.success(`Invitation to ${inv.email} cancelled.`),
+                                    onError: (err: { message?: string }) =>
+                                      toast.error(err?.message ?? "Failed to cancel invitation."),
+                                  })
+                                }
+                              >
+                                {cancelInvitation.isPending && cancelInvitation.variables === inv.id ? (
+                                  <Spinner className="size-3" />
+                                ) : (
+                                  "Cancel"
+                                )}
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+          )}
+        </Tabs>
       </div>
 
       <InviteMemberDialog open={inviteOpen} onOpenChange={setInviteOpen} organizationId={orgId} />

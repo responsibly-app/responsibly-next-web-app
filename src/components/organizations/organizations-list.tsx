@@ -34,14 +34,12 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
-  useListOrganizations,
   useActiveOrganization,
   useSetActiveOrganization,
   useDeleteOrganization,
   useLeaveOrganization,
-  useGetActiveMemberRole,
+  useListMyOrganizations,
 } from "@/lib/auth/hooks";
-import { authClient } from "@/lib/auth/auth-client";
 import { CreateOrganizationDialog } from "./create-organization-dialog";
 import { EditOrganizationDialog } from "./edit-organization-dialog";
 
@@ -66,26 +64,19 @@ export function OrganizationsList() {
   const [editTarget, setEditTarget] = useState<EditTarget>(null);
   const [pendingAction, setPendingAction] = useState<OrgAction>(null);
   const [search, setSearch] = useState("");
+  const [ownerFilter, setOwnerFilter] = useState<"all" | "mine">("all");
 
-  const { data: organizations, isPending } = useListOrganizations();
+  const { data: organizations, isPending } = useListMyOrganizations();
   const { data: activeOrg } = useActiveOrganization();
-  const { data: activeRole } = useGetActiveMemberRole();
-  const { data: session } = authClient.useSession();
   const setActive = useSetActiveOrganization();
   const deleteOrg = useDeleteOrganization();
   const leaveOrg = useLeaveOrganization();
 
-  const currentUserId = session?.user?.id;
-
-  const filtered = (organizations ?? []).filter((org) =>
-    org.name.toLowerCase().includes(search.toLowerCase())
-  );
-
-  function getRoleForOrg(org: { id: string; members?: Array<{ userId: string; role: string }> }): string | undefined {
-    if (org.id === activeOrg?.id && activeRole) return activeRole;
-    if (!currentUserId || !org.members) return undefined;
-    return org.members.find((m) => m.userId === currentUserId)?.role;
-  }
+  const filtered = (organizations ?? []).filter((org) => {
+    if (!org.name.toLowerCase().includes(search.toLowerCase())) return false;
+    if (ownerFilter === "mine" && org.role !== "owner") return false;
+    return true;
+  });
 
   function handleConfirm() {
     if (!pendingAction) return;
@@ -121,14 +112,34 @@ export function OrganizationsList() {
         </Button>
       </div>
 
-      <div className="relative">
-        <Search className="text-muted-foreground absolute left-3 top-1/2 size-4 -translate-y-1/2" />
-        <Input
-          placeholder="Search organizations..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="pl-9"
-        />
+      <div className="flex items-center gap-3">
+        <div className="relative flex-1">
+          <Search className="text-muted-foreground absolute left-3 top-1/2 size-4 -translate-y-1/2" />
+          <Input
+            placeholder="Search organizations..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-9"
+          />
+        </div>
+        <div className="flex items-center rounded-md border p-1 gap-1">
+          <Button
+            variant={ownerFilter === "all" ? "secondary" : "ghost"}
+            size="sm"
+            className="h-7 px-3 text-xs"
+            onClick={() => setOwnerFilter("all")}
+          >
+            All
+          </Button>
+          <Button
+            variant={ownerFilter === "mine" ? "secondary" : "ghost"}
+            size="sm"
+            className="h-7 px-3 text-xs"
+            onClick={() => setOwnerFilter("mine")}
+          >
+            My Own
+          </Button>
+        </div>
       </div>
 
       {isPending ? (
@@ -149,7 +160,11 @@ export function OrganizationsList() {
         </div>
       ) : filtered.length === 0 ? (
         <div className="flex flex-col items-center justify-center rounded-xl border border-dashed py-12 text-center">
-          <p className="text-muted-foreground text-sm">No organizations match your search.</p>
+          <p className="text-muted-foreground text-sm">
+            {ownerFilter === "mine"
+              ? "You don't own any organizations matching your search."
+              : "No organizations match your search."}
+          </p>
         </div>
       ) : (
         <div className="rounded-md border">
@@ -164,7 +179,7 @@ export function OrganizationsList() {
             <TableBody>
               {filtered.map((org) => {
                 const isActive = activeOrg?.id === org.id;
-                const role = getRoleForOrg(org as { id: string; members?: Array<{ userId: string; role: string }> });
+                const role = org.role;
                 const isOwner = role === "owner";
 
                 return (

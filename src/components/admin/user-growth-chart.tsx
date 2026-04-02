@@ -98,9 +98,9 @@ function buildChartData(
 }
 
 export function UserGrowthChart() {
-  const [view, setView] = useState<View>("newUsers");
-  const [range, setRange] = useState<Range>("12m");
-  const [granularity, setGranularity] = useState<Granularity>("monthly");
+  const [view, setView] = useState<View>("total");
+  const [range, setRange] = useState<Range>("all");
+  const [granularity, setGranularity] = useState<Granularity>("daily");
 
   function handleRangeChange(value: string) {
     if (!value) return;

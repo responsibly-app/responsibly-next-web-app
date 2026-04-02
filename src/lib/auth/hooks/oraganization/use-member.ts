@@ -27,6 +27,7 @@ export function useListMembers(query: ListMembersQuery) {
     });
 }
 
+
 /** Get the current user's active member role in the active organization */
 export function useGetActiveMemberRole() {
     return useQuery({

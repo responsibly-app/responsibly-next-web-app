@@ -2,6 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { authClient } from "@/lib/auth/auth-client";
+import { orpcUtils } from "@/lib/orpc/orpc-client";
 
 export type OrgRole = "owner" | "admin" | "assistant" | "member";
 
@@ -98,4 +99,12 @@ export function useSetActiveOrganization() {
       return result.data;
     },
   });
+}
+
+/**
+ * List all organizations the current user belongs to, including their role.
+ * Single JOIN query — more efficient than fetching roles per org separately.
+ */
+export function useListMyOrganizations() {
+  return useQuery(orpcUtils.organization.listMine.queryOptions());
 }
