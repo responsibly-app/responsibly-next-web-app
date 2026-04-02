@@ -4,16 +4,14 @@ import { createFromOpenAPI, createOpenAPIHandler, fromOpenAPI } from "@better-au
 import { getAccessToken } from "better-auth/api";
 
 const appName = ENVConfig.app_name;
-// const baseURL = ENVConfig.backend_base_url;
-const baseURL = "https://responsibly-next-web-app-yh7q.vercel.app";
+const baseURL = ENVConfig.backend_base_url;
+// const baseURL = "https://responsibly-next-web-app-yh7q.vercel.app";
 
 // const spec = await fetch(`${baseURL}/api/v1/openapi.json`).then((r) =>
 //     r.json(),
 // );
 
-const spec = await fetch(`${baseURL}/api/v1/openapi.json`).then((r) =>
-    r.json(),
-);
+import spec from "./openapi.json";
 
 const capabilities = fromOpenAPI(spec);
 const onExecute = createOpenAPIHandler(spec, {

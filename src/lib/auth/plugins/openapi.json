@@ -1,0 +1,971 @@
+{
+    "info": {
+        "title": "Dashboard API",
+        "version": "1.0.0",
+        "description": "Internal API for the personal dashboard application."
+    },
+    "servers": [
+        {
+            "url": "https://responsibly-next-web-app-yh7q.vercel.app/api/v1/rest"
+        }
+    ],
+    "security": [
+        {
+            "sessionCookie": []
+        }
+    ],
+    "components": {
+        "securitySchemes": {
+            "sessionCookie": {
+                "type": "apiKey",
+                "in": "cookie",
+                "name": "better-auth.session_token",
+                "description": "Session cookie set by Better Auth"
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "Session",
+            "description": "Zoom account connection and profile"
+        },
+        {
+            "name": "Storage",
+            "description": "Zoom account connection and profile"
+        },
+        {
+            "name": "Zoom",
+            "description": "Zoom account connection and profile"
+        }
+    ],
+    "openapi": "3.1.1",
+    "paths": {
+        "/session/me": {
+            "get": {
+                "operationId": "session.me",
+                "summary": "Get the current authenticated user",
+                "tags": [
+                    "Session"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "id": {
+                                            "type": "string"
+                                        },
+                                        "name": {
+                                            "type": "string"
+                                        },
+                                        "email": {
+                                            "type": "string",
+                                            "format": "email"
+                                        },
+                                        "emailVerified": {
+                                            "type": "boolean"
+                                        },
+                                        "image": {
+                                            "anyOf": [
+                                                {
+                                                    "type": "string"
+                                                },
+                                                {
+                                                    "type": "null"
+                                                }
+                                            ]
+                                        },
+                                        "createdAt": {
+                                            "anyOf": [
+                                                {
+                                                    "type": "string"
+                                                },
+                                                {
+                                                    "type": "string",
+                                                    "format": "date-time",
+                                                    "x-native-type": "date"
+                                                }
+                                            ]
+                                        },
+                                        "updatedAt": {
+                                            "anyOf": [
+                                                {
+                                                    "type": "string"
+                                                },
+                                                {
+                                                    "type": "string",
+                                                    "format": "date-time",
+                                                    "x-native-type": "date"
+                                                }
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "id",
+                                        "name",
+                                        "email",
+                                        "emailVerified",
+                                        "createdAt",
+                                        "updatedAt"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/session/current": {
+            "get": {
+                "operationId": "session.current",
+                "summary": "Get the current session with user",
+                "tags": [
+                    "Session"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "session": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "string"
+                                                },
+                                                "token": {
+                                                    "type": "string"
+                                                },
+                                                "expiresAt": {
+                                                    "anyOf": [
+                                                        {
+                                                            "type": "string"
+                                                        },
+                                                        {
+                                                            "type": "string",
+                                                            "format": "date-time",
+                                                            "x-native-type": "date"
+                                                        }
+                                                    ]
+                                                },
+                                                "createdAt": {
+                                                    "anyOf": [
+                                                        {
+                                                            "type": "string"
+                                                        },
+                                                        {
+                                                            "type": "string",
+                                                            "format": "date-time",
+                                                            "x-native-type": "date"
+                                                        }
+                                                    ]
+                                                },
+                                                "updatedAt": {
+                                                    "anyOf": [
+                                                        {
+                                                            "type": "string"
+                                                        },
+                                                        {
+                                                            "type": "string",
+                                                            "format": "date-time",
+                                                            "x-native-type": "date"
+                                                        }
+                                                    ]
+                                                },
+                                                "ipAddress": {
+                                                    "anyOf": [
+                                                        {
+                                                            "type": "string"
+                                                        },
+                                                        {
+                                                            "type": "null"
+                                                        }
+                                                    ]
+                                                },
+                                                "userAgent": {
+                                                    "anyOf": [
+                                                        {
+                                                            "type": "string"
+                                                        },
+                                                        {
+                                                            "type": "null"
+                                                        }
+                                                    ]
+                                                },
+                                                "userId": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "id",
+                                                "token",
+                                                "expiresAt",
+                                                "createdAt",
+                                                "updatedAt",
+                                                "userId"
+                                            ]
+                                        },
+                                        "user": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "string"
+                                                },
+                                                "name": {
+                                                    "type": "string"
+                                                },
+                                                "email": {
+                                                    "type": "string",
+                                                    "format": "email"
+                                                },
+                                                "emailVerified": {
+                                                    "type": "boolean"
+                                                },
+                                                "image": {
+                                                    "anyOf": [
+                                                        {
+                                                            "type": "string"
+                                                        },
+                                                        {
+                                                            "type": "null"
+                                                        }
+                                                    ]
+                                                },
+                                                "createdAt": {
+                                                    "anyOf": [
+                                                        {
+                                                            "type": "string"
+                                                        },
+                                                        {
+                                                            "type": "string",
+                                                            "format": "date-time",
+                                                            "x-native-type": "date"
+                                                        }
+                                                    ]
+                                                },
+                                                "updatedAt": {
+                                                    "anyOf": [
+                                                        {
+                                                            "type": "string"
+                                                        },
+                                                        {
+                                                            "type": "string",
+                                                            "format": "date-time",
+                                                            "x-native-type": "date"
+                                                        }
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "id",
+                                                "name",
+                                                "email",
+                                                "emailVerified",
+                                                "createdAt",
+                                                "updatedAt"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "session",
+                                        "user"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/storage/avatar/upload": {
+            "post": {
+                "operationId": "storage.uploadAvatar",
+                "summary": "Upload user avatar",
+                "tags": [
+                    "Storage"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "file": {}
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "publicUrl": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "publicUrl"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/storage/avatar": {
+            "delete": {
+                "operationId": "storage.deleteAvatar",
+                "summary": "Delete user avatar",
+                "tags": [
+                    "Storage"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "anyOf": [
+                                        {},
+                                        {
+                                            "not": {}
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/zoom/status": {
+            "get": {
+                "operationId": "zoom.status",
+                "summary": "Check Zoom connection status",
+                "tags": [
+                    "Zoom"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "connected": {
+                                            "type": "boolean"
+                                        }
+                                    },
+                                    "required": [
+                                        "connected"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/zoom/profile": {
+            "get": {
+                "operationId": "zoom.profile",
+                "summary": "Get authenticated Zoom user profile",
+                "tags": [
+                    "Zoom"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "id": {
+                                            "type": "string"
+                                        },
+                                        "first_name": {
+                                            "type": "string"
+                                        },
+                                        "last_name": {
+                                            "type": "string"
+                                        },
+                                        "email": {
+                                            "type": "string",
+                                            "format": "email"
+                                        },
+                                        "type": {
+                                            "type": "number"
+                                        },
+                                        "role_name": {
+                                            "type": "string"
+                                        },
+                                        "pmi": {
+                                            "type": "number"
+                                        },
+                                        "use_pmi": {
+                                            "type": "boolean"
+                                        },
+                                        "personal_meeting_url": {
+                                            "type": "string"
+                                        },
+                                        "timezone": {
+                                            "type": "string"
+                                        },
+                                        "created_at": {
+                                            "type": "string"
+                                        },
+                                        "last_login_time": {
+                                            "type": "string"
+                                        },
+                                        "pic_url": {
+                                            "type": "string"
+                                        },
+                                        "status": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "id",
+                                        "first_name",
+                                        "last_name",
+                                        "email",
+                                        "type",
+                                        "role_name",
+                                        "pmi",
+                                        "use_pmi",
+                                        "personal_meeting_url",
+                                        "timezone",
+                                        "created_at",
+                                        "last_login_time",
+                                        "pic_url",
+                                        "status"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/zoom/meetings": {
+            "get": {
+                "operationId": "zoom.meetings.list",
+                "summary": "List meetings",
+                "tags": [
+                    "Zoom"
+                ],
+                "parameters": [
+                    {
+                        "name": "type",
+                        "in": "query",
+                        "schema": {
+                            "default": "upcoming",
+                            "enum": [
+                                "scheduled",
+                                "live",
+                                "upcoming"
+                            ],
+                            "description": "Filter by meeting type"
+                        },
+                        "style": "deepObject",
+                        "explode": true,
+                        "allowEmptyValue": true,
+                        "allowReserved": true
+                    },
+                    {
+                        "name": "page_size",
+                        "in": "query",
+                        "schema": {
+                            "default": 30,
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 300,
+                            "description": "Number of records per page"
+                        },
+                        "allowEmptyValue": true,
+                        "allowReserved": true
+                    },
+                    {
+                        "name": "page_number",
+                        "in": "query",
+                        "schema": {
+                            "default": 1,
+                            "type": "integer",
+                            "minimum": 1,
+                            "description": "Page number"
+                        },
+                        "allowEmptyValue": true,
+                        "allowReserved": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "page_count": {
+                                            "type": "number"
+                                        },
+                                        "page_number": {
+                                            "type": "number"
+                                        },
+                                        "page_size": {
+                                            "type": "number"
+                                        },
+                                        "total_records": {
+                                            "type": "number"
+                                        },
+                                        "meetings": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "number"
+                                                    },
+                                                    "uuid": {
+                                                        "type": "string"
+                                                    },
+                                                    "host_id": {
+                                                        "type": "string"
+                                                    },
+                                                    "topic": {
+                                                        "type": "string"
+                                                    },
+                                                    "type": {
+                                                        "type": "number",
+                                                        "description": "1=instant, 2=scheduled, 3=recurring (no fixed time), 8=recurring (fixed time)"
+                                                    },
+                                                    "status": {
+                                                        "type": "string"
+                                                    },
+                                                    "start_time": {
+                                                        "type": "string"
+                                                    },
+                                                    "duration": {
+                                                        "type": "number",
+                                                        "description": "Duration in minutes"
+                                                    },
+                                                    "timezone": {
+                                                        "type": "string"
+                                                    },
+                                                    "created_at": {
+                                                        "type": "string"
+                                                    },
+                                                    "join_url": {
+                                                        "type": "string"
+                                                    },
+                                                    "agenda": {
+                                                        "type": "string"
+                                                    },
+                                                    "password": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "id",
+                                                    "uuid",
+                                                    "host_id",
+                                                    "topic",
+                                                    "type"
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "page_count",
+                                        "page_number",
+                                        "page_size",
+                                        "total_records",
+                                        "meetings"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "operationId": "zoom.meetings.create",
+                "summary": "Create a new meeting",
+                "tags": [
+                    "Zoom"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "topic": {
+                                        "type": "string",
+                                        "description": "Meeting topic / title"
+                                    },
+                                    "type": {
+                                        "type": "integer",
+                                        "description": "1=instant, 2=scheduled, 3=recurring (no fixed time), 8=recurring (fixed time)"
+                                    },
+                                    "start_time": {
+                                        "type": "string",
+                                        "description": "ISO 8601 datetime, e.g. 2026-03-20T10:00:00Z"
+                                    },
+                                    "duration": {
+                                        "type": "integer",
+                                        "description": "Duration in minutes"
+                                    },
+                                    "timezone": {
+                                        "type": "string"
+                                    },
+                                    "agenda": {
+                                        "type": "string"
+                                    },
+                                    "password": {
+                                        "type": "string"
+                                    },
+                                    "settings": {
+                                        "type": "object",
+                                        "properties": {
+                                            "host_video": {
+                                                "type": "boolean"
+                                            },
+                                            "participant_video": {
+                                                "type": "boolean"
+                                            },
+                                            "join_before_host": {
+                                                "type": "boolean"
+                                            },
+                                            "mute_upon_entry": {
+                                                "type": "boolean"
+                                            },
+                                            "waiting_room": {
+                                                "type": "boolean"
+                                            }
+                                        }
+                                    }
+                                },
+                                "required": [
+                                    "topic"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "id": {
+                                            "type": "number"
+                                        },
+                                        "uuid": {
+                                            "type": "string"
+                                        },
+                                        "host_id": {
+                                            "type": "string"
+                                        },
+                                        "topic": {
+                                            "type": "string"
+                                        },
+                                        "type": {
+                                            "type": "number",
+                                            "description": "1=instant, 2=scheduled, 3=recurring (no fixed time), 8=recurring (fixed time)"
+                                        },
+                                        "status": {
+                                            "type": "string"
+                                        },
+                                        "start_time": {
+                                            "type": "string"
+                                        },
+                                        "duration": {
+                                            "type": "number",
+                                            "description": "Duration in minutes"
+                                        },
+                                        "timezone": {
+                                            "type": "string"
+                                        },
+                                        "created_at": {
+                                            "type": "string"
+                                        },
+                                        "join_url": {
+                                            "type": "string"
+                                        },
+                                        "agenda": {
+                                            "type": "string"
+                                        },
+                                        "password": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "id",
+                                        "uuid",
+                                        "host_id",
+                                        "topic",
+                                        "type"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/zoom/meetings/{meetingId}": {
+            "get": {
+                "operationId": "zoom.meetings.get",
+                "summary": "Get a meeting by ID",
+                "tags": [
+                    "Zoom"
+                ],
+                "parameters": [
+                    {
+                        "name": "meetingId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "description": "Zoom meeting ID"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "id": {
+                                            "type": "number"
+                                        },
+                                        "uuid": {
+                                            "type": "string"
+                                        },
+                                        "host_id": {
+                                            "type": "string"
+                                        },
+                                        "topic": {
+                                            "type": "string"
+                                        },
+                                        "type": {
+                                            "type": "number",
+                                            "description": "1=instant, 2=scheduled, 3=recurring (no fixed time), 8=recurring (fixed time)"
+                                        },
+                                        "status": {
+                                            "type": "string"
+                                        },
+                                        "start_time": {
+                                            "type": "string"
+                                        },
+                                        "duration": {
+                                            "type": "number",
+                                            "description": "Duration in minutes"
+                                        },
+                                        "timezone": {
+                                            "type": "string"
+                                        },
+                                        "created_at": {
+                                            "type": "string"
+                                        },
+                                        "join_url": {
+                                            "type": "string"
+                                        },
+                                        "agenda": {
+                                            "type": "string"
+                                        },
+                                        "password": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "id",
+                                        "uuid",
+                                        "host_id",
+                                        "topic",
+                                        "type"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "operationId": "zoom.meetings.update",
+                "summary": "Update an existing meeting",
+                "tags": [
+                    "Zoom"
+                ],
+                "parameters": [
+                    {
+                        "name": "meetingId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "description": "Zoom meeting ID"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": false,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "topic": {
+                                        "type": "string"
+                                    },
+                                    "type": {
+                                        "type": "integer"
+                                    },
+                                    "start_time": {
+                                        "type": "string",
+                                        "description": "ISO 8601 datetime"
+                                    },
+                                    "duration": {
+                                        "type": "integer",
+                                        "description": "Duration in minutes"
+                                    },
+                                    "timezone": {
+                                        "type": "string"
+                                    },
+                                    "agenda": {
+                                        "type": "string"
+                                    },
+                                    "password": {
+                                        "type": "string"
+                                    },
+                                    "settings": {
+                                        "type": "object",
+                                        "properties": {
+                                            "host_video": {
+                                                "type": "boolean"
+                                            },
+                                            "participant_video": {
+                                                "type": "boolean"
+                                            },
+                                            "join_before_host": {
+                                                "type": "boolean"
+                                            },
+                                            "mute_upon_entry": {
+                                                "type": "boolean"
+                                            },
+                                            "waiting_room": {
+                                                "type": "boolean"
+                                            }
+                                        }
+                                    }
+                                },
+                                "required": []
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "anyOf": [
+                                        {
+                                            "not": {}
+                                        },
+                                        {
+                                            "not": {}
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "operationId": "zoom.meetings.delete",
+                "summary": "Delete a meeting",
+                "tags": [
+                    "Zoom"
+                ],
+                "parameters": [
+                    {
+                        "name": "meetingId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "description": "Zoom meeting ID"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": false,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {},
+                                "required": []
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "anyOf": [
+                                        {
+                                            "not": {}
+                                        },
+                                        {
+                                            "not": {}
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
