@@ -3,7 +3,6 @@ import { accessControl } from "../hooks/oraganization/permissions";
 import ENVConfig from "@/config";
 import { routes } from "@/routes";
 import { sendOrganizationInvitation } from "@/email/email-templates/organization/organization-invitation";
-import { organizationClient } from "better-auth/client/plugins";
 
 const baseURL = ENVConfig.backend_base_url;
 
