@@ -1,7 +1,7 @@
-import { adminClient, jwtClient, emailOTPClient, magicLinkClient } from "better-auth/client/plugins";
-import { agentAuthClient } from "@better-auth/agent-auth/client";
-import { organizationClientPlugin } from "./organizationClientPlugin";
 import { BetterAuthClientPlugin } from "better-auth/types";
+import { adminClient, jwtClient, emailOTPClient, magicLinkClient } from "better-auth/client/plugins";
+import { organizationClientPlugin } from "./organizationClientPlugin";
+// import { agentAuthClient } from "@better-auth/agent-auth/client";
 
 export const clientPlugins = [
     adminClient(),
@@ -9,5 +9,5 @@ export const clientPlugins = [
     jwtClient(),
     emailOTPClient(),
     magicLinkClient(),
-    agentAuthClient(),
+    // agentAuthClient(),
 ] as const satisfies BetterAuthClientPlugin[]

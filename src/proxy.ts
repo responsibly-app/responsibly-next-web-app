@@ -34,11 +34,6 @@ export default async function proxy(req: NextRequest) {
     return NextResponse.redirect(signInUrl);
   }
 
-  // Admin pages: must have admin role
-  if (isOnAdmin && session?.user.role !== "admin") {
-    return NextResponse.redirect(new URL(routes.dashboard.root(), req.nextUrl));
-  }
-
   // Pages restricted for authenticated users (e.g. sign-in, goodbye)
   if (isOnAuthRestrictedPages && isLoggedIn) {
     return NextResponse.redirect(new URL(routes.dashboard.root(), req.nextUrl));

@@ -1,9 +1,25 @@
-"use client";
+import { redirect } from "next/navigation";
+import { headers } from "next/headers";
+import { auth } from "@/lib/auth/auth";
+import { getUserRoleFromDB } from "@/lib/auth/actions";
+import { AdminLayout } from "@/components/admin/admin-layout";
+import { routes } from "@/routes";
 
-import dynamic from "next/dynamic";
+export default async function Layout({ children }: { children: React.ReactNode }) {
+  const session = await auth.api.getSession({
+    headers: await headers(),
+    query: { disableCookieCache: true },
+  });
 
-const AdminLayout = dynamic(() => import("@/components/admin/admin-layout").then((m) => m.AdminLayout), { ssr: false });
+  if (!session) {
+    redirect(routes.auth.signIn());
+  }
 
-export default function Layout({ children }: { children: React.ReactNode }) {
+  const role = await getUserRoleFromDB(session.user.id);
+
+  if (role !== "admin") {
+    redirect(routes.dashboard.root());
+  }
+
   return <AdminLayout>{children}</AdminLayout>;
 }

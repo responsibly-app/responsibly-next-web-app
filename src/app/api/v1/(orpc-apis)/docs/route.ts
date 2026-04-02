@@ -3,7 +3,10 @@ import { auth } from "@/lib/auth/auth";
 const openAPISchemaURL = "/api/v1/openapi.json";
 
 async function checkAdminAuth(req: Request): Promise<Response | null> {
-  const session = await auth.api.getSession({ headers: req.headers });
+  const session = await auth.api.getSession({
+    headers: req.headers,
+    query: { disableCookieCache: true },
+  });
 
   if (!session) {
     return new Response("Unauthorized", { status: 401 });
