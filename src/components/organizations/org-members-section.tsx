@@ -240,13 +240,11 @@ export function OrgMembersSection() {
         </CardContent>
       </Card>
 
-      {inviteOpen && (
-        <InviteMemberDialog
-          open={inviteOpen}
-          onOpenChange={setInviteOpen}
-          organizationId={orgId}
-        />
-      )}
+      <InviteMemberDialog
+        open={inviteOpen}
+        onOpenChange={setInviteOpen}
+        organizationId={orgId}
+      />
 
       <AlertDialog open={leaveConfirmOpen} onOpenChange={setLeaveConfirmOpen}>
         <AlertDialogContent>

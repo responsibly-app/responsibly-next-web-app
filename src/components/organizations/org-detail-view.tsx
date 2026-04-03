@@ -472,7 +472,7 @@ export function OrgDetailView({ orgId }: { orgId: string }) {
         </Tabs>
       </div>
 
-      {inviteOpen && <InviteMemberDialog open={inviteOpen} onOpenChange={setInviteOpen} organizationId={orgId} />}
+      <InviteMemberDialog open={inviteOpen} onOpenChange={setInviteOpen} organizationId={orgId} />
       <UpdateMemberRoleDialog
         open={!!roleTarget}
         onOpenChange={(open) => !open && setRoleTarget(null)}

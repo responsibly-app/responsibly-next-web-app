@@ -39,15 +39,14 @@ export function InviteMemberDialog({ open, onOpenChange, organizationId }: Props
   const [role, setRole] = useState<InvitationRole>("member");
 
   useEffect(() => {
-    if (invitableRoles.length > 0) {
+    if (open && invitableRoles.length > 0) {
+      setEmail("");
       setRole(invitableRoles.at(-1)!.role as InvitationRole);
     }
-  }, [invitableRoles]);
+  }, [open, invitableRoles]);
 
   function handleClose() {
     onOpenChange(false);
-    setEmail("");
-    setRole(availableRoles.at(-1) ?? "member");
   }
 
   function handleSubmit() {
@@ -88,7 +87,7 @@ export function InviteMemberDialog({ open, onOpenChange, organizationId }: Props
                   <SelectPrimitive.Item
                     key={r.role}
                     value={r.role}
-                    className="relative flex w-full cursor-default items-start gap-2.5 rounded-xl py-2.5 pr-8 pl-3 text-sm outline-hidden select-none focus:bg-accent focus:text-accent-foreground data-[state=checked]:bg-accent data-[state=checked]:text-accent-foreground data-disabled:pointer-events-none data-disabled:opacity-50"
+                    className="relative flex w-full cursor-default items-start m-1 gap-2.5 rounded-xl py-2.5 pr-8 pl-3 text-sm outline-hidden select-none focus:bg-accent focus:text-accent-foreground data-[state=checked]:bg-accent data-[state=checked]:text-accent-foreground data-disabled:pointer-events-none data-disabled:opacity-50"
                   >
                     <span className="pointer-events-none absolute right-2 top-2.5 flex size-4 items-center justify-center">
                       <SelectPrimitive.ItemIndicator>
