@@ -40,20 +40,22 @@ import {
   useLeaveOrganization,
   useListMyOrganizations,
 } from "@/lib/auth/hooks";
+import { getPermissions } from "@/lib/auth/hooks/oraganization/access-control";
 import { CreateOrganizationDialog } from "./create-organization-dialog";
 import { EditOrganizationDialog } from "./edit-organization-dialog";
+import { OrgRole } from "@/lib/auth/hooks/oraganization/permissions";
 
 type OrgAction = { type: "leave" | "delete"; orgId: string; orgName: string } | null;
 type EditTarget = { id: string; name: string; slug: string } | null;
 
-const ROLE_LABELS: Record<string, string> = {
+const ROLE_LABELS: Record<OrgRole, string> = {
   owner: "Owner",
   admin: "Admin",
   assistant: "Assistant",
   member: "Member",
 };
 
-function roleBadgeVariant(role: string) {
+function roleBadgeVariant(role: OrgRole) {
   if (role === "owner") return "default" as const;
   if (role === "admin") return "secondary" as const;
   return "outline" as const;
@@ -122,7 +124,7 @@ export function OrganizationsList() {
             className="pl-9"
           />
         </div>
-        <div className="flex items-center rounded-md border p-1 gap-1">
+        <div className="flex items-center rounded-2xl border p-1 gap-1">
           <Button
             variant={ownerFilter === "all" ? "secondary" : "ghost"}
             size="sm"
@@ -179,8 +181,8 @@ export function OrganizationsList() {
             <TableBody>
               {filtered.map((org) => {
                 const isActive = activeOrg?.id === org.id;
-                const role = org.role;
-                const isOwner = role === "owner";
+                const role = org.role as OrgRole;
+                const { canEditOrg, canDeleteOrg, canLeave } = getPermissions(role);
 
                 return (
                   <TableRow key={org.id}>
@@ -235,17 +237,19 @@ export function OrganizationsList() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            {isOwner ? (
+                            {canEditOrg && (
+                              <DropdownMenuItem
+                                onClick={() =>
+                                  setEditTarget({ id: org.id, name: org.name, slug: org.slug })
+                                }
+                              >
+                                <Pencil className="mr-2 size-4" />
+                                Edit Organization
+                              </DropdownMenuItem>
+                            )}
+                            {canDeleteOrg && (
                               <>
-                                <DropdownMenuItem
-                                  onClick={() =>
-                                    setEditTarget({ id: org.id, name: org.name, slug: org.slug })
-                                  }
-                                >
-                                  <Pencil className="mr-2 size-4" />
-                                  Edit Organization
-                                </DropdownMenuItem>
-                                <DropdownMenuSeparator />
+                                {canEditOrg && <DropdownMenuSeparator />}
                                 <DropdownMenuItem
                                   className="text-destructive focus:text-destructive"
                                   onClick={() =>
@@ -256,7 +260,8 @@ export function OrganizationsList() {
                                   Delete Organization
                                 </DropdownMenuItem>
                               </>
-                            ) : (
+                            )}
+                            {canLeave && (
                               <DropdownMenuItem
                                 className="text-destructive focus:text-destructive"
                                 onClick={() =>

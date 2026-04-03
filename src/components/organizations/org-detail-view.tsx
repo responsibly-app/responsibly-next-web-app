@@ -51,10 +51,13 @@ import {
 import { authClient } from "@/lib/auth/auth-client";
 import { InviteMemberDialog } from "./invite-member-dialog";
 import { EditOrganizationDialog } from "./edit-organization-dialog";
-import type { OrgRole } from "@/lib/auth/hooks";
+import { UpdateMemberRoleDialog } from "./update-member-role-dialog";
+import { getPermissions } from "@/lib/auth/hooks/oraganization/access-control";
+import { OrgRole } from "@/lib/auth/hooks/oraganization/permissions";
 
 type ConfirmAction = { type: "delete" | "leave" } | null;
 type EditTarget = { id: string; name: string; slug: string } | null;
+type RoleTarget = { memberId: string; memberName: string; currentRole: OrgRole } | null;
 
 const ROLE_LABELS: Record<string, string> = {
   owner: "Owner",
@@ -99,6 +102,7 @@ export function OrgDetailView({ orgId }: { orgId: string }) {
   const [inviteOpen, setInviteOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<EditTarget>(null);
   const [confirmAction, setConfirmAction] = useState<ConfirmAction>(null);
+  const [roleTarget, setRoleTarget] = useState<RoleTarget>(null);
 
   const { data: activeOrg } = useActiveOrganization();
   const { data: session } = authClient.useSession();
@@ -132,9 +136,8 @@ export function OrgDetailView({ orgId }: { orgId: string }) {
 
   // Derive current user's role from the members list
   const currentRole = members.find((m) => m.userId === currentUserId)?.role;
-  const isOwner = currentRole === "owner";
-  const canManage = currentRole === "owner" || currentRole === "admin";
-  const canLeave = currentRole !== "owner";
+  const { canCreateInvitation, canRemoveMember, canUpdateMemberRole, canEditOrg, canDeleteOrg, canManage, canLeave } =
+    getPermissions(currentRole);
 
   function handleRemove(memberId: string, email: string) {
     removeMember.mutate(
@@ -259,17 +262,19 @@ export function OrgDetailView({ orgId }: { orgId: string }) {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                {isOwner ? (
+                {canEditOrg && (
+                  <DropdownMenuItem
+                    onClick={() =>
+                      setEditTarget({ id: orgId, name: fullOrg.name, slug: fullOrg.slug })
+                    }
+                  >
+                    <Pencil className="mr-2 size-4" />
+                    Edit Organization
+                  </DropdownMenuItem>
+                )}
+                {canDeleteOrg && (
                   <>
-                    <DropdownMenuItem
-                      onClick={() =>
-                        setEditTarget({ id: orgId, name: fullOrg.name, slug: fullOrg.slug })
-                      }
-                    >
-                      <Pencil className="mr-2 size-4" />
-                      Edit Organization
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
+                    {canEditOrg && <DropdownMenuSeparator />}
                     <DropdownMenuItem
                       className="text-destructive focus:text-destructive"
                       onClick={() => setConfirmAction({ type: "delete" })}
@@ -278,7 +283,8 @@ export function OrgDetailView({ orgId }: { orgId: string }) {
                       Delete Organization
                     </DropdownMenuItem>
                   </>
-                ) : canLeave ? (
+                )}
+                {canLeave && (
                   <DropdownMenuItem
                     className="text-destructive focus:text-destructive"
                     onClick={() => setConfirmAction({ type: "leave" })}
@@ -286,7 +292,7 @@ export function OrgDetailView({ orgId }: { orgId: string }) {
                     <LogOut className="mr-2 size-4" />
                     Leave Organization
                   </DropdownMenuItem>
-                ) : null}
+                )}
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
@@ -299,7 +305,7 @@ export function OrgDetailView({ orgId }: { orgId: string }) {
               <TabsTrigger value="members">
                 Members
                 {members.length > 0 && (
-                  <span className="bg-muted text-muted-foreground ml-1.5 rounded px-1.5 py-0.5 text-xs font-normal">
+                  <span className="bg-primary text-primary-foreground ml-1.5 rounded-full px-1.5 py-0.5 text-xs font-normal">
                     {members.length}
                   </span>
                 )}
@@ -387,18 +393,19 @@ export function OrgDetailView({ orgId }: { orgId: string }) {
                                       </Button>
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent align="end">
-                                      {currentRole === "owner" && (
+                                      {canUpdateMemberRole && (
                                         <>
-                                          {member.role !== "admin" && (
-                                            <DropdownMenuItem onClick={() => handleRoleChange(member.id, "admin")}>
-                                              Make Admin
-                                            </DropdownMenuItem>
-                                          )}
-                                          {member.role !== "member" && (
-                                            <DropdownMenuItem onClick={() => handleRoleChange(member.id, "member")}>
-                                              Make Member
-                                            </DropdownMenuItem>
-                                          )}
+                                          <DropdownMenuItem
+                                            onClick={() =>
+                                              setRoleTarget({
+                                                memberId: member.id,
+                                                memberName: member.user?.name ?? member.user?.email ?? member.id,
+                                                currentRole: member.role,
+                                              })
+                                            }
+                                          >
+                                            Update Role
+                                          </DropdownMenuItem>
                                           <DropdownMenuSeparator />
                                         </>
                                       )}
@@ -488,6 +495,25 @@ export function OrgDetailView({ orgId }: { orgId: string }) {
       </div>
 
       <InviteMemberDialog open={inviteOpen} onOpenChange={setInviteOpen} organizationId={orgId} />
+      {roleTarget && (
+        <UpdateMemberRoleDialog
+          open={!!roleTarget}
+          onOpenChange={(open) => !open && setRoleTarget(null)}
+          memberName={roleTarget.memberName}
+          currentRole={roleTarget.currentRole}
+          isPending={updateRole.isPending}
+          onConfirm={(role) => {
+            updateRole.mutate(
+              { memberId: roleTarget.memberId, role, organizationId: orgId },
+              {
+                onSuccess: () => setRoleTarget(null),
+                onError: (err: { message?: string }) =>
+                  toast.error(err?.message ?? "Failed to update role."),
+              },
+            );
+          }}
+        />
+      )}
       {editTarget && (
         <EditOrganizationDialog
           open={!!editTarget}

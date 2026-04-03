@@ -4,8 +4,6 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { authClient } from "@/lib/auth/auth-client";
 import { orpcUtils } from "@/lib/orpc/orpc-client";
 
-export type OrgRole = "owner" | "admin" | "assistant" | "member";
-
 type CreateOrganizationParams = {
   name: string;
   slug: string;

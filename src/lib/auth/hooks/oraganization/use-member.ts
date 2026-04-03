@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { authClient } from "@/lib/auth/auth-client";
-import { OrgRole } from "./use-organization";
+import { OrgRole } from "./permissions";
 
 export type ListMembersQuery = {
     organizationId: string;

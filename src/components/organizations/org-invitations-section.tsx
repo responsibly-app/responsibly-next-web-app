@@ -21,7 +21,7 @@ import {
   useCancelInvitation,
   useGetActiveMemberRole,
 } from "@/lib/auth/hooks";
-import type { OrgRole } from "@/lib/auth/hooks";
+import { OrgRole } from "@/lib/auth/hooks/oraganization/permissions";
 
 const ROLE_LABELS: Record<string, string> = {
   owner: "Owner",

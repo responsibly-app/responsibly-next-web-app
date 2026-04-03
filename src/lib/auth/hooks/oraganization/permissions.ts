@@ -10,9 +10,9 @@ const ac = createAccessControl(statement);
 
 //  -----------------------------------------------
 
-const member = ac.newRole({
-    ...memberAc.statements,
-    project: ["create"],
+const owner = ac.newRole({
+    ...ownerAc.statements,
+    project: ["create", "update", "delete"],
 });
 
 const admin = ac.newRole({
@@ -20,14 +20,16 @@ const admin = ac.newRole({
     project: ["create", "update"],
 });
 
-const owner = ac.newRole({
-    ...ownerAc.statements,
-    project: ["create", "update", "delete"],
+const member = ac.newRole({
+    ...memberAc.statements,
+    project: ["create"],
 });
 
-const myCustomRole = ac.newRole({
-    project: ["create", "update", "delete"],
+const assistant = ac.newRole({
     organization: ["update"],
+    member: ["create", "update", "delete"],
+    invitation: ["create", "cancel"],
+    project: ["create", "update", "delete"],
 });
 
 //  -----------------------------------------------
@@ -38,15 +40,12 @@ export const accessControl = {
         owner,
         admin,
         member,
-        myCustomRole
+        assistant
     }
 }
 
 //  -----------------------------------------------
 
-// /** Example usage */
-// const canCreateProject = await authClient.organization.hasPermission({
-//   permissions: {
-//     project: ["create"],
-//   },
-// });
+export type OrgRole = "owner" | "admin" | "member" | "assistant";
+
+// -----------------------------------------------

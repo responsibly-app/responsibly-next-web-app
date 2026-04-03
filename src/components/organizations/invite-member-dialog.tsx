@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/select";
 import { Spinner } from "@/components/ui/spinner";
 import { useInviteMember } from "@/lib/auth/hooks";
-import type { InvitationRole, OrgRole } from "@/lib/auth/hooks";
+import type { InvitationRole } from "@/lib/auth/hooks";
 
 type Props = {
   open: boolean;
