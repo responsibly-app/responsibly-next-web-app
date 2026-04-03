@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { authClient } from "@/lib/auth/auth-client";
-import { orpcUtils } from "@/lib/orpc/orpc-client";
+import { orpcTQUtils } from "@/lib/orpc/orpc-client";
 
 type CreateOrganizationParams = {
   name: string;
@@ -104,5 +104,5 @@ export function useSetActiveOrganization() {
  * Single JOIN query — more efficient than fetching roles per org separately.
  */
 export function useListMyOrganizations() {
-  return useQuery(orpcUtils.organization.listMine.queryOptions());
+  return useQuery(orpcTQUtils.organization.listMine.queryOptions());
 }

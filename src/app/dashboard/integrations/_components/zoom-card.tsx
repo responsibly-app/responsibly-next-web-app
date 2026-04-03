@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
-import { orpcUtils } from "@/lib/orpc/orpc-client";
+import { orpcTQUtils } from "@/lib/orpc/orpc-client";
 import { useLinkSocial, useUnlinkSocial } from "@/lib/auth/hooks";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
@@ -22,16 +22,16 @@ import { toast } from "sonner";
 
 export function ZoomCard() {
   const { data: statusData, isLoading: statusLoading } = useQuery(
-    orpcUtils.zoom.status.queryOptions()
+    orpcTQUtils.zoom.status.queryOptions()
   );
   const isConnected = statusData?.connected ?? false;
 
   const { data: profileData } = useQuery(
-    orpcUtils.zoom.profile.queryOptions({ enabled: isConnected })
+    orpcTQUtils.zoom.profile.queryOptions({ enabled: isConnected })
   );
 
   const { data: meetingsData, isLoading: meetingsLoading } = useQuery(
-    orpcUtils.zoom.meetings.list.queryOptions({ input: { type: "upcoming" }, enabled: isConnected })
+    orpcTQUtils.zoom.meetings.list.queryOptions({ input: { type: "upcoming" }, enabled: isConnected })
   );
 
   const queryClient = useQueryClient();
@@ -49,8 +49,8 @@ export function ZoomCard() {
   function handleDisconnect() {
     unlinkSocial.mutate("zoom", {
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: orpcUtils.zoom.status.key() });
-        queryClient.removeQueries({ queryKey: orpcUtils.zoom.meetings.key() });
+        queryClient.invalidateQueries({ queryKey: orpcTQUtils.zoom.status.key() });
+        queryClient.removeQueries({ queryKey: orpcTQUtils.zoom.meetings.key() });
         toast.success("Zoom disconnected.");
       },
     });

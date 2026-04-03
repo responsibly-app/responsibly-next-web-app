@@ -3,7 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { authClient } from "@/lib/auth/auth-client";
-import { orpcUtils, orpc } from "@/lib/orpc/orpc-client";
+import { orpcTQUtils, orpc } from "@/lib/orpc/orpc-client";
 import { OrgRole, canAssignRole } from "./permissions";
 
 export type ListMembersQuery = {
@@ -20,7 +20,7 @@ export type ListMembersQuery = {
 /** Get the current user's role in a specific organization directly from the DB */
 export function useGetMemberRole(organizationId: string) {
     return useQuery(
-        orpcUtils.organization.getMemberRole.queryOptions({
+        orpcTQUtils.organization.getMemberRole.queryOptions({
             input: { organizationId },
             enabled: !!organizationId,
             staleTime: 0,
@@ -32,7 +32,7 @@ export function useGetMemberRole(organizationId: string) {
 /** Get roles the current user can assign to other members in an organization */
 export function useGetAssignableRoles(organizationId: string) {
     return useQuery(
-        orpcUtils.organization.getAssignableRoles.queryOptions({
+        orpcTQUtils.organization.getAssignableRoles.queryOptions({
             input: { organizationId },
             enabled: !!organizationId,
             staleTime: 0,
@@ -44,7 +44,7 @@ export function useGetAssignableRoles(organizationId: string) {
 /** Get roles the current user can use when inviting new members to an organization */
 export function useGetInvitableRoles(organizationId: string) {
     return useQuery(
-        orpcUtils.organization.getInvitableRoles.queryOptions({
+        orpcTQUtils.organization.getInvitableRoles.queryOptions({
             input: { organizationId },
             enabled: !!organizationId,
             staleTime: 0,

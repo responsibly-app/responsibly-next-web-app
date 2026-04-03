@@ -30,4 +30,4 @@ const link = new RPCLink({
 
 export const orpc: RouterClient<AppRouter> = createORPCClient(link)
 
-export const orpcUtils = createRouterUtils(orpc);
+export const orpcTQUtils = createRouterUtils(orpc);
