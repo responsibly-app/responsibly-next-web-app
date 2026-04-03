@@ -162,9 +162,9 @@ export function OrganizationsList() {
           </p>
         </div>
       ) : (
-        <div className="rounded-md border">
+        <div className="rounded-xl border overflow-auto">
           <Table>
-            <TableHeader>
+            <TableHeader className="sticky top-0 z-10 bg-background">
               <TableRow>
                 <TableHead>Organization</TableHead>
                 <TableHead>Role</TableHead>

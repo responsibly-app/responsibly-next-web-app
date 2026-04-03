@@ -15,32 +15,40 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
 import { useCreateOrganization } from "@/lib/auth/hooks";
+import { SlugInput, toSlug } from "./slug-input";
 
 type Props = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 };
 
-function toSlug(value: string) {
-  return value
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9\s-]/g, "")
-    .replace(/\s+/g, "-");
-}
-
 export function CreateOrganizationDialog({ open, onOpenChange }: Props) {
   const createOrganization = useCreateOrganization();
 
   const [name, setName] = useState("");
+  const [slug, setSlug] = useState("");
+  const [slugEdited, setSlugEdited] = useState(false);
+
+  function handleNameChange(value: string) {
+    setName(value);
+    if (!slugEdited) {
+      setSlug(toSlug(value));
+    }
+  }
+
+  function handleSlugChange(value: string) {
+    setSlug(value);
+    setSlugEdited(value !== "");
+  }
 
   function handleClose() {
     onOpenChange(false);
     setName("");
+    setSlug("");
+    setSlugEdited(false);
   }
 
   function handleSubmit() {
-    const slug = toSlug(name);
     createOrganization.mutate(
       { name: name.trim(), slug },
       {
@@ -55,7 +63,7 @@ export function CreateOrganizationDialog({ open, onOpenChange }: Props) {
     );
   }
 
-  const isValid = name.trim();
+  const isValid = name.trim() && slug.trim();
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
@@ -71,9 +79,10 @@ export function CreateOrganizationDialog({ open, onOpenChange }: Props) {
               id="org-name"
               placeholder="My Organization"
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(e) => handleNameChange(e.target.value)}
             />
           </div>
+          <SlugInput id="org-slug" value={slug} onChange={handleSlugChange} />
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={handleClose}>

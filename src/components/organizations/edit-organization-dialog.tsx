@@ -15,20 +15,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
 import { useUpdateOrganization } from "@/lib/auth/hooks";
+import { SlugInput, toSlug } from "./slug-input";
 
 type Props = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   organization: { id: string; name: string; slug: string };
 };
-
-function toSlug(value: string) {
-  return value
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9\s-]/g, "")
-    .replace(/\s+/g, "-");
-}
 
 export function EditOrganizationDialog({ open, onOpenChange, organization }: Props) {
   const updateOrganization = useUpdateOrganization();
@@ -54,7 +47,7 @@ export function EditOrganizationDialog({ open, onOpenChange, organization }: Pro
 
   function handleSlugChange(value: string) {
     setSlugTouched(true);
-    setSlug(toSlug(value));
+    setSlug(value);
   }
 
   function handleClose() {
@@ -95,21 +88,7 @@ export function EditOrganizationDialog({ open, onOpenChange, organization }: Pro
               onChange={(e) => handleNameChange(e.target.value)}
             />
           </div>
-          <div className="grid gap-2">
-            <Label htmlFor="edit-org-slug">Slug</Label>
-            <div className="flex items-center">
-              <span className="text-muted-foreground border-input bg-muted flex h-9 items-center rounded-l-md border border-r-0 px-3 text-sm">
-                /
-              </span>
-              <Input
-                id="edit-org-slug"
-                className="rounded-l-none"
-                placeholder="my-organization"
-                value={slug}
-                onChange={(e) => handleSlugChange(e.target.value)}
-              />
-            </div>
-          </div>
+          <SlugInput id="edit-org-slug" value={slug} onChange={handleSlugChange} />
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={handleClose}>

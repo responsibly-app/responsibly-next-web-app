@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { authClient } from "@/lib/auth/auth-client";
-import { orpcTQUtils } from "@/lib/orpc/orpc-client";
+import { orpc, orpcTQUtils } from "@/lib/orpc/orpc-client";
 
 type CreateOrganizationParams = {
   name: string;
@@ -54,6 +54,9 @@ export function useCreateOrganization() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["organization"] });
+      // queryClient.invalidateQueries({
+      //   queryKey: orpcTQUtils.organization.listMine.queryKey(),
+      // });
     },
   });
 }
@@ -69,6 +72,9 @@ export function useUpdateOrganization() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["organization"] });
+      // queryClient.invalidateQueries({
+      //   queryKey: orpcTQUtils.organization.listMine.queryKey(),
+      // });
     },
   });
 }
@@ -84,6 +90,9 @@ export function useDeleteOrganization() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["organization"] });
+      // queryClient.invalidateQueries({
+      //   queryKey: orpcTQUtils.organization.listMine.queryKey(),
+      // });
     },
   });
 }
@@ -104,5 +113,8 @@ export function useSetActiveOrganization() {
  * Single JOIN query — more efficient than fetching roles per org separately.
  */
 export function useListMyOrganizations() {
-  return useQuery(orpcTQUtils.organization.listMine.queryOptions());
+  return useQuery({
+    ...orpcTQUtils.organization.listMine.queryOptions(),
+    queryKey: ["organization", ...orpcTQUtils.organization.listMine.queryKey()],
+  });
 }

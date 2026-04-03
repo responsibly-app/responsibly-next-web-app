@@ -1,6 +1,6 @@
 import { OrganizationsList } from "@/components/organizations/organizations-list";
-import { OrgMembersSection } from "@/components/organizations/org-members-section";
-import { OrgInvitationsSection } from "@/components/organizations/org-invitations-section";
+// import { OrgMembersSection } from "@/components/organizations/org-members-section";
+// import { OrgInvitationsSection } from "@/components/organizations/org-invitations-section";
 
 export default function OrganizationsPage() {
   return (

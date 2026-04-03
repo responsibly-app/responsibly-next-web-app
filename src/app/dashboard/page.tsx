@@ -1,5 +1,5 @@
-import { ComponentExample } from "@/components/component-example";
+import { ActiveOrgDetail } from "@/components/dashboard/active-org-detail";
 
 export default function Page() {
-  return <ComponentExample />;
+  return <ActiveOrgDetail />;
 }
