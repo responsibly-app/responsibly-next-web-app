@@ -1,27 +1,39 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { authClient } from "@/lib/auth/auth-client";
+import { orpc } from "@/lib/orpc/orpc-client";
+import { OrgRole, canAssignRole } from "./permissions";
 
 export type InvitationRole = "owner" | "admin" | "assistant" | "priviledgedMember" | "member";
 
 type InviteMemberParams = {
     email: string;
     role: InvitationRole;
-    organizationId?: string;
+    organizationId: string;
 };
 
 /** Invite a member to an organization */
-export function useInviteMember() {
+export function useInviteMember(organizationId: string) {
     const queryClient = useQueryClient();
+
     return useMutation({
         mutationFn: async (params: InviteMemberParams) => {
+            const { role: actorRole } = await orpc.organization.getMemberRole({ organizationId });
+            if (!actorRole || !canAssignRole(actorRole as OrgRole, params.role as OrgRole)) {
+                throw new Error("You cannot invite a user with a role higher than your own.");
+            }
             const result = await authClient.organization.inviteMember(params);
             if (result.error) throw result.error;
             return result.data;
         },
-        onSuccess: () => {
+        onSuccess: (_, { email }) => {
             queryClient.invalidateQueries({ queryKey: ["organization"] });
+            toast.success(`Invitation sent to ${email}.`);
+        },
+        onError: (err: { message?: string }) => {
+            toast.error(err?.message ?? "Failed to send invitation.");
         },
     });
 }
@@ -30,13 +42,17 @@ export function useInviteMember() {
 export function useCancelInvitation() {
     const queryClient = useQueryClient();
     return useMutation({
-        mutationFn: async (invitationId: string) => {
+        mutationFn: async ({ invitationId }: { invitationId: string; email: string }) => {
             const result = await authClient.organization.cancelInvitation({ invitationId });
             if (result.error) throw result.error;
             return result.data;
         },
-        onSuccess: () => {
+        onSuccess: (_, { email }) => {
             queryClient.invalidateQueries({ queryKey: ["organization"] });
+            toast.success(`Invitation to ${email} cancelled.`);
+        },
+        onError: (err: { message?: string }) => {
+            toast.error(err?.message ?? "Failed to cancel invitation.");
         },
     });
 }

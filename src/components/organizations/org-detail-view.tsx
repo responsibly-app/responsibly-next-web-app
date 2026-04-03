@@ -47,6 +47,7 @@ import {
   useRemoveMember,
   useUpdateMemberRole,
   useCancelInvitation,
+  useGetMemberRole,
 } from "@/lib/auth/hooks";
 import { authClient } from "@/lib/auth/auth-client";
 import { InviteMemberDialog } from "./invite-member-dialog";
@@ -113,6 +114,9 @@ export function OrgDetailView({ orgId }: { orgId: string }) {
   const isActive = activeOrg?.id === orgId;
   const currentUserId = session?.user?.id;
 
+  const { data: memberRoleData } = useGetMemberRole(orgId);
+  const currentRole = memberRoleData?.role as OrgRole | undefined;
+
   const members: MemberRow[] = membersRaw
     ? Array.isArray(membersRaw)
       ? (membersRaw as MemberRow[])
@@ -126,9 +130,6 @@ export function OrgDetailView({ orgId }: { orgId: string }) {
         ? (invitationsRaw as Invitation[])
         : ((invitationsRaw as { invitations?: Invitation[] }).invitations ?? [])
   ).filter((inv) => inv.status === "pending");
-
-  // Derive current user's role from the members list
-  const currentRole = members.find((m) => m.userId === currentUserId)?.role;
   const { canCreateInvitation, canRemoveMember, canUpdateMemberRole, canEditOrg, canDeleteOrg, canManage, canLeave } =
     getPermissions(currentRole);
 
@@ -144,13 +145,7 @@ export function OrgDetailView({ orgId }: { orgId: string }) {
   }
 
   function handleRoleChange(memberId: string, role: OrgRole) {
-    updateRole.mutate(
-      { memberId, role, organizationId: orgId },
-      {
-        onError: (err: { message?: string }) =>
-          toast.error(err?.message ?? "Failed to update role."),
-      },
-    );
+    updateRole.mutate({ memberId, role, organizationId: orgId });
   }
 
   function handleConfirm() {
@@ -459,16 +454,12 @@ export function OrgDetailView({ orgId }: { orgId: string }) {
                                 variant="ghost"
                                 size="sm"
                                 className="text-destructive hover:text-destructive h-7 px-2 text-xs"
-                                disabled={cancelInvitation.isPending && cancelInvitation.variables === inv.id}
+                                disabled={cancelInvitation.isPending && cancelInvitation.variables?.invitationId === inv.id}
                                 onClick={() =>
-                                  cancelInvitation.mutate(inv.id, {
-                                    onSuccess: () => toast.success(`Invitation to ${inv.email} cancelled.`),
-                                    onError: (err: { message?: string }) =>
-                                      toast.error(err?.message ?? "Failed to cancel invitation."),
-                                  })
+                                  cancelInvitation.mutate({ invitationId: inv.id, email: inv.email })
                                 }
                               >
-                                {cancelInvitation.isPending && cancelInvitation.variables === inv.id ? (
+                                {cancelInvitation.isPending && cancelInvitation.variables?.invitationId === inv.id ? (
                                   <Spinner className="size-3" />
                                 ) : (
                                   "Cancel"
@@ -487,27 +478,22 @@ export function OrgDetailView({ orgId }: { orgId: string }) {
         </Tabs>
       </div>
 
-      <InviteMemberDialog open={inviteOpen} onOpenChange={setInviteOpen} organizationId={orgId} actorRole={(currentRole as OrgRole) ?? "member"} />
-      {roleTarget && (
-        <UpdateMemberRoleDialog
-          open={!!roleTarget}
-          onOpenChange={(open) => !open && setRoleTarget(null)}
-          memberName={roleTarget.memberName}
-          currentRole={roleTarget.currentRole}
-          actorRole={(currentRole as OrgRole) ?? "member"}
-          isPending={updateRole.isPending}
-          onConfirm={(role) => {
-            updateRole.mutate(
-              { memberId: roleTarget.memberId, role, organizationId: orgId },
-              {
-                onSuccess: () => setRoleTarget(null),
-                onError: (err: { message?: string }) =>
-                  toast.error(err?.message ?? "Failed to update role."),
-              },
-            );
-          }}
-        />
-      )}
+      <InviteMemberDialog open={inviteOpen} onOpenChange={setInviteOpen} organizationId={orgId} />
+      <UpdateMemberRoleDialog
+        open={!!roleTarget}
+        onOpenChange={(open) => !open && setRoleTarget(null)}
+        memberName={roleTarget?.memberName ?? ""}
+        currentRole={(roleTarget?.currentRole ?? "member") as OrgRole}
+        actorRole={(currentRole as OrgRole) ?? "member"}
+        isPending={updateRole.isPending}
+        onConfirm={(role) => {
+          if (!roleTarget) return;
+          updateRole.mutate(
+            { memberId: roleTarget.memberId, role, organizationId: orgId },
+            { onSuccess: () => setRoleTarget(null) },
+          );
+        }}
+      />
       {editTarget && (
         <EditOrganizationDialog
           open={!!editTarget}

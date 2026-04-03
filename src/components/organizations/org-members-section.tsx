@@ -40,6 +40,7 @@ import {
   useRemoveMember,
   useUpdateMemberRole,
   useLeaveOrganization,
+  useGetAssignableRoles,
 } from "@/lib/auth/hooks";
 import { authClient } from "@/lib/auth/auth-client";
 import { InviteMemberDialog } from "./invite-member-dialog";
@@ -68,6 +69,8 @@ export function OrgMembersSection() {
   const { data: currentRole } = useGetActiveMemberRole();
 
   const orgId = activeOrg?.id ?? "";
+
+  const { data: assignableRoles = [] } = useGetAssignableRoles(orgId);
 
   const { data: membersData, isPending } = useListMembers(
     { organizationId: orgId },
@@ -100,13 +103,7 @@ export function OrgMembersSection() {
   }
 
   function handleRoleChange(memberId: string, role: OrgRole) {
-    updateRole.mutate(
-      { memberId, role, organizationId: orgId },
-      {
-        onError: (err: { message?: string }) =>
-          toast.error(err?.message ?? "Failed to update role."),
-      },
-    );
+    updateRole.mutate({ memberId, role, organizationId: orgId });
   }
 
   return (
@@ -210,29 +207,17 @@ export function OrgMembersSection() {
                                 </Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
-                                {currentRole === "owner" && (
-                                  <>
-                                    {member.role !== "admin" && (
-                                      <DropdownMenuItem
-                                        onClick={() =>
-                                          handleRoleChange(member.id, "admin")
-                                        }
-                                      >
-                                        Make Admin
-                                      </DropdownMenuItem>
-                                    )}
-                                    {member.role !== "member" && (
-                                      <DropdownMenuItem
-                                        onClick={() =>
-                                          handleRoleChange(member.id, "member")
-                                        }
-                                      >
-                                        Make Member
-                                      </DropdownMenuItem>
-                                    )}
-                                    <DropdownMenuSeparator />
-                                  </>
-                                )}
+                                {assignableRoles
+                                  .filter((r) => r.role !== member.role)
+                                  .map((r) => (
+                                    <DropdownMenuItem
+                                      key={r.role}
+                                      onClick={() => handleRoleChange(member.id, r.role as OrgRole)}
+                                    >
+                                      Make {r.label}
+                                    </DropdownMenuItem>
+                                  ))}
+                                {assignableRoles.length > 0 && <DropdownMenuSeparator />}
                                 <DropdownMenuItem
                                   className="text-destructive focus:text-destructive"
                                   onClick={() =>
@@ -255,12 +240,13 @@ export function OrgMembersSection() {
         </CardContent>
       </Card>
 
-      <InviteMemberDialog
-        open={inviteOpen}
-        onOpenChange={setInviteOpen}
-        organizationId={orgId}
-        actorRole={(currentRole as OrgRole) ?? "member"}
-      />
+      {inviteOpen && (
+        <InviteMemberDialog
+          open={inviteOpen}
+          onOpenChange={setInviteOpen}
+          organizationId={orgId}
+        />
+      )}
 
       <AlertDialog open={leaveConfirmOpen} onOpenChange={setLeaveConfirmOpen}>
         <AlertDialogContent>

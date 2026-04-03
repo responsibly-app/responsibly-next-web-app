@@ -1,6 +1,5 @@
 "use client";
 
-import { toast } from "sonner";
 import { Mail } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -62,11 +61,7 @@ export function OrgInvitationsSection() {
   const canManage = currentRole === "owner" || currentRole === "admin";
 
   function handleCancel(invitationId: string, email: string) {
-    cancelInvitation.mutate(invitationId, {
-      onSuccess: () => toast.success(`Invitation to ${email} cancelled.`),
-      onError: (err: { message?: string }) =>
-        toast.error(err?.message ?? "Failed to cancel invitation."),
-    });
+    cancelInvitation.mutate({ invitationId, email });
   }
 
   return (
@@ -119,12 +114,12 @@ export function OrgInvitationsSection() {
                         className="text-destructive hover:text-destructive h-7 px-2 text-xs"
                         disabled={
                           cancelInvitation.isPending &&
-                          cancelInvitation.variables === inv.id
+                          cancelInvitation.variables?.invitationId === inv.id
                         }
                         onClick={() => handleCancel(inv.id, inv.email)}
                       >
                         {cancelInvitation.isPending &&
-                        cancelInvitation.variables === inv.id ? (
+                          cancelInvitation.variables?.invitationId === inv.id ? (
                           <Spinner className="size-3" />
                         ) : (
                           "Cancel"

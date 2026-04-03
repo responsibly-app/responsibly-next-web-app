@@ -94,3 +94,9 @@ export const ROLE_META: Record<OrgRole, { label: string; description: string }> 
 };
 
 // -----------------------------------------------
+
+export const ALL_ASSIGNABLE_ROLES: OrgRole[] = ["admin", "assistant", "priviledgedMember", "member"];
+export const INVITABLE_ROLES: OrgRole[] = ["admin", "assistant", "priviledgedMember", "member"];
+
+// -----------------------------------------------
+

@@ -1,8 +1,10 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { authClient } from "@/lib/auth/auth-client";
-import { OrgRole } from "./permissions";
+import { orpcUtils, orpc } from "@/lib/orpc/orpc-client";
+import { OrgRole, canAssignRole } from "./permissions";
 
 export type ListMembersQuery = {
     organizationId: string;
@@ -14,6 +16,42 @@ export type ListMembersQuery = {
     filterOperator?: "in" | "contains" | "starts_with" | "ends_with" | "eq" | "ne" | "gt" | "gte" | "lt" | "lte" | "not_in";
     filterValue?: string;
 };
+
+/** Get the current user's role in a specific organization directly from the DB */
+export function useGetMemberRole(organizationId: string) {
+    return useQuery(
+        orpcUtils.organization.getMemberRole.queryOptions({
+            input: { organizationId },
+            enabled: !!organizationId,
+            staleTime: 0,
+            gcTime: 0,
+        })
+    );
+}
+
+/** Get roles the current user can assign to other members in an organization */
+export function useGetAssignableRoles(organizationId: string) {
+    return useQuery(
+        orpcUtils.organization.getAssignableRoles.queryOptions({
+            input: { organizationId },
+            enabled: !!organizationId,
+            staleTime: 0,
+            gcTime: 0,
+        })
+    );
+}
+
+/** Get roles the current user can use when inviting new members to an organization */
+export function useGetInvitableRoles(organizationId: string) {
+    return useQuery(
+        orpcUtils.organization.getInvitableRoles.queryOptions({
+            input: { organizationId },
+            enabled: !!organizationId,
+            staleTime: 0,
+            gcTime: 0,
+        })
+    );
+}
 
 /** List members of an organization */
 export function useListMembers(query: ListMembersQuery) {
@@ -71,13 +109,20 @@ export function useRemoveMember() {
 export function useUpdateMemberRole() {
     const queryClient = useQueryClient();
     return useMutation({
-        mutationFn: async ({ memberId, role, organizationId }: { memberId: string; role: OrgRole; organizationId?: string }) => {
+        mutationFn: async ({ memberId, role, organizationId }: { memberId: string; role: OrgRole; organizationId: string }) => {
+            const { role: actorRole } = await orpc.organization.getMemberRole({ organizationId });
+            if (!actorRole || !canAssignRole(actorRole as OrgRole, role)) {
+                throw new Error("You cannot assign a role higher than your own.");
+            }
             const result = await authClient.organization.updateMemberRole({ memberId, role, organizationId });
             if (result.error) throw result.error;
             return result.data;
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["organization"] });
+        },
+        onError: (err: { message?: string }) => {
+            toast.error(err?.message ?? "Failed to update role.");
         },
     });
 }

@@ -1,8 +1,9 @@
 import { db } from "@/lib/db";
 import { member, organization } from "@/lib/db/schema/better-auth-schema";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { authed } from "@/lib/orpc/base";
-import { ListMyOrganizationsOutputSchema } from "./organization-schemas";
+import { GetMemberRoleInputSchema, GetMemberRoleOutputSchema, GetRolesInputSchema, GetRolesOutputSchema, ListMyOrganizationsOutputSchema } from "./organization-schemas";
+import { ALL_ASSIGNABLE_ROLES, canAssignRole, INVITABLE_ROLES, OrgRole, ROLE_META } from "@/lib/auth/hooks/oraganization/permissions";
 
 export const organizationRouter = {
   listMine: authed
@@ -32,5 +33,81 @@ export const organizationRouter = {
         .where(eq(member.userId, userId));
 
       return rows;
+    }),
+
+  getMemberRole: authed
+    .route({
+      method: "GET",
+      path: "/organization/member-role",
+      summary: "Get the current user's role in a specific organization",
+      tags: ["Organization"],
+    })
+    .input(GetMemberRoleInputSchema)
+    .output(GetMemberRoleOutputSchema)
+    .handler(async ({ input, context }) => {
+      const userId = context.session.user.id;
+
+      const row = await db
+        .select({ role: member.role })
+        .from(member)
+        .where(and(eq(member.organizationId, input.organizationId), eq(member.userId, userId)))
+        .limit(1)
+        .then((rows) => rows[0]);
+
+      return { role: row?.role ?? null };
+    }),
+
+  getAssignableRoles: authed
+    .route({
+      method: "GET",
+      path: "/organization/assignable-roles",
+      summary: "Get roles the current user can assign to other members",
+      tags: ["Organization"],
+    })
+    .input(GetRolesInputSchema)
+    .output(GetRolesOutputSchema)
+    .handler(async ({ input, context }) => {
+      const userId = context.session.user.id;
+
+      const row = await db
+        .select({ role: member.role })
+        .from(member)
+        .where(and(eq(member.organizationId, input.organizationId), eq(member.userId, userId)))
+        .limit(1)
+        .then((rows) => rows[0]);
+
+      const actorRole = (row?.role ?? null) as OrgRole | null;
+      if (!actorRole) return [];
+
+      return ALL_ASSIGNABLE_ROLES
+        .filter((role) => canAssignRole(actorRole, role))
+        .map((role) => ({ role, ...ROLE_META[role] }));
+    }),
+
+  getInvitableRoles: authed
+    .route({
+      method: "GET",
+      path: "/organization/invitable-roles",
+      summary: "Get roles the current user can use when inviting new members",
+      tags: ["Organization"],
+    })
+    .input(GetRolesInputSchema)
+    .output(GetRolesOutputSchema)
+    .handler(async ({ input, context }) => {
+      const userId = context.session.user.id;
+
+      const row = await db
+        .select({ role: member.role })
+        .from(member)
+        .where(and(eq(member.organizationId, input.organizationId), eq(member.userId, userId)))
+        .limit(1)
+        .then((rows) => rows[0]);
+
+      const actorRole = (row?.role ?? null) as OrgRole | null;
+      if (!actorRole) return [];
+
+      return INVITABLE_ROLES
+        .filter((role) => canAssignRole(actorRole, role))
+        .map((role) => ({ role, ...ROLE_META[role] }));
     }),
 };

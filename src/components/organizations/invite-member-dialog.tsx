@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { toast } from "sonner";
 import { Select as SelectPrimitive } from "radix-ui";
 import { CheckIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -22,25 +21,22 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Spinner } from "@/components/ui/spinner";
-import { useInviteMember } from "@/lib/auth/hooks";
+import { useInviteMember, useGetInvitableRoles } from "@/lib/auth/hooks";
 import type { InvitationRole } from "@/lib/auth/hooks";
-import { OrgRole, ROLE_META, canAssignRole } from "@/lib/auth/hooks/oraganization/permissions";
-
-const INVITABLE_ROLES: InvitationRole[] = ["admin", "assistant", "priviledgedMember", "member"];
 
 type Props = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   organizationId: string;
-  actorRole: OrgRole;
 };
 
-export function InviteMemberDialog({ open, onOpenChange, organizationId, actorRole }: Props) {
-  const inviteMember = useInviteMember();
+export function InviteMemberDialog({ open, onOpenChange, organizationId }: Props) {
+  const inviteMember = useInviteMember(organizationId);
+  const { data: invitableRoles = [] } = useGetInvitableRoles(organizationId);
   const [email, setEmail] = useState("");
 
-  const availableRoles = INVITABLE_ROLES.filter((r) => canAssignRole(actorRole, r as OrgRole));
-  const [role, setRole] = useState<InvitationRole>(availableRoles[0] ?? "member");
+  const availableRoles = invitableRoles.map((r) => r.role) as InvitationRole[];
+  const [role, setRole] = useState<InvitationRole>(availableRoles.at(-1) ?? "member");
 
   function handleClose() {
     onOpenChange(false);
@@ -51,15 +47,7 @@ export function InviteMemberDialog({ open, onOpenChange, organizationId, actorRo
   function handleSubmit() {
     inviteMember.mutate(
       { email, role, organizationId },
-      {
-        onSuccess: () => {
-          toast.success(`Invitation sent to ${email}.`);
-          handleClose();
-        },
-        onError: (err: { message?: string }) => {
-          toast.error(err?.message ?? "Failed to send invitation.");
-        },
-      },
+      { onSuccess: handleClose },
     );
   }
 
@@ -90,10 +78,10 @@ export function InviteMemberDialog({ open, onOpenChange, organizationId, actorRo
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {availableRoles.map((r) => (
+                {invitableRoles.map((r) => (
                   <SelectPrimitive.Item
-                    key={r}
-                    value={r}
+                    key={r.role}
+                    value={r.role}
                     className="relative flex w-full cursor-default items-start gap-2.5 rounded-xl py-2.5 pr-8 pl-3 text-sm outline-hidden select-none focus:bg-accent focus:text-accent-foreground data-disabled:pointer-events-none data-disabled:opacity-50"
                   >
                     <span className="pointer-events-none absolute right-2 top-2.5 flex size-4 items-center justify-center">
@@ -103,9 +91,9 @@ export function InviteMemberDialog({ open, onOpenChange, organizationId, actorRo
                     </span>
                     <div className="flex flex-col gap-0.5">
                       <SelectPrimitive.ItemText>
-                        <span className="font-medium">{ROLE_META[r as OrgRole].label}</span>
+                        <span className="font-medium">{r.label}</span>
                       </SelectPrimitive.ItemText>
-                      <span className="text-xs text-muted-foreground leading-snug">{ROLE_META[r as OrgRole].description}</span>
+                      <span className="text-xs text-muted-foreground leading-snug">{r.description}</span>
                     </div>
                   </SelectPrimitive.Item>
                 ))}
