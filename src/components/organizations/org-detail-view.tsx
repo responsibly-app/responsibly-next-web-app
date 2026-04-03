@@ -53,20 +53,13 @@ import { InviteMemberDialog } from "./invite-member-dialog";
 import { EditOrganizationDialog } from "./edit-organization-dialog";
 import { UpdateMemberRoleDialog } from "./update-member-role-dialog";
 import { getPermissions } from "@/lib/auth/hooks/oraganization/access-control";
-import { OrgRole } from "@/lib/auth/hooks/oraganization/permissions";
+import { OrgRole, ROLE_META } from "@/lib/auth/hooks/oraganization/permissions";
 
 type ConfirmAction = { type: "delete" | "leave" } | null;
 type EditTarget = { id: string; name: string; slug: string } | null;
 type RoleTarget = { memberId: string; memberName: string; currentRole: OrgRole } | null;
 
-const ROLE_LABELS: Record<string, string> = {
-  owner: "Owner",
-  admin: "Admin",
-  assistant: "Assistant",
-  member: "Member",
-};
-
-function roleBadgeVariant(role: string) {
+function roleBadgeVariant(role: OrgRole) {
   if (role === "owner") return "default" as const;
   if (role === "admin") return "secondary" as const;
   return "outline" as const;
@@ -235,7 +228,7 @@ export function OrgDetailView({ orgId }: { orgId: string }) {
                 {isActive && <Badge variant="secondary">Active</Badge>}
                 {currentRole && (
                   <Badge variant={roleBadgeVariant(currentRole)}>
-                    {ROLE_LABELS[currentRole] ?? currentRole}
+                    {ROLE_META[currentRole].label ?? currentRole}
                   </Badge>
                 )}
               </div>
@@ -379,7 +372,7 @@ export function OrgDetailView({ orgId }: { orgId: string }) {
                             </TableCell>
                             <TableCell>
                               <Badge variant={roleBadgeVariant(member.role)}>
-                                {ROLE_LABELS[member.role] ?? member.role}
+                                {ROLE_META[member.role]?.label ?? member.role}
                               </Badge>
                             </TableCell>
                             {canManage && (
@@ -459,7 +452,7 @@ export function OrgDetailView({ orgId }: { orgId: string }) {
                           <TableRow key={inv.id}>
                             <TableCell className="text-sm">{inv.email}</TableCell>
                             <TableCell>
-                              <Badge variant="outline">{ROLE_LABELS[inv.role] ?? inv.role}</Badge>
+                              <Badge variant="outline">{ROLE_META[inv.role]?.label ?? inv.role}</Badge>
                             </TableCell>
                             <TableCell>
                               <Button
@@ -494,13 +487,14 @@ export function OrgDetailView({ orgId }: { orgId: string }) {
         </Tabs>
       </div>
 
-      <InviteMemberDialog open={inviteOpen} onOpenChange={setInviteOpen} organizationId={orgId} />
+      <InviteMemberDialog open={inviteOpen} onOpenChange={setInviteOpen} organizationId={orgId} actorRole={(currentRole as OrgRole) ?? "member"} />
       {roleTarget && (
         <UpdateMemberRoleDialog
           open={!!roleTarget}
           onOpenChange={(open) => !open && setRoleTarget(null)}
           memberName={roleTarget.memberName}
           currentRole={roleTarget.currentRole}
+          actorRole={(currentRole as OrgRole) ?? "member"}
           isPending={updateRole.isPending}
           onConfirm={(role) => {
             updateRole.mutate(

@@ -3,7 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { authClient } from "@/lib/auth/auth-client";
 
-export type InvitationRole = "owner" | "admin" | "member";
+export type InvitationRole = "owner" | "admin" | "assistant" | "priviledgedMember" | "member";
 
 type InviteMemberParams = {
     email: string;

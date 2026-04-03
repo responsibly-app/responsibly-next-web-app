@@ -43,15 +43,9 @@ import {
 } from "@/lib/auth/hooks";
 import { authClient } from "@/lib/auth/auth-client";
 import { InviteMemberDialog } from "./invite-member-dialog";
-import type { OrgRole } from "@/lib/auth/hooks";
+import { ROLE_META, type OrgRole } from "@/lib/auth/hooks/oraganization/permissions";
 
-const ROLE_LABELS: Record<string, string> = {
-  owner: "Owner",
-  admin: "Admin",
-  member: "Member",
-};
-
-function roleBadgeVariant(role: string) {
+function roleBadgeVariant(role: OrgRole) {
   if (role === "owner") return "default" as const;
   if (role === "admin") return "secondary" as const;
   return "outline" as const;
@@ -198,7 +192,7 @@ export function OrgMembersSection() {
                       </TableCell>
                       <TableCell>
                         <Badge variant={roleBadgeVariant(member.role)}>
-                          {ROLE_LABELS[member.role] ?? member.role}
+                          {ROLE_META[member.role]?.label ?? member.role}
                         </Badge>
                       </TableCell>
                       {canManage && (
@@ -265,6 +259,7 @@ export function OrgMembersSection() {
         open={inviteOpen}
         onOpenChange={setInviteOpen}
         organizationId={orgId}
+        actorRole={(currentRole as OrgRole) ?? "member"}
       />
 
       <AlertDialog open={leaveConfirmOpen} onOpenChange={setLeaveConfirmOpen}>

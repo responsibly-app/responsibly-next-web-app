@@ -43,17 +43,10 @@ import {
 import { getPermissions } from "@/lib/auth/hooks/oraganization/access-control";
 import { CreateOrganizationDialog } from "./create-organization-dialog";
 import { EditOrganizationDialog } from "./edit-organization-dialog";
-import { OrgRole } from "@/lib/auth/hooks/oraganization/permissions";
+import { OrgRole, ROLE_META } from "@/lib/auth/hooks/oraganization/permissions";
 
 type OrgAction = { type: "leave" | "delete"; orgId: string; orgName: string } | null;
 type EditTarget = { id: string; name: string; slug: string } | null;
-
-const ROLE_LABELS: Record<OrgRole, string> = {
-  owner: "Owner",
-  admin: "Admin",
-  assistant: "Assistant",
-  member: "Member",
-};
 
 function roleBadgeVariant(role: OrgRole) {
   if (role === "owner") return "default" as const;
@@ -213,7 +206,7 @@ export function OrganizationsList() {
                     <TableCell>
                       {role && (
                         <Badge variant={roleBadgeVariant(role)}>
-                          {ROLE_LABELS[role] ?? role}
+                          {ROLE_META[role]?.label ?? role}
                         </Badge>
                       )}
                     </TableCell>

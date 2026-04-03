@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
+import { Select as SelectPrimitive } from "radix-ui";
+import { CheckIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -16,29 +18,34 @@ import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
-  SelectItem,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
 import { Spinner } from "@/components/ui/spinner";
 import { useInviteMember } from "@/lib/auth/hooks";
 import type { InvitationRole } from "@/lib/auth/hooks";
+import { OrgRole, ROLE_META, canAssignRole } from "@/lib/auth/hooks/oraganization/permissions";
+
+const INVITABLE_ROLES: InvitationRole[] = ["admin", "assistant", "priviledgedMember", "member"];
 
 type Props = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   organizationId: string;
+  actorRole: OrgRole;
 };
 
-export function InviteMemberDialog({ open, onOpenChange, organizationId }: Props) {
+export function InviteMemberDialog({ open, onOpenChange, organizationId, actorRole }: Props) {
   const inviteMember = useInviteMember();
   const [email, setEmail] = useState("");
-  const [role, setRole] = useState<InvitationRole>("member");
+
+  const availableRoles = INVITABLE_ROLES.filter((r) => canAssignRole(actorRole, r as OrgRole));
+  const [role, setRole] = useState<InvitationRole>(availableRoles[0] ?? "member");
 
   function handleClose() {
     onOpenChange(false);
     setEmail("");
-    setRole("member");
+    setRole(availableRoles[0] ?? "member");
   }
 
   function handleSubmit() {
@@ -79,12 +86,29 @@ export function InviteMemberDialog({ open, onOpenChange, organizationId }: Props
           <div className="grid gap-2">
             <Label htmlFor="invite-role">Role</Label>
             <Select value={role} onValueChange={(v) => setRole(v as InvitationRole)}>
-              <SelectTrigger id="invite-role" className="w-40">
+              <SelectTrigger id="invite-role" className="w-44">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="member">Member</SelectItem>
-                <SelectItem value="admin">Admin</SelectItem>
+                {availableRoles.map((r) => (
+                  <SelectPrimitive.Item
+                    key={r}
+                    value={r}
+                    className="relative flex w-full cursor-default items-start gap-2.5 rounded-xl py-2.5 pr-8 pl-3 text-sm outline-hidden select-none focus:bg-accent focus:text-accent-foreground data-disabled:pointer-events-none data-disabled:opacity-50"
+                  >
+                    <span className="pointer-events-none absolute right-2 top-2.5 flex size-4 items-center justify-center">
+                      <SelectPrimitive.ItemIndicator>
+                        <CheckIcon className="size-4 pointer-events-none" />
+                      </SelectPrimitive.ItemIndicator>
+                    </span>
+                    <div className="flex flex-col gap-0.5">
+                      <SelectPrimitive.ItemText>
+                        <span className="font-medium">{ROLE_META[r as OrgRole].label}</span>
+                      </SelectPrimitive.ItemText>
+                      <span className="text-xs text-muted-foreground leading-snug">{ROLE_META[r as OrgRole].description}</span>
+                    </div>
+                  </SelectPrimitive.Item>
+                ))}
               </SelectContent>
             </Select>
           </div>

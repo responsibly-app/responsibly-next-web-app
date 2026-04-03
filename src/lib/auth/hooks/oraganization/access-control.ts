@@ -1,5 +1,6 @@
 import { authClient } from "../../auth-client";
 import type { OrgRole } from "./permissions";
+export { canAssignRole, ROLE_LEVELS } from "./permissions";
 
 // -----------------------------------------------
 // Component-level access control
