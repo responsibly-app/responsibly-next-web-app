@@ -120,6 +120,7 @@ export function useUpdateMemberRole() {
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["organization"] });
+            queryClient.invalidateQueries({ queryKey: orpcTQUtils.organization.listMine.queryOptions().queryKey });
         },
         onError: (err: { message?: string }) => {
             toast.error(err?.message ?? "Failed to update role.");

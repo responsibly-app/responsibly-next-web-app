@@ -45,7 +45,6 @@ import {
   useListInvitations,
   useGetFullOrganization,
   useRemoveMember,
-  useUpdateMemberRole,
   useCancelInvitation,
   useGetMemberRole,
 } from "@/lib/auth/hooks";
@@ -108,7 +107,6 @@ export function OrgDetailView({ orgId }: { orgId: string }) {
   const deleteOrg = useDeleteOrganization();
   const leaveOrg = useLeaveOrganization();
   const removeMember = useRemoveMember();
-  const updateRole = useUpdateMemberRole();
   const cancelInvitation = useCancelInvitation();
 
   const isActive = activeOrg?.id === orgId;
@@ -142,10 +140,6 @@ export function OrgDetailView({ orgId }: { orgId: string }) {
           toast.error(err?.message ?? "Failed to remove member."),
       },
     );
-  }
-
-  function handleRoleChange(memberId: string, role: OrgRole) {
-    updateRole.mutate({ memberId, role, organizationId: orgId });
   }
 
   function handleConfirm() {
@@ -478,21 +472,14 @@ export function OrgDetailView({ orgId }: { orgId: string }) {
         </Tabs>
       </div>
 
-      <InviteMemberDialog open={inviteOpen} onOpenChange={setInviteOpen} organizationId={orgId} />
+      {inviteOpen && <InviteMemberDialog open={inviteOpen} onOpenChange={setInviteOpen} organizationId={orgId} />}
       <UpdateMemberRoleDialog
         open={!!roleTarget}
         onOpenChange={(open) => !open && setRoleTarget(null)}
+        organizationId={orgId}
+        memberId={roleTarget?.memberId ?? ""}
         memberName={roleTarget?.memberName ?? ""}
         currentRole={(roleTarget?.currentRole ?? "member") as OrgRole}
-        actorRole={(currentRole as OrgRole) ?? "member"}
-        isPending={updateRole.isPending}
-        onConfirm={(role) => {
-          if (!roleTarget) return;
-          updateRole.mutate(
-            { memberId: roleTarget.memberId, role, organizationId: orgId },
-            { onSuccess: () => setRoleTarget(null) },
-          );
-        }}
       />
       {editTarget && (
         <EditOrganizationDialog

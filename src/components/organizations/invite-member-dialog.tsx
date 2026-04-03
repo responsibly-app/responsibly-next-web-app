@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Select as SelectPrimitive } from "radix-ui";
 import { CheckIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -32,16 +32,22 @@ type Props = {
 
 export function InviteMemberDialog({ open, onOpenChange, organizationId }: Props) {
   const inviteMember = useInviteMember(organizationId);
-  const { data: invitableRoles = [] } = useGetInvitableRoles(organizationId);
+  const { data: invitableRoles = [], isPending: rolesPending } = useGetInvitableRoles(organizationId);
   const [email, setEmail] = useState("");
 
   const availableRoles = invitableRoles.map((r) => r.role) as InvitationRole[];
-  const [role, setRole] = useState<InvitationRole>(availableRoles.at(-1) ?? "member");
+  const [role, setRole] = useState<InvitationRole>("member");
+
+  useEffect(() => {
+    if (invitableRoles.length > 0) {
+      setRole(invitableRoles.at(-1)!.role as InvitationRole);
+    }
+  }, [invitableRoles]);
 
   function handleClose() {
     onOpenChange(false);
     setEmail("");
-    setRole(availableRoles[0] ?? "member");
+    setRole(availableRoles.at(-1) ?? "member");
   }
 
   function handleSubmit() {
@@ -73,16 +79,16 @@ export function InviteMemberDialog({ open, onOpenChange, organizationId }: Props
           </div>
           <div className="grid gap-2">
             <Label htmlFor="invite-role">Role</Label>
-            <Select value={role} onValueChange={(v) => setRole(v as InvitationRole)}>
+            <Select value={role} onValueChange={(v) => setRole(v as InvitationRole)} disabled={rolesPending}>
               <SelectTrigger id="invite-role" className="w-44">
-                <SelectValue />
+                {rolesPending ? <Spinner className="size-3.5" /> : <SelectValue />}
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="p-2">
                 {invitableRoles.map((r) => (
                   <SelectPrimitive.Item
                     key={r.role}
                     value={r.role}
-                    className="relative flex w-full cursor-default items-start gap-2.5 rounded-xl py-2.5 pr-8 pl-3 text-sm outline-hidden select-none focus:bg-accent focus:text-accent-foreground data-disabled:pointer-events-none data-disabled:opacity-50"
+                    className="relative flex w-full cursor-default items-start gap-2.5 rounded-xl py-2.5 pr-8 pl-3 text-sm outline-hidden select-none focus:bg-accent focus:text-accent-foreground data-[state=checked]:bg-accent data-[state=checked]:text-accent-foreground data-disabled:pointer-events-none data-disabled:opacity-50"
                   >
                     <span className="pointer-events-none absolute right-2 top-2.5 flex size-4 items-center justify-center">
                       <SelectPrimitive.ItemIndicator>
