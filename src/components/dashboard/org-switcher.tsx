@@ -70,7 +70,7 @@ export function OrgSwitcherDialog({
   function handleSelect(orgId: string) {
     setActivatingId(orgId);
     setActiveOrg(orgId, {
-      onSuccess: () => setTimeout(() => onOpenChange(false), 2 * 1000),
+      onSuccess: () => setTimeout(() => onOpenChange(false), 1.5 * 1000), // Small delay before closing
       onSettled: () => setActivatingId(null),
     });
   }
@@ -146,11 +146,12 @@ export function OrgSwitcherDialog({
           )}
           {filtered.map((org) => {
             const isActive = activeOrg?.id === org.id;
+            const isActivating = activatingId === org.id;
             return (
               <button
                 key={org.id}
                 onClick={() => handleSelect(org.id)}
-                disabled={isPending}
+                disabled={isPending || isActivating || isActive}
                 className={cn(
                   "flex items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-colors",
                   isActive ? "bg-sidebar-accent text-sidebar-accent-foreground" : "hover:bg-muted"
@@ -167,7 +168,7 @@ export function OrgSwitcherDialog({
                   <Badge variant="outline" className="text-xs capitalize">
                     {ROLE_LABELS[org.role] ?? org.role}
                   </Badge>
-                  {activatingId === org.id ? (
+                  {isActivating ? (
                     <Spinner className="size-4" />
                   ) : (
                     isActive && <CheckIcon className="size-4 text-primary" />
