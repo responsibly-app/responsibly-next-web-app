@@ -1,10 +1,11 @@
 "use client";
 
 // import { useLatestSession } from "@/lib/auth/hooks";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DangerZoneCard } from "./danger-zone-card";
 import { PersonalInfoCard } from "./personal-info-card";
 import { ProfileHeader } from "./profile-header";
-import { SecurityCard } from "./security-card";
+import { PasswordCard } from "./password-card";
 import { SessionsCard } from "./sessions-card";
 
 export function AccountProfile() {
@@ -12,10 +13,23 @@ export function AccountProfile() {
   return (
     <div className="space-y-6">
       <ProfileHeader />
-      <PersonalInfoCard />
-      <SecurityCard />
-      <SessionsCard />
-      <DangerZoneCard />
+      <Tabs defaultValue="profile">
+        <TabsList>
+          <TabsTrigger value="profile">Profile</TabsTrigger>
+          <TabsTrigger value="security">Security</TabsTrigger>
+          <TabsTrigger value="account">Account</TabsTrigger>
+        </TabsList>
+        <TabsContent value="profile" className="mt-6">
+          <PersonalInfoCard />
+        </TabsContent>
+        <TabsContent value="security" className="mt-6 space-y-6">
+          <PasswordCard />
+          <SessionsCard />
+        </TabsContent>
+        <TabsContent value="account" className="mt-6">
+          <DangerZoneCard />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

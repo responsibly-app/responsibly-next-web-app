@@ -16,7 +16,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { authClient } from "@/lib/auth/auth-client";
 import { useIsCredentialUser, useRequestPasswordReset } from "@/lib/auth/hooks";
 
-function SecurityCardSkeleton() {
+function PasswordCardSkeleton() {
   return (
     <Card>
       <CardHeader className="border-b">
@@ -42,14 +42,14 @@ function SecurityCardSkeleton() {
   );
 }
 
-export function SecurityCard() {
+export function PasswordCard() {
   const { data: session, isPending } = authClient.useSession();
   const user = session?.user;
 
   const { isCredentialUser, isLoading: accountsLoading } = useIsCredentialUser();
   const requestPasswordReset = useRequestPasswordReset();
 
-  if (isPending || accountsLoading) return <SecurityCardSkeleton />;
+  if (isPending || accountsLoading) return <PasswordCardSkeleton />;
 
   function handlePasswordReset() {
     if (!user?.email) return;
@@ -74,8 +74,8 @@ export function SecurityCard() {
             <KeyRoundIcon className="text-primary size-4" />
           </div>
           <div>
-            <CardTitle>Security</CardTitle>
-            <CardDescription>Manage your password and account security.</CardDescription>
+            <CardTitle>Password</CardTitle>
+            <CardDescription>Manage your password.</CardDescription>
           </div>
         </div>
       </CardHeader>
