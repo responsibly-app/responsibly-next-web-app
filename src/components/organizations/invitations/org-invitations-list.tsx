@@ -25,7 +25,7 @@ type Invitation = {
   expiresAt: Date | string;
 };
 
-export function OrgInvitationsTab({ orgId }: { orgId: string }) {
+export function OrgInvitationsList({ orgId }: { orgId: string }) {
   const { data: invitationsRaw, isPending } = useListInvitations(orgId);
   const cancelInvitation = useCancelInvitation();
 

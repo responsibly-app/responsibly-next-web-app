@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { MessageSquare, Plug, LayoutDashboard, User, Building2 } from "lucide-react";
+import { CalendarDays, ClipboardList, LayoutDashboard, Plug, User, Building2, Users } from "lucide-react";
 import {
   SidebarGroup,
   SidebarMenu,
@@ -13,10 +13,11 @@ import { routes } from "@/routes";
 
 const items = [
   { title: "Dashboard", url: routes.dashboard.root(), icon: LayoutDashboard },
-  // { title: "Chat", url: "/chat", icon: MessageSquare },
+  { title: "Members", url: routes.dashboard.members(), icon: Users },
+  { title: "Events", url: routes.dashboard.events(), icon: CalendarDays },
+  { title: "Attendance", url: routes.dashboard.attendance(), icon: ClipboardList },
   { title: "Organizations", url: routes.dashboard.organizations(), icon: Building2 },
   { title: "Integrations", url: routes.dashboard.integrations(), icon: Plug },
-  { title: "Account", url: routes.dashboard.account(), icon: User },
 ];
 
 export function NavMenu() {

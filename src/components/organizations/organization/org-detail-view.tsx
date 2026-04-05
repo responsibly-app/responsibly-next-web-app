@@ -34,13 +34,13 @@ import {
   useGetMemberRole,
   useListMembers,
 } from "@/lib/auth/hooks";
-import { InviteMemberDialog } from "./invite-member-dialog";
+import { InviteMemberDialog } from "../invitations/invite-member-dialog";
 import { EditOrganizationDialog } from "./edit-organization-dialog";
-import { OrgMembersTab } from "./org-members-tab";
-import { OrgInvitationsTab } from "./org-invitations-tab";
-import { OrgEventsTab } from "./org-events-tab";
+import { OrgMembersList } from "../members/org-members-list";
+import { OrgInvitationsList } from "../invitations/org-invitations-list";
 import { getPermissions } from "@/lib/auth/hooks/oraganization/access-control";
 import { OrgRole, ROLE_META } from "@/lib/auth/hooks/oraganization/permissions";
+import { OrgEventsList } from "../events/org-events-list";
 
 type ConfirmAction = { type: "delete" | "leave" } | null;
 type EditTarget = { id: string; name: string; slug: string } | null;
@@ -95,7 +95,7 @@ export function OrgDetailView({ orgId }: { orgId: string }) {
 
   if (orgPending) {
     return (
-      <div className="mx-auto w-full max-w-5xl space-y-6 p-2 pt-5">
+      <div className="space-y-6">
         <Skeleton className="h-8 w-48" />
         <Skeleton className="h-24 w-full rounded-xl" />
         <Skeleton className="h-64 w-full rounded-xl" />
@@ -105,7 +105,7 @@ export function OrgDetailView({ orgId }: { orgId: string }) {
 
   if (!fullOrg) {
     return (
-      <div className="mx-auto w-full max-w-5xl p-2 pt-5">
+      <>
         <Link
           href="/dashboard/organizations"
           className="text-muted-foreground hover:text-foreground mb-6 inline-flex items-center gap-1.5 text-sm"
@@ -120,13 +120,13 @@ export function OrgDetailView({ orgId }: { orgId: string }) {
             You may not have access to this organization.
           </p>
         </div>
-      </div>
+      </>
     );
   }
 
   return (
     <>
-      <div className="mx-auto w-full max-w-5xl space-y-6 p-2 pt-5">
+      <div className="space-y-6">
         {/* <Link
           href="/dashboard/organizations"
           className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 text-sm"
@@ -237,17 +237,17 @@ export function OrgDetailView({ orgId }: { orgId: string }) {
           </div>
 
           <TabsContent value="members" className="mt-4">
-            <OrgMembersTab orgId={orgId} />
+            <OrgMembersList orgId={orgId} />
           </TabsContent>
 
           {canManage && (
             <TabsContent value="invitations" className="mt-4">
-              <OrgInvitationsTab orgId={orgId} />
+              <OrgInvitationsList orgId={orgId} />
             </TabsContent>
           )}
 
           <TabsContent value="events" className="mt-4">
-            <OrgEventsTab organizationId={orgId} canManage={canManage} />
+            <OrgEventsList organizationId={orgId} canManage={canManage} />
           </TabsContent>
         </Tabs>
       </div>

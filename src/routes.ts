@@ -1,10 +1,15 @@
 export const routes = {
   dashboard: {
     root: () => "/dashboard",
+    members: () => "/dashboard/members",
+    memberProfile: (userId: string) => `/dashboard/members/${userId}`,
+    events: () => "/dashboard/events",
     integrations: () => "/dashboard/integrations",
     account: () => "/dashboard/account",
     organizations: () => "/dashboard/organizations",
-    acceptInvitation: (invitationId: string) => `/dashboard/organizations/accept-invitation/${invitationId}`,
+    attendance: () => "/dashboard/attendance",
+    eventAttendance: (eventId: string) => `/dashboard/events/${eventId}/attendance`,
+    acceptInvitation: (invitationId: string) => `/dashboard/accept-invitation?id=${invitationId}`,
   },
   admin: {
     root: () => "/admin",

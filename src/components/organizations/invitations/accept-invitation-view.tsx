@@ -20,12 +20,7 @@ import {
   useRejectInvitation,
 } from "@/lib/auth/hooks";
 import { routes } from "@/routes";
-
-const ROLE_LABELS: Record<string, string> = {
-  owner: "Owner",
-  admin: "Admin",
-  member: "Member",
-};
+import { ROLE_META } from "@/lib/auth/hooks/oraganization/permissions";
 
 type Props = { invitationId: string };
 
@@ -37,7 +32,7 @@ export function AcceptInvitationView({ invitationId }: Props) {
   const rejectInvitation = useRejectInvitation();
 
   function handleSignIn() {
-    const redirectTo = encodeURIComponent(`/dashboard/organizations/accept-invitation/${invitationId}`);
+    const redirectTo = encodeURIComponent(routes.dashboard.acceptInvitation(invitationId));
     router.push(`${routes.auth.signIn()}?redirectTo=${redirectTo}`);
   }
 
@@ -65,7 +60,7 @@ export function AcceptInvitationView({ invitationId }: Props) {
     });
   }
 
-  if (sessionPending || invitePending) {
+  if (sessionPending || (!!invitationId && invitePending)) {
     return (
       <div className="flex flex-1 items-center justify-center py-24">
         <Spinner className="size-6" />
@@ -148,7 +143,7 @@ export function AcceptInvitationView({ invitationId }: Props) {
         <div className="flex items-center justify-between rounded-md border px-4 py-3 text-sm">
           <span className="text-muted-foreground">You&apos;ll join as</span>
           <Badge variant="secondary">
-            {ROLE_LABELS[invitation.role] ?? invitation.role}
+            {ROLE_META[invitation.role].label ?? invitation.role}
           </Badge>
         </div>
         <Button

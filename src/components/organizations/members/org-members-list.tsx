@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { MoreHorizontal, UserRound } from "lucide-react";
+import { MoreHorizontal, UserRound, Search, ExternalLink } from "lucide-react";
+import Link from "next/link";
+import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -28,6 +30,7 @@ import { authClient } from "@/lib/auth/auth-client";
 import { UpdateMemberRoleDialog } from "./update-member-role-dialog";
 import { getPermissions } from "@/lib/auth/hooks/oraganization/access-control";
 import { OrgRole, ROLE_META } from "@/lib/auth/hooks/oraganization/permissions";
+import { routes } from "@/routes";
 
 type MemberRow = {
   id: string;
@@ -50,8 +53,9 @@ function initials(name: string) {
   return name.split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase();
 }
 
-export function OrgMembersTab({ orgId }: { orgId: string }) {
+export function OrgMembersList({ orgId }: { orgId: string }) {
   const [roleTarget, setRoleTarget] = useState<RoleTarget>(null);
+  const [search, setSearch] = useState("");
 
   const { data: session } = authClient.useSession();
   const { data: membersRaw, isPending } = useListMembers({ organizationId: orgId });
@@ -62,11 +66,21 @@ export function OrgMembersTab({ orgId }: { orgId: string }) {
   const currentRole = memberRoleData?.role as OrgRole | undefined;
   const { canManage, canRemoveMember, canUpdateMemberRole } = getPermissions(currentRole);
 
-  const members: MemberRow[] = membersRaw
+  const allMembers: MemberRow[] = membersRaw
     ? Array.isArray(membersRaw)
       ? (membersRaw as MemberRow[])
       : ((membersRaw as { members?: MemberRow[] }).members ?? [])
     : [];
+
+  const members = search.trim()
+    ? allMembers.filter((m) => {
+        const q = search.toLowerCase();
+        return (
+          m.user?.name?.toLowerCase().includes(q) ||
+          m.user?.email?.toLowerCase().includes(q)
+        );
+      })
+    : allMembers;
 
   function handleRemove(memberId: string, email: string) {
     removeMember.mutate(
@@ -81,6 +95,16 @@ export function OrgMembersTab({ orgId }: { orgId: string }) {
 
   return (
     <>
+      <div className="relative my-2">
+        <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+        <Input
+          placeholder="Search by name or email…"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="pl-9"
+        />
+      </div>
+
       <Card>
         <CardContent className="p-0">
           {isPending ? (
@@ -92,7 +116,9 @@ export function OrgMembersTab({ orgId }: { orgId: string }) {
           ) : members.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-center">
               <UserRound className="text-muted-foreground mb-3 size-8" />
-              <p className="text-muted-foreground text-sm">No members yet</p>
+              <p className="text-muted-foreground text-sm">
+                {search.trim() ? "No members match your search" : "No members yet"}
+              </p>
             </div>
           ) : (
             <Table>
@@ -118,12 +144,16 @@ export function OrgMembersTab({ orgId }: { orgId: string }) {
                             </AvatarFallback>
                           </Avatar>
                           <div className="leading-tight">
-                            <p className="text-sm font-medium">
+                            <Link
+                              href={routes.dashboard.memberProfile(member.userId)}
+                              className="group flex items-center gap-1 text-sm font-medium hover:underline"
+                            >
                               {member.user?.name}
                               {isSelf && (
-                                <span className="text-muted-foreground ml-1.5 text-xs font-normal">(you)</span>
+                                <span className="text-muted-foreground ml-1 text-xs font-normal">(you)</span>
                               )}
-                            </p>
+                              <ExternalLink className="size-3 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
+                            </Link>
                             <p className="text-muted-foreground text-xs">{member.user?.email}</p>
                           </div>
                         </div>

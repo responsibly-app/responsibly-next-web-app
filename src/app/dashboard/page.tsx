@@ -1,4 +1,4 @@
-import { ActiveOrgDetail } from "@/components/dashboard/active-org-detail";
+import { ActiveOrgDetail } from "@/components/organizations/organization/org-page";
 
 export default function Page() {
   return <ActiveOrgDetail />;

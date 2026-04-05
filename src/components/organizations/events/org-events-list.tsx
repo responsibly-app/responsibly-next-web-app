@@ -4,6 +4,7 @@ import { useState } from "react";
 import { format } from "date-fns";
 import { CalendarDays, MoreHorizontal, Users } from "lucide-react";
 import { toast } from "sonner";
+import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -25,15 +26,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { useListEvents, useDeleteEvent, useListMembers } from "@/lib/auth/hooks";
+import { useListEvents, useDeleteEvent } from "@/lib/auth/hooks";
 import { CreateEventDialog } from "./create-event-dialog";
-import { EventAttendanceDialog } from "./event-attendance-dialog";
-
-type Member = {
-  id: string;
-  userId: string;
-  user: { id: string; name: string; email: string; image?: string | null };
-};
+import { routes } from "@/routes";
 
 type EventRow = {
   id: string;
@@ -56,18 +51,11 @@ function creatorInitials(name: string | null) {
   return name.split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase();
 }
 
-export function OrgEventsTab({ organizationId, canManage }: Props) {
+export function OrgEventsList({ organizationId, canManage }: Props) {
   const [createOpen, setCreateOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<EventRow | null>(null);
-  const [attendanceTarget, setAttendanceTarget] = useState<EventRow | null>(null);
 
   const { data: events = [], isPending } = useListEvents(organizationId);
-  const { data: membersRaw } = useListMembers({ organizationId });
-  const members: Member[] = membersRaw
-    ? Array.isArray(membersRaw)
-      ? (membersRaw as Member[])
-      : ((membersRaw as { members?: Member[] }).members ?? [])
-    : [];
   const deleteEvent = useDeleteEvent();
 
   function handleDelete() {
@@ -157,14 +145,11 @@ export function OrgEventsTab({ organizationId, canManage }: Props) {
                   </div>
 
                   <div className="flex items-center gap-1.5 shrink-0">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="h-8 gap-1.5"
-                      onClick={() => setAttendanceTarget(ev as EventRow)}
-                    >
-                      <Users className="size-3.5" />
-                      Attendance
+                    <Button variant="outline" size="sm" className="h-8 gap-1.5" asChild>
+                      <Link href={routes.dashboard.eventAttendance(ev.id)}>
+                        <Users className="size-3.5" />
+                        Attendance
+                      </Link>
                     </Button>
                     {canManage && (
                       <DropdownMenu>
@@ -197,18 +182,6 @@ export function OrgEventsTab({ organizationId, canManage }: Props) {
         onOpenChange={setCreateOpen}
         organizationId={organizationId}
       />
-
-      {attendanceTarget && (
-        <EventAttendanceDialog
-          open={!!attendanceTarget}
-          onOpenChange={(open) => !open && setAttendanceTarget(null)}
-          eventId={attendanceTarget.id}
-          eventTitle={attendanceTarget.title}
-          organizationId={organizationId}
-          members={members}
-          canManage={canManage}
-        />
-      )}
 
       <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
         <AlertDialogContent>
