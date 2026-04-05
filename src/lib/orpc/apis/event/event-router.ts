@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { member, user } from "@/lib/db/schema/better-auth-schema";
 import { event, eventAttendance } from "@/lib/db/schema/event-schema";
 import { authed } from "@/lib/orpc/base";
+import { ROLE_LEVELS, type OrgRole } from "@/lib/auth/hooks/oraganization/permissions";
 import {
   ListEventsInputSchema,
   ListEventsOutputSchema,
@@ -26,9 +27,11 @@ async function requireOrgMember(organizationId: string, userId: string) {
   return row.role;
 }
 
-async function requireOrgAdmin(organizationId: string, userId: string) {
+async function requireAtLeastRole(organizationId: string, userId: string, minRole: OrgRole) {
   const role = await requireOrgMember(organizationId, userId);
-  if (!["owner", "admin"].includes(role)) throw new ORPCError("FORBIDDEN");
+  const userLevel = ROLE_LEVELS[role as OrgRole] ?? Infinity;
+  const requiredLevel = ROLE_LEVELS[minRole];
+  if (userLevel > requiredLevel) throw new ORPCError("FORBIDDEN");
 }
 
 export const eventRouter = {
@@ -75,7 +78,7 @@ export const eventRouter = {
     .output(EventSchema)
     .handler(async ({ input, context }) => {
       const userId = context.session.user.id;
-      await requireOrgAdmin(input.organizationId, userId);
+      await requireAtLeastRole(input.organizationId, userId, "admin");
 
       const id = crypto.randomUUID();
       const [row] = await db
@@ -104,7 +107,7 @@ export const eventRouter = {
     })
     .input(DeleteEventInputSchema)
     .handler(async ({ input, context }) => {
-      await requireOrgAdmin(input.organizationId, context.session.user.id);
+      await requireAtLeastRole(input.organizationId, context.session.user.id, "admin");
       await db.delete(event).where(eq(event.id, input.eventId));
       return { success: true };
     }),
@@ -151,7 +154,7 @@ export const eventRouter = {
     })
     .input(MarkAttendanceInputSchema)
     .handler(async ({ input, context }) => {
-      await requireOrgAdmin(input.organizationId, context.session.user.id);
+      await requireAtLeastRole(input.organizationId, context.session.user.id, "assistant");
 
       await db
         .insert(eventAttendance)

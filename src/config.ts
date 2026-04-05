@@ -4,7 +4,8 @@ interface configItem {
     // frontend_base_url: string; // exclude trailing slash (e.g., "http://localhost:3000")
     backend_base_url: string; // exclude trailing slash (e.g., "http://localhost:8000")
     landing_page_url: string; // exclude trailing slash (e.g., "http://localhost:3001")
-}
+};
+
 
 // -------------------------------------------------------------------------------------
 export const ENVIRONMENT = process.env.NEXT_PUBLIC_ENV || "local";
@@ -27,6 +28,11 @@ export const config: { [env: string]: configItem } = {
         app_name: appName,
         backend_base_url: "http://localhost:3000",
         landing_page_url: "http://localhost:3001",
+    },
+    local_https: {
+        app_name: appName,
+        backend_base_url: "https://localhost:3000",
+        landing_page_url: "https://localhost:3001",
     },
     ngrok: {
         app_name: appName,

@@ -1,4 +1,5 @@
 import { ZoomCard } from "./_components/zoom-card";
+import { TelegramCard } from "./_components/telegram-card";
 
 export default function IntegrationsPage() {
   return (
@@ -12,6 +13,7 @@ export default function IntegrationsPage() {
 
       <div className="grid gap-4 sm:grid-cols-2">
         <ZoomCard />
+        <TelegramCard />
       </div>
     </div>
   );

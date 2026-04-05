@@ -70,7 +70,8 @@ export function OrgSwitcherDialog({
   function handleSelect(orgId: string) {
     setActivatingId(orgId);
     setActiveOrg(orgId, {
-      onSuccess: () => setTimeout(() => onOpenChange(false), 1.5 * 1000), // Small delay before closing
+      // onSuccess: () => setTimeout(() => onOpenChange(false), 1.5 * 1000), // Small delay before closing
+      onSuccess: () => onOpenChange(false),
       onSettled: () => setActivatingId(null),
     });
   }
