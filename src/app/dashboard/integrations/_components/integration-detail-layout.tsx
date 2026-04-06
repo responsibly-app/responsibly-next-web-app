@@ -28,7 +28,7 @@ export function IntegrationDetailLayout({
   children,
 }: IntegrationDetailLayoutProps) {
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-6 p-4 md:p-6">
       <Button variant="ghost" size="sm" className="gap-1.5" asChild>
         <Link href="/dashboard/integrations">
           <ChevronLeft className="h-4 w-4" />
@@ -36,7 +36,7 @@ export function IntegrationDetailLayout({
         </Link>
       </Button>
 
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-4">
           <div
             className="relative h-12 w-12 shrink-0 rounded-xl p-2"
@@ -45,7 +45,7 @@ export function IntegrationDetailLayout({
             <Image src={icon} alt={name} fill className="object-contain" />
           </div>
           <div>
-            <h1 className="text-2xl font-semibold tracking-tight">{name}</h1>
+            <h1 className="text-xl font-semibold tracking-tight md:text-2xl">{name}</h1>
             <p className="text-muted-foreground text-sm">{description}</p>
           </div>
         </div>

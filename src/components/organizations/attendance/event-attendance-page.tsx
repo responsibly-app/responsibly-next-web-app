@@ -176,7 +176,7 @@ export function EventAttendancePage({ eventId, organizationId }: Props) {
                 return (
                   <div
                     key={member.id}
-                    className="flex items-center justify-between gap-4 px-5 py-4"
+                    className="flex flex-col gap-3 px-5 py-4 sm:flex-row sm:items-center sm:justify-between"
                   >
                     <div className="flex min-w-0 items-center gap-3">
                       <Avatar className="size-9 shrink-0">
@@ -193,7 +193,7 @@ export function EventAttendancePage({ eventId, organizationId }: Props) {
                       </div>
                     </div>
 
-                    <div className="flex shrink-0 items-center gap-1.5">
+                    <div className="flex shrink-0 items-center gap-1.5 self-end sm:self-auto">
                       {isPendingMark ? (
                         <Spinner className="size-4" />
                       ) : canManage ? (

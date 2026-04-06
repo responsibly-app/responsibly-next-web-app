@@ -1,10 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
-import { ArrowLeft, Building2, LogOut, MoreHorizontal, Pencil, Trash2, UserPlus } from "lucide-react";
+import { Building2, LogOut, MoreHorizontal, Pencil, Trash2, UserPlus } from "lucide-react";
 import { toast } from "sonner";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -26,8 +24,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
-  useActiveOrganization,
-  useSetActiveOrganization,
   useDeleteOrganization,
   useLeaveOrganization,
   useGetFullOrganization,
@@ -39,32 +35,22 @@ import { EditOrganizationDialog } from "./edit-organization-dialog";
 import { OrgMembersList } from "../members/org-members-list";
 import { OrgInvitationsList } from "../invitations/org-invitations-list";
 import { getPermissions } from "@/lib/auth/hooks/oraganization/access-control";
-import { OrgRole, ROLE_META } from "@/lib/auth/hooks/oraganization/permissions";
+import { OrgRole } from "@/lib/auth/hooks/oraganization/permissions";
 import { OrgEventsList } from "../events/org-events-list";
 
 type ConfirmAction = { type: "delete" | "leave" } | null;
 type EditTarget = { id: string; name: string; slug: string } | null;
-
-function roleBadgeVariant(role: OrgRole) {
-  if (role === "owner") return "default" as const;
-  if (role === "admin") return "secondary" as const;
-  return "outline" as const;
-}
 
 export function OrgDetailView({ orgId }: { orgId: string }) {
   const [inviteOpen, setInviteOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<EditTarget>(null);
   const [confirmAction, setConfirmAction] = useState<ConfirmAction>(null);
 
-  const { data: activeOrg } = useActiveOrganization();
   const { data: fullOrg, isPending: orgPending } = useGetFullOrganization(orgId);
   const { data: memberRoleData } = useGetMemberRole(orgId);
 
-  const setActive = useSetActiveOrganization();
   const deleteOrg = useDeleteOrganization();
   const leaveOrg = useLeaveOrganization();
-
-  const isActive = activeOrg?.id === orgId;
 
   const { data: membersRaw } = useListMembers({ organizationId: orgId });
   const memberCount = membersRaw
@@ -105,118 +91,23 @@ export function OrgDetailView({ orgId }: { orgId: string }) {
 
   if (!fullOrg) {
     return (
-      <>
-        <Link
-          href="/dashboard/organizations"
-          className="text-muted-foreground hover:text-foreground mb-6 inline-flex items-center gap-1.5 text-sm"
-        >
-          <ArrowLeft className="size-4" />
-          Organizations
-        </Link>
-        <div className="flex flex-col items-center justify-center rounded-xl border border-dashed py-16 text-center">
-          <Building2 className="text-muted-foreground mb-4 size-10" />
-          <p className="font-medium">Organization not found</p>
-          <p className="text-muted-foreground mt-1 text-sm">
-            You may not have access to this organization.
-          </p>
-        </div>
-      </>
+      <div className="flex flex-col items-center justify-center rounded-xl border border-dashed py-16 text-center">
+        <Building2 className="text-muted-foreground mb-4 size-10" />
+        <p className="font-medium">Organization not found</p>
+        <p className="text-muted-foreground mt-1 text-sm">
+          You may not have access to this organization.
+        </p>
+      </div>
     );
   }
 
   return (
     <>
       <div className="space-y-6">
-        {/* <Link
-          href="/dashboard/organizations"
-          className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 text-sm"
-        >
-          <ArrowLeft className="size-4" />
-          Organizations
-        </Link> */}
-
-        {/* Header */}
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex items-center gap-3">
-            {fullOrg.logo ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={fullOrg.logo} alt={fullOrg.name} className="size-12 rounded-lg object-cover" />
-            ) : (
-              <div className="bg-muted flex size-12 items-center justify-center rounded-lg">
-                <Building2 className="text-muted-foreground size-6" />
-              </div>
-            )}
-            <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-2xl font-semibold tracking-tight">{fullOrg.name}</h1>
-                {isActive && <Badge variant="secondary">Active</Badge>}
-                {currentRole && (
-                  <Badge variant={roleBadgeVariant(currentRole)}>
-                    {ROLE_META[currentRole].label ?? currentRole}
-                  </Badge>
-                )}
-              </div>
-              <p className="text-muted-foreground text-sm">/{fullOrg.slug}</p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2">
-            {!isActive && (
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={setActive.isPending}
-                onClick={() => setActive.mutate(orgId)}
-              >
-                Set Active
-              </Button>
-            )}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="icon" className="size-9">
-                  <MoreHorizontal className="size-4" />
-                  <span className="sr-only">Organization actions</span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                {canEditOrg && (
-                  <DropdownMenuItem
-                    onClick={() => setEditTarget({ id: orgId, name: fullOrg.name, slug: fullOrg.slug })}
-                  >
-                    <Pencil className="mr-2 size-4" />
-                    Edit Organization
-                  </DropdownMenuItem>
-                )}
-                {canDeleteOrg && (
-                  <>
-                    {canEditOrg && <DropdownMenuSeparator />}
-                    <DropdownMenuItem
-                      className="text-destructive focus:text-destructive"
-                      onClick={() => setConfirmAction({ type: "delete" })}
-                    >
-                      <Trash2 className="mr-2 size-4" />
-                      Delete Organization
-                    </DropdownMenuItem>
-                  </>
-                )}
-                {canLeave && (
-                  <DropdownMenuItem
-                    className="text-destructive focus:text-destructive"
-                    onClick={() => setConfirmAction({ type: "leave" })}
-                  >
-                    <LogOut className="mr-2 size-4" />
-                    Leave Organization
-                  </DropdownMenuItem>
-                )}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        </div>
-
         {/* Tabs */}
         <Tabs defaultValue="members">
-          <div className="flex items-center justify-between gap-4">
-            <TabsList>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <TabsList className="w-fit">
               <TabsTrigger value="members">
                 Members
                 {memberCount != null && memberCount > 0 && (
@@ -228,12 +119,53 @@ export function OrgDetailView({ orgId }: { orgId: string }) {
               {canManage && <TabsTrigger value="invitations">Invitations</TabsTrigger>}
               <TabsTrigger value="events">Events</TabsTrigger>
             </TabsList>
-            {canManage && (
-              <Button size="sm" onClick={() => setInviteOpen(true)}>
-                <UserPlus className="mr-1.5 size-3.5" />
-                Invite Member
-              </Button>
-            )}
+            <div className="flex shrink-0 items-center gap-2 self-end sm:self-auto">
+              {canManage && (
+                <Button size="sm" onClick={() => setInviteOpen(true)}>
+                  <UserPlus className="mr-1.5 size-3.5" />
+                  Invite Member
+                </Button>
+              )}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="icon" className="size-9">
+                    <MoreHorizontal className="size-4" />
+                    <span className="sr-only">Organization actions</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  {canEditOrg && (
+                    <DropdownMenuItem
+                      onClick={() => setEditTarget({ id: orgId, name: fullOrg.name, slug: fullOrg.slug })}
+                    >
+                      <Pencil className="mr-2 size-4" />
+                      Edit Organization
+                    </DropdownMenuItem>
+                  )}
+                  {canDeleteOrg && (
+                    <>
+                      {canEditOrg && <DropdownMenuSeparator />}
+                      <DropdownMenuItem
+                        className="text-destructive focus:text-destructive"
+                        onClick={() => setConfirmAction({ type: "delete" })}
+                      >
+                        <Trash2 className="mr-2 size-4" />
+                        Delete Organization
+                      </DropdownMenuItem>
+                    </>
+                  )}
+                  {canLeave && (
+                    <DropdownMenuItem
+                      className="text-destructive focus:text-destructive"
+                      onClick={() => setConfirmAction({ type: "leave" })}
+                    >
+                      <LogOut className="mr-2 size-4" />
+                      Leave Organization
+                    </DropdownMenuItem>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           </div>
 
           <TabsContent value="members" className="mt-4">

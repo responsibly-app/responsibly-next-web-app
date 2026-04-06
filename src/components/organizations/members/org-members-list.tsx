@@ -121,6 +121,7 @@ export function OrgMembersList({ orgId }: { orgId: string }) {
               </p>
             </div>
           ) : (
+            <div className="overflow-auto">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -208,6 +209,7 @@ export function OrgMembersList({ orgId }: { orgId: string }) {
                 })}
               </TableBody>
             </Table>
+            </div>
           )}
         </CardContent>
       </Card>

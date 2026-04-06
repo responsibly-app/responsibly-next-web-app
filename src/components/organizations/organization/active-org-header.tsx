@@ -18,33 +18,33 @@ export function ActiveOrgHeader({ org }: ActiveOrgHeaderProps) {
     const currentRole = memberRoleData?.role as OrgRole | undefined;
 
     return (
-        <div className="flex items-center justify-between gap-4 rounded-xl border bg-muted/40 px-5 py-4">
-            <div className="flex items-center gap-4">
+        <div className="flex items-center justify-between gap-3 rounded-xl border bg-muted/40 px-4 py-3 sm:px-5 sm:py-4">
+            <div className="flex min-w-0 items-center gap-3">
                 {org.logo ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={org.logo} alt={org.name} className="size-10 rounded-lg object-cover" />
+                    <img src={org.logo} alt={org.name} className="size-9 shrink-0 rounded-lg object-cover sm:size-10" />
                 ) : (
-                    <div className="flex size-10 shrink-0 items-center justify-center rounded-lg border bg-background shadow-sm">
-                        <Building2 className="size-5 text-muted-foreground" />
+                    <div className="flex size-9 shrink-0 items-center justify-center rounded-lg border bg-background shadow-sm sm:size-10">
+                        <Building2 className="size-4 text-muted-foreground sm:size-5" />
                     </div>
                 )}
-                <div className="flex flex-col gap-0.5">
-                    <div className="flex items-center gap-2">
-                        <span className="text-sm font-semibold leading-none">{org.name}</span>
+                <div className="flex min-w-0 flex-col gap-0.5">
+                    <div className="flex min-w-0 items-center gap-1.5">
+                        <span className="truncate text-sm font-semibold leading-none">{org.name}</span>
                         {currentRole && (
-                            <Badge variant="outline" className="text-xs capitalize">
+                            <Badge variant="outline" className="shrink-0 text-xs capitalize">
                                 {ROLE_META[currentRole]?.label ?? currentRole}
                             </Badge>
                         )}
                     </div>
-                    <span className="text-xs text-muted-foreground">/{org.slug}</span>
+                    <span className="truncate text-xs text-muted-foreground">/{org.slug}</span>
                 </div>
             </div>
 
             <OrgSwitcherDialog open={switcherOpen} onOpenChange={setSwitcherOpen}>
-                <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground">
+                <Button variant="ghost" size="sm" className="shrink-0 gap-1.5 text-muted-foreground">
                     <ChevronsUpDown className="size-3.5" />
-                    Switch
+                    <span className="hidden sm:inline">Switch</span>
                 </Button>
             </OrgSwitcherDialog>
         </div>

@@ -27,7 +27,7 @@ export function ConnectedAccountCard({
       <CardHeader>
         <CardTitle className="text-sm font-medium">Connected account</CardTitle>
       </CardHeader>
-      <CardContent className="flex items-center justify-between">
+      <CardContent className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         {isLoading ? (
           <div className="flex items-center gap-4">
             <Skeleton className="h-14 w-14 rounded-full" />
@@ -44,16 +44,16 @@ export function ConnectedAccountCard({
                 {avatarFallbackChar}
               </AvatarFallback>
             </Avatar>
-            <div>
-              <p className="font-medium">{primaryText}</p>
+            <div className="min-w-0">
+              <p className="truncate font-medium">{primaryText}</p>
               {secondaryText && (
-                <p className="text-muted-foreground text-sm">{secondaryText}</p>
+                <p className="text-muted-foreground truncate text-sm">{secondaryText}</p>
               )}
             </div>
           </div>
         )}
 
-        {!isLoading && disconnectButton}
+        {!isLoading && <div className="sm:shrink-0">{disconnectButton}</div>}
       </CardContent>
     </Card>
   );

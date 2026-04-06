@@ -148,7 +148,7 @@ export function OrgEventsList({ organizationId, canManage }: Props) {
                     <Button variant="outline" size="sm" className="h-8 gap-1.5" asChild>
                       <Link href={routes.dashboard.eventAttendance(ev.id)}>
                         <Users className="size-3.5" />
-                        Attendance
+                        <span className="hidden sm:inline">Attendance</span>
                       </Link>
                     </Button>
                     {canManage && (

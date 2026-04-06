@@ -96,12 +96,12 @@ export function OrganizationsList() {
 
   return (
     <>
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Organizations</h1>
           <p className="text-muted-foreground mt-1 text-sm">Manage and switch between your organizations.</p>
         </div>
-        <Button onClick={() => setCreateOpen(true)}>
+        <Button className="shrink-0" onClick={() => setCreateOpen(true)}>
           <Plus className="mr-2 size-4" />
           New Organization
         </Button>

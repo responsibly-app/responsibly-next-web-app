@@ -52,6 +52,7 @@ export function OrgInvitationsList({ orgId }: { orgId: string }) {
             <p className="text-muted-foreground text-sm">No pending invitations</p>
           </div>
         ) : (
+          <div className="overflow-auto">
           <Table>
             <TableHeader>
               <TableRow>
@@ -86,6 +87,7 @@ export function OrgInvitationsList({ orgId }: { orgId: string }) {
               ))}
             </TableBody>
           </Table>
+          </div>
         )}
       </CardContent>
     </Card>

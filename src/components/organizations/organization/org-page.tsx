@@ -5,7 +5,7 @@ import { OrgDetailView } from "./org-detail-view";
 
 export function ActiveOrgDetail() {
   return (
-    <OrgPageShell showHeader={false}>
+    <OrgPageShell showHeader={true}>
       {(orgId) => <OrgDetailView orgId={orgId} />}
     </OrgPageShell>
   );

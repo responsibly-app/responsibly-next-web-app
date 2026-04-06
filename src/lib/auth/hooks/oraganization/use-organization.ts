@@ -3,6 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { authClient } from "@/lib/auth/auth-client";
 import { orpc, orpcTQUtils } from "@/lib/orpc/orpc-client";
+import { toast } from "sonner";
 
 type CreateOrganizationParams = {
   name: string;
@@ -104,6 +105,11 @@ export function useSetActiveOrganization() {
       const result = await authClient.organization.setActive({ organizationId });
       if (result.error) throw result.error;
       return result.data;
+    },
+    onSuccess: (data) => {
+      if (data?.name) {
+        toast.success(`Switched to ${data.name}`);
+      }
     },
   });
 }
