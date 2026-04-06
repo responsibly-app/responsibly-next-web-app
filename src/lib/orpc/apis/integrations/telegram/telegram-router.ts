@@ -140,6 +140,12 @@ export const telegramRouter = {
             .limit(1);
 
           if (verification) {
+            // Remove any existing link for this Telegram account (could be on a different userId)
+            // so the current token owner can always re-link their Telegram account freely.
+            await db
+              .delete(userTelegram)
+              .where(eq(userTelegram.telegramId, String(from.id)));
+
             await telegram.sendMessage(from.id, "Verifying your account…");
 
             const [telegramPhotoUrl, [userRow]] = await Promise.all([
