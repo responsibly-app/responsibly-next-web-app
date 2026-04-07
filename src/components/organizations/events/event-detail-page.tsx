@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { format } from "date-fns";
 import {
   ArrowLeft,
   CalendarDays,
@@ -28,6 +27,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { useGetEvent, useUpdateEvent } from "@/lib/auth/hooks";
 import { ROLE_LEVELS, type OrgRole } from "@/lib/auth/hooks/oraganization/permissions";
+import { TimezoneSelect } from "@/components/ui-custom/timezone-select";
+import { buildDateTimeInTimezone, extractTimeInTimezone, formatEventDateTime, formatEventTime, tzAbbr } from "@/lib/utils/timezone";
 import { routes } from "@/routes";
 import { toast } from "sonner";
 
@@ -59,6 +60,7 @@ export function EventDetailPage({ eventId }: Props) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [eventType, setEventType] = useState<EventType>("in_person");
+  const [timezone, setTimezone] = useState("UTC");
   const [date, setDate] = useState<Date | undefined>(undefined);
   const [startTime, setStartTime] = useState("09:00");
   const [endTime, setEndTime] = useState("");
@@ -69,21 +71,19 @@ export function EventDetailPage({ eventId }: Props) {
     setTitle(event.title);
     setDescription(event.description ?? "");
     setEventType((event.eventType as EventType) ?? "in_person");
-    setDate(new Date(event.startAt));
-    setStartTime(format(new Date(event.startAt), "HH:mm"));
-    setEndTime(event.endAt ? format(new Date(event.endAt), "HH:mm") : "");
+    setTimezone(event.timezone ?? "UTC");
+    const tz = event.timezone ?? "UTC";
+    // Build a Date whose year/month/day matches the wall-clock date in the event's timezone
+    // so the calendar picker shows the correct day
+    const localDateStr = new Intl.DateTimeFormat("en-CA", { timeZone: tz }).format(new Date(event.startAt));
+    setDate(new Date(localDateStr + "T12:00:00"));
+    setStartTime(extractTimeInTimezone(new Date(event.startAt), tz));
+    setEndTime(event.endAt ? extractTimeInTimezone(new Date(event.endAt), tz) : "");
     setEditing(true);
   }
 
   function cancelEdit() {
     setEditing(false);
-  }
-
-  function buildDateTime(date: Date, time: string): string {
-    const [hours, minutes] = time.split(":").map(Number);
-    const dt = new Date(date);
-    dt.setHours(hours, minutes, 0, 0);
-    return dt.toISOString();
   }
 
   function handleSave() {
@@ -95,8 +95,9 @@ export function EventDetailPage({ eventId }: Props) {
         title,
         description: description || null,
         eventType,
-        startAt: buildDateTime(date, startTime),
-        endAt: endTime ? buildDateTime(date, endTime) : null,
+        timezone,
+        startAt: buildDateTimeInTimezone(date, startTime, timezone),
+        endAt: endTime ? buildDateTimeInTimezone(date, endTime, timezone) : null,
       },
       {
         onSuccess: () => {
@@ -173,8 +174,9 @@ export function EventDetailPage({ eventId }: Props) {
               <span>·</span>
               <span className="flex items-center gap-1">
                 <Clock className="size-3.5" />
-                {format(new Date(event.startAt), "EEEE, MMMM d, yyyy · h:mm a")}
-                {event.endAt && <> – {format(new Date(event.endAt), "h:mm a")}</>}
+                {formatEventDateTime(new Date(event.startAt), event.timezone ?? "UTC")}
+                {event.endAt && <> – {formatEventTime(new Date(event.endAt), event.timezone ?? "UTC")}</>}
+                <span className="text-xs opacity-70">{tzAbbr(new Date(event.startAt), event.timezone ?? "UTC")}</span>
               </span>
             </div>
           </div>
@@ -245,7 +247,7 @@ export function EventDetailPage({ eventId }: Props) {
                     )}
                   >
                     <CalendarDays className="mr-2 size-4" />
-                    {date ? format(date, "EEEE, MMMM d, yyyy") : "Pick a date"}
+                    {date ? new Intl.DateTimeFormat("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" }).format(date) : "Pick a date"}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
@@ -295,6 +297,12 @@ export function EventDetailPage({ eventId }: Props) {
                   min={startTime}
                 />
               </div>
+            </div>
+
+            {/* Timezone */}
+            <div className="grid gap-2">
+              <Label>Timezone</Label>
+              <TimezoneSelect value={timezone} onChange={setTimezone} />
             </div>
 
             {/* Description */}

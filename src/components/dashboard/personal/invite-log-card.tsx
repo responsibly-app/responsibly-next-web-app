@@ -6,14 +6,15 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { authClient } from "@/lib/auth/auth-client";
 import { useGetInviteHistory, useLogInvites } from "@/lib/auth/hooks";
-
-function todayStr(): string {
-  return new Date().toISOString().split("T")[0];
-}
+import { localDateStr } from "@/lib/utils/timezone";
 
 export function InviteLogCard() {
-  const today = todayStr();
+  const { data: session } = authClient.useSession();
+  const timezone = session?.user ?.timezone ?? "UTC";
+  const today = localDateStr(timezone);
+
   const { data: history = [], isPending } = useGetInviteHistory(90);
   const { mutate: logInvites, isPending: isSaving } = useLogInvites();
 

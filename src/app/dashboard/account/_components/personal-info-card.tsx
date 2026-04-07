@@ -32,12 +32,9 @@ function PersonalInfoCardSkeleton() {
         </div>
       </CardHeader>
       <CardContent className="pt-0">
-        <div className="grid gap-2">
-          <Skeleton className="h-4 w-20" />
-          <div className="flex gap-2">
-            <Skeleton className="h-9 flex-1" />
-            <Skeleton className="size-9 shrink-0 rounded-md" />
-          </div>
+        <div className="grid gap-6">
+          <Skeleton className="h-9 w-full" />
+          <Skeleton className="h-9 w-full" />
         </div>
       </CardContent>
     </Card>
@@ -48,35 +45,35 @@ export function PersonalInfoCard() {
   const { data: session, isPending, refetch } = authClient.useSession();
   const user = session?.user;
 
-  const [isEditing, setIsEditing] = useState(false);
+  const [isEditingName, setIsEditingName] = useState(false);
   const [fullName, setFullName] = useState("");
 
   useEffect(() => {
     setFullName(user?.name ?? "");
-  }, [user?.name]);
+  }, [user]);
 
   const updateUser = useUpdateUser();
-  const isDirty = fullName.trim() !== (user?.name ?? "");
+  const isNameDirty = fullName.trim() !== (user?.name ?? "");
 
   if (isPending) return <PersonalInfoCardSkeleton />;
 
-  function handleCancel() {
-    setFullName(user?.name ?? "");
-    setIsEditing(false);
+  function refetchSession() {
+    refetch({ query: { disableCookieCache: true } });
   }
 
-  function handleSave() {
+  function handleCancelName() {
+    setFullName(user?.name ?? "");
+    setIsEditingName(false);
+  }
+
+  function handleSaveName() {
     updateUser.mutate(
       { name: fullName.trim() },
       {
         onSuccess: () => {
-          refetch({
-            query: {
-              disableCookieCache: true
-            }
-          });
-          setIsEditing(false);
-          toast.success("Name updated successfully.");
+          refetchSession();
+          setIsEditingName(false);
+          toast.success("Name updated.");
         },
         onError: (err: { message?: string }) => {
           toast.error(err?.message ?? "Failed to update name.");
@@ -100,55 +97,37 @@ export function PersonalInfoCard() {
       </CardHeader>
       <CardContent className="pt-0">
         <div className="grid gap-6">
-        <div className="grid gap-2">
-          <Label htmlFor="email">Email address</Label>
-          <Input
-            id="email"
-            value={user?.email ?? ""}
-            disabled
-          />
-        </div>
-        <div className="grid gap-2">
-          <Label htmlFor="fullName">Full name</Label>
-          <div className="flex gap-2">
-            <Input
-              id="fullName"
-              placeholder="Add your full name"
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
-              readOnly={!isEditing}
-              className={!isEditing ? "bg-muted/50 cursor-default" : ""}
-            />
-            {!isEditing ? (
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => setIsEditing(true)}
-                aria-label="Edit name"
-              >
-                <PencilIcon className="size-4" />
-              </Button>
-            ) : (
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={handleCancel}
-                aria-label="Cancel editing"
-              >
-                <XIcon className="size-4" />
-              </Button>
-            )}
+          <div className="grid gap-2">
+            <Label htmlFor="email">Email address</Label>
+            <Input id="email" value={user?.email ?? ""} disabled />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="fullName">Full name</Label>
+            <div className="flex gap-2">
+              <Input
+                id="fullName"
+                placeholder="Add your full name"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                readOnly={!isEditingName}
+                className={!isEditingName ? "bg-muted/50 cursor-default" : ""}
+              />
+              {!isEditingName ? (
+                <Button variant="outline" size="icon" onClick={() => setIsEditingName(true)} aria-label="Edit name">
+                  <PencilIcon className="size-4" />
+                </Button>
+              ) : (
+                <Button variant="outline" size="icon" onClick={handleCancelName} aria-label="Cancel">
+                  <XIcon className="size-4" />
+                </Button>
+              )}
+            </div>
           </div>
         </div>
-        </div>
       </CardContent>
-      {isEditing && (
+      {isEditingName && (
         <div className="flex justify-end border-t px-6 pt-4 pb-6">
-          <Button
-            onClick={handleSave}
-            disabled={updateUser.isPending || !isDirty || !fullName.trim()}
-            size="sm"
-          >
+          <Button onClick={handleSaveName} disabled={updateUser.isPending || !isNameDirty || !fullName.trim()} size="sm">
             {updateUser.isPending ? (
               <Spinner className="mr-1.5 size-3.5" data-icon="inline-start" />
             ) : (

@@ -23,20 +23,21 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { authClient } from "@/lib/auth/auth-client";
 import { useGetInviteHistory, useLogInvites } from "@/lib/auth/hooks";
 import { InviteStreakGrid } from "@/components/dashboard/personal/invite-streak-grid";
-
-function todayStr(): string {
-  return new Date().toISOString().split("T")[0];
-}
+import { localDateStr } from "@/lib/utils/timezone";
 
 function formatDate(dateStr: string): string {
-  const d = new Date(dateStr + "T00:00:00");
+  const d = new Date(dateStr + "T12:00:00Z");
   return d.toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" });
 }
 
 export function InvitesPage() {
-  const today = todayStr();
+  const { data: session } = authClient.useSession();
+  const timezone = session?.user?.timezone ?? "UTC";
+  const today = localDateStr(timezone);
+
   const { data: history = [], isPending } = useGetInviteHistory(90);
   const { mutate: logInvites, isPending: isSaving } = useLogInvites();
 
@@ -46,6 +47,11 @@ export function InvitesPage() {
   const [logCount, setLogCount] = useState<string>("");
   const [showCustomDate, setShowCustomDate] = useState(false);
   const dateInputRef = useRef<HTMLInputElement>(null);
+
+  // Keep logDate in sync when timezone/today changes
+  useEffect(() => {
+    if (!showCustomDate) setLogDate(today);
+  }, [today, showCustomDate]);
 
   const logEntry = history.find((h) => h.date === logDate);
 
@@ -130,7 +136,7 @@ export function InvitesPage() {
             {isPending ? (
               <Skeleton className="h-24 w-full" />
             ) : (
-              <InviteStreakGrid data={history} />
+              <InviteStreakGrid data={history} timezone={timezone} />
             )}
           </CardContent>
         </Card>

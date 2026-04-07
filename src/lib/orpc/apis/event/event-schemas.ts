@@ -12,6 +12,7 @@ export const EventSchema = z.object({
   title: z.string(),
   description: z.string().nullable(),
   eventType: z.string().nullable(),
+  timezone: z.string(),
   startAt: z.date(),
   endAt: z.date().nullable(),
   createdBy: z.string(),
@@ -26,6 +27,7 @@ export const CreateEventInputSchema = z.object({
   title: z.string().min(1),
   description: z.string().optional(),
   eventType: EventTypeSchema.optional(),
+  timezone: z.string().default("UTC"),
   startAt: z.string().datetime(),
   endAt: z.string().datetime().optional(),
 });
@@ -45,6 +47,7 @@ export const UpdateEventInputSchema = z.object({
   title: z.string().min(1).optional(),
   description: z.string().nullable().optional(),
   eventType: EventTypeSchema.nullable().optional(),
+  timezone: z.string().optional(),
   startAt: z.string().datetime().optional(),
   endAt: z.string().datetime().nullable().optional(),
 });
@@ -102,6 +105,7 @@ export const UpcomingEventSchema = z.object({
   title: z.string(),
   description: z.string().nullable(),
   eventType: z.string().nullable(),
+  timezone: z.string(),
   startAt: z.date(),
   endAt: z.date().nullable(),
 });

@@ -47,10 +47,13 @@ export const invitesRouter = {
     .handler(async ({ input, context }) => {
       const userId = context.session.user.id;
       const days = input.days ?? 90;
-
-      const startDate = new Date();
-      startDate.setDate(startDate.getDate() - (days - 1));
-      const startDateStr = startDate.toISOString().split("T")[0];
+      // Use the user's stored timezone so "today" and date ranges match their local calendar
+      const timezone = context.session.user?.timezone ?? "UTC";
+      const todayInTz = new Intl.DateTimeFormat("en-CA", { timeZone: timezone }).format(new Date());
+      // Compute start date by going back (days - 1) UTC days from today's local date string
+      const startDateObj = new Date(todayInTz + "T12:00:00Z");
+      startDateObj.setUTCDate(startDateObj.getUTCDate() - (days - 1));
+      const startDateStr = startDateObj.toISOString().split("T")[0];
 
       return db
         .select()

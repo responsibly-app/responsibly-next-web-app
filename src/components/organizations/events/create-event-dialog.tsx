@@ -20,8 +20,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Spinner } from "@/components/ui/spinner";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { authClient } from "@/lib/auth/auth-client";
 import { useCreateEvent } from "@/lib/auth/hooks";
 import { useActiveOrganization } from "@/lib/auth/hooks/oraganization";
+import { TimezoneSelect } from "@/components/ui-custom/timezone-select";
+import { buildDateTimeInTimezone } from "@/lib/utils/timezone";
 
 type EventType = "in_person" | "online" | "hybrid";
 
@@ -38,6 +41,9 @@ type Props = {
 };
 
 export function CreateEventDialog({ open, onOpenChange, organizationId }: Props) {
+  const { data: session } = authClient.useSession();
+  const userTimezone = session?.user?.timezone ?? "UTC";
+
   const { data: activeOrg } = useActiveOrganization();
   const createEvent = useCreateEvent();
 
@@ -47,6 +53,7 @@ export function CreateEventDialog({ open, onOpenChange, organizationId }: Props)
   const [date, setDate] = useState<Date | undefined>(undefined);
   const [startTime, setStartTime] = useState("09:00");
   const [endTime, setEndTime] = useState("");
+  const [timezone, setTimezone] = useState(userTimezone);
   const [calendarOpen, setCalendarOpen] = useState(false);
 
   useEffect(() => {
@@ -57,15 +64,9 @@ export function CreateEventDialog({ open, onOpenChange, organizationId }: Props)
       setDate(undefined);
       setStartTime("09:00");
       setEndTime("");
+      setTimezone(userTimezone);
     }
-  }, [open]);
-
-  function buildDateTime(date: Date, time: string): string {
-    const [hours, minutes] = time.split(":").map(Number);
-    const dt = new Date(date);
-    dt.setHours(hours, minutes, 0, 0);
-    return dt.toISOString();
-  }
+  }, [open, userTimezone]);
 
   function handleSubmit() {
     if (!date || !startTime) return;
@@ -75,8 +76,9 @@ export function CreateEventDialog({ open, onOpenChange, organizationId }: Props)
         title,
         description: description || undefined,
         eventType,
-        startAt: buildDateTime(date, startTime),
-        endAt: endTime ? buildDateTime(date, endTime) : undefined,
+        timezone,
+        startAt: buildDateTimeInTimezone(date, startTime, timezone),
+        endAt: endTime ? buildDateTimeInTimezone(date, endTime, timezone) : undefined,
       },
       { onSuccess: () => onOpenChange(false) },
     );
@@ -204,6 +206,12 @@ export function CreateEventDialog({ open, onOpenChange, organizationId }: Props)
             </div>
           </div>
 
+          {/* Timezone */}
+          <div className="grid gap-2">
+            <Label>Timezone</Label>
+            <TimezoneSelect value={timezone} onChange={setTimezone} />
+          </div>
+
           {/* Description */}
           <div className="grid gap-2">
             <Label htmlFor="event-description">
@@ -232,3 +240,4 @@ export function CreateEventDialog({ open, onOpenChange, organizationId }: Props)
     </Dialog>
   );
 }
+

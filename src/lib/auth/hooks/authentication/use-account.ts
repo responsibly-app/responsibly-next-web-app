@@ -16,6 +16,8 @@ type LinkSocialParams = {
 type UpdateUserParams = {
   name?: string;
   image?: string;
+  timezone?: string;
+  timezoneMode?: "auto" | "custom";
 };
 
 /** Link a social provider to an existing account */

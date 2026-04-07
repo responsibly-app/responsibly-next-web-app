@@ -28,6 +28,20 @@ export const auth = betterAuth({
     max: 100, // max requests in the window
   },
   user: {
+    additionalFields: {
+      timezone: {
+        type: "string",
+        required: false,
+        defaultValue: "UTC",
+        input: true,
+      },
+      timezoneMode: {
+        type: "string", // "auto" | "custom"
+        required: false,
+        defaultValue: "auto",
+        input: true,
+      },
+    },
     deleteUser: {
       enabled: true,
       // sendDeleteAccountVerification: async ({ user, token }) => {
@@ -119,3 +133,5 @@ export const auth = betterAuth({
 });
 
 // http://localhost:3000/api/auth/reference
+
+type Session = typeof auth.$Infer.Session

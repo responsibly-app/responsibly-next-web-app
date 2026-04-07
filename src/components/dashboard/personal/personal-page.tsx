@@ -7,18 +7,49 @@ import { UpcomingEventsCard } from "./upcoming-events";
 import { InviteStreakGrid } from "./invite-streak-grid";
 import { useGetInviteHistory } from "@/lib/auth/hooks";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Flame } from "lucide-react";
 import Link from "next/link";
 import { routes } from "@/routes";
 
-function greeting(): string {
-  const h = new Date().getHours();
-  if (h < 12) return "Good morning";
-  if (h < 17) return "Good afternoon";
-  return "Good evening";
+function greeting(hour: number): string {
+  if (hour < 5) return "Up late";
+  if (hour < 12) return "Good morning";
+  if (hour < 17) return "Good afternoon";
+  if (hour < 21) return "Good evening";
+  return "Good night";
 }
 
+// function useLocalClock(timezone: string) {
+//   const [time, setTime] = useState<Date | null>(null);
+
+//   useEffect(() => {
+//     setTime(new Date());
+//     const id = setInterval(() => setTime(new Date()), 1000);
+//     return () => clearInterval(id);
+//   }, []);
+
+//   if (!time) return { display: "", hour: new Date().getHours() };
+
+//   const display = new Intl.DateTimeFormat("en-US", {
+//     timeZone: timezone,
+//     hour: "numeric",
+//     minute: "2-digit",
+//     second: "2-digit",
+//     hour12: true,
+//   }).format(time);
+
+//   const hour = parseInt(
+//     new Intl.DateTimeFormat("en-US", { timeZone: timezone, hour: "numeric", hour12: false }).format(time),
+//     10,
+//   );
+
+//   return { display, hour };
+// }
+
 function InviteStreakPreview() {
+  const { data: session } = authClient.useSession();
+  const timezone = session?.user?.timezone ?? "UTC";
   const { data: history = [] } = useGetInviteHistory(90);
   return (
     <Card>
@@ -29,7 +60,7 @@ function InviteStreakPreview() {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <InviteStreakGrid data={history} />
+        <InviteStreakGrid data={history} timezone={timezone} />
         <Link href={routes.dashboard.invites()} className="text-xs text-primary hover:underline block">
           View full history →
         </Link>
@@ -39,14 +70,28 @@ function InviteStreakPreview() {
 }
 
 export function PersonalPage() {
-  const { data: session } = authClient.useSession();
+  const { data: session, isPending } = authClient.useSession();
+
   const firstName = session?.user.name?.split(" ")[0] ?? "there";
+  const timezone = session?.user?.timezone ?? "UTC";
+
+  const now = new Date();
+  const hour = parseInt(
+    new Intl.DateTimeFormat("en-US", { timeZone: timezone, hour: "numeric", hour12: false }).format(now),
+    10,
+  );
 
   return (
     <div className="space-y-6 pt-5">
-      <h1 className="text-2xl font-semibold tracking-tight">
-        {greeting()}, {firstName}
-      </h1>
+      <div>
+        {isPending ? (
+          <Skeleton className="h-8 w-56" />
+        ) : (
+          <h1 className="text-2xl font-semibold tracking-tight">
+            {greeting(hour)}, {firstName}
+          </h1>
+        )}
+      </div>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         {/* Left column: activity cards */}

@@ -5,7 +5,9 @@ import { CalendarDays, MapPin, Monitor, Blend } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { authClient } from "@/lib/auth/auth-client";
 import { useListAllUpcomingEvents } from "@/lib/auth/hooks";
+import { dateInTimezone, detectTimezone, formatEventTime, tzAbbr } from "@/lib/utils/timezone";
 import { routes } from "@/routes";
 
 const EVENT_TYPE_ICONS: Record<string, React.ElementType> = {
@@ -14,36 +16,40 @@ const EVENT_TYPE_ICONS: Record<string, React.ElementType> = {
   hybrid: Blend,
 };
 
-function formatEventDate(date: Date): string {
-  const now = new Date();
-  now.setHours(0, 0, 0, 0);
-  const d = new Date(date);
-  d.setHours(0, 0, 0, 0);
-  const diffDays = Math.round((d.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+function formatEventDate(date: Date, timezone: string): string {
+  const todayStr = dateInTimezone(new Date(), timezone);
+  const eventStr = dateInTimezone(date, timezone);
 
-  const time = new Date(date).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  const todayDate = new Date(todayStr + "T12:00:00Z");
+  const eventDate = new Date(eventStr + "T12:00:00Z");
+  const diffDays = Math.round((eventDate.getTime() - todayDate.getTime()) / (1000 * 60 * 60 * 24));
 
-  if (diffDays === 0) return `Today · ${time}`;
-  if (diffDays === 1) return `Tomorrow · ${time}`;
-  return new Date(date).toLocaleDateString([], { month: "short", day: "numeric" }) + ` · ${time}`;
+  const time = formatEventTime(date, timezone);
+  const abbr = tzAbbr(date, timezone);
+
+  if (diffDays === 0) return `Today · ${time} ${abbr}`;
+  if (diffDays === 1) return `Tomorrow · ${time} ${abbr}`;
+  return new Intl.DateTimeFormat("en-US", {
+    timeZone: timezone,
+    month: "short",
+    day: "numeric",
+  }).format(date) + ` · ${time} ${abbr}`;
 }
 
 type StatusBadge = { label: string; className: string };
 
-function getStatusBadge(startAt: Date, endAt?: Date | null): StatusBadge {
+function getStatusBadge(startAt: Date, endAt: Date | null | undefined, timezone: string): StatusBadge {
   const now = new Date();
-  const start = new Date(startAt);
-  const end = endAt ? new Date(endAt) : null;
 
-  if (now >= start && (end ? now <= end : false)) {
+  if (now >= startAt && (endAt ? now <= endAt : false)) {
     return { label: "In Progress", className: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/20" };
   }
 
-  const todayMidnight = new Date();
-  todayMidnight.setHours(0, 0, 0, 0);
-  const startMidnight = new Date(start);
-  startMidnight.setHours(0, 0, 0, 0);
-  const diffDays = Math.round((startMidnight.getTime() - todayMidnight.getTime()) / (1000 * 60 * 60 * 24));
+  const todayStr = dateInTimezone(now, timezone);
+  const eventStr = dateInTimezone(startAt, timezone);
+  const todayDate = new Date(todayStr + "T12:00:00Z");
+  const eventDate = new Date(eventStr + "T12:00:00Z");
+  const diffDays = Math.round((eventDate.getTime() - todayDate.getTime()) / (1000 * 60 * 60 * 24));
 
   if (diffDays === 0) return { label: "Today", className: "bg-orange-500/15 text-orange-600 dark:text-orange-400 border-orange-500/20" };
   if (diffDays === 1) return { label: "Tomorrow", className: "bg-blue-500/15 text-blue-600 dark:text-blue-400 border-blue-500/20" };
@@ -52,6 +58,8 @@ function getStatusBadge(startAt: Date, endAt?: Date | null): StatusBadge {
 
 export function UpcomingEventsCard() {
   const { data: events = [], isPending } = useListAllUpcomingEvents();
+  const { data: session } = authClient.useSession();
+  const userTz = session?.user?.timezone ?? detectTimezone();
 
   return (
     <Card className="h-full">
@@ -77,7 +85,7 @@ export function UpcomingEventsCard() {
           <ul className="space-y-2">
             {events.map((ev) => {
               const TypeIcon = EVENT_TYPE_ICONS[ev.eventType ?? "in_person"] ?? MapPin;
-              const status = getStatusBadge(ev.startAt, ev.endAt);
+              const status = getStatusBadge(ev.startAt, ev.endAt, userTz);
 
               return (
                 <li key={ev.id}>
@@ -94,7 +102,7 @@ export function UpcomingEventsCard() {
                     <div className="flex items-center justify-between gap-2">
                       <div className="flex items-center gap-2 text-xs text-muted-foreground">
                         <TypeIcon className="size-3 shrink-0" />
-                        <span>{formatEventDate(ev.startAt)}</span>
+                        <span>{formatEventDate(ev.startAt, userTz)}</span>
                       </div>
                       <Badge className={`shrink-0 text-[10px] border ${status.className}`}>
                         {status.label}

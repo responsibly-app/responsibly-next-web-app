@@ -23,6 +23,8 @@ export const user = pgTable("user", {
   banned: boolean("banned").default(false),
   banReason: text("ban_reason"),
   banExpires: timestamp("ban_expires"),
+  timezone: text("timezone").default("UTC"),
+  timezoneMode: text("timezone_mode").default("auto"),
 });
 
 export const session = pgTable(

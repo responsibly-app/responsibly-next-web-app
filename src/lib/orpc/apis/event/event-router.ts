@@ -60,6 +60,7 @@ export const eventRouter = {
           title: event.title,
           description: event.description,
           eventType: event.eventType,
+          timezone: event.timezone,
           startAt: event.startAt,
           endAt: event.endAt,
           createdBy: event.createdBy,
@@ -92,6 +93,7 @@ export const eventRouter = {
           title: event.title,
           description: event.description,
           eventType: event.eventType,
+          timezone: event.timezone,
           startAt: event.startAt,
           endAt: event.endAt,
           createdBy: event.createdBy,
@@ -134,6 +136,7 @@ export const eventRouter = {
           title: input.title,
           description: input.description ?? null,
           eventType: input.eventType ?? "in_person",
+          timezone: input.timezone ?? "UTC",
           startAt: new Date(input.startAt),
           endAt: input.endAt ? new Date(input.endAt) : null,
           createdBy: userId,
@@ -160,6 +163,7 @@ export const eventRouter = {
       if (input.title !== undefined) updateValues.title = input.title;
       if (input.description !== undefined) updateValues.description = input.description;
       if (input.eventType !== undefined) updateValues.eventType = input.eventType;
+      if (input.timezone !== undefined) updateValues.timezone = input.timezone;
       if (input.startAt !== undefined) updateValues.startAt = new Date(input.startAt);
       if ("endAt" in input) updateValues.endAt = input.endAt ? new Date(input.endAt) : null;
 
@@ -314,6 +318,7 @@ export const eventRouter = {
           title: event.title,
           description: event.description,
           eventType: event.eventType,
+          timezone: event.timezone,
           startAt: event.startAt,
           endAt: event.endAt,
         })

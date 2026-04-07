@@ -23,28 +23,44 @@ function getTextClass(count: number): string {
   return "text-white dark:text-green-950";
 }
 
-function toDateStr(d: Date): string {
+/** Returns YYYY-MM-DD for the given Date in the specified IANA timezone. */
+function toLocalDateStr(d: Date, timezone: string): string {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: timezone }).format(d);
+}
+
+/**
+ * Advance a YYYY-MM-DD string by `days` calendar days.
+ * Uses UTC noon to avoid DST boundary issues.
+ */
+function addCalendarDays(dateStr: string, days: number): string {
+  const d = new Date(dateStr + "T12:00:00Z");
+  d.setUTCDate(d.getUTCDate() + days);
   return d.toISOString().split("T")[0];
 }
 
-export function calculateStreak(data: { date: string; count: number }[]): number {
+/** Day-of-week (0=Sun) for a YYYY-MM-DD string, computed via UTC noon. */
+function dayOfWeek(dateStr: string): number {
+  return new Date(dateStr + "T12:00:00Z").getUTCDay();
+}
+
+export function calculateStreak(
+  data: { date: string; count: number }[],
+  timezone: string = "UTC",
+): number {
   const map = new Map(data.map((d) => [d.date, d.count]));
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  let checkDate = toLocalDateStr(new Date(), timezone);
 
-  const cur = new Date(today);
-
-  // If today has no invites, start streak check from yesterday
-  if (!map.get(toDateStr(cur))) {
-    cur.setDate(cur.getDate() - 1);
+  // If today has no invites, start from yesterday
+  if (!map.get(checkDate)) {
+    checkDate = addCalendarDays(checkDate, -1);
   }
 
   let streak = 0;
   while (true) {
-    const count = map.get(toDateStr(cur)) ?? 0;
+    const count = map.get(checkDate) ?? 0;
     if (count === 0) break;
     streak++;
-    cur.setDate(cur.getDate() - 1);
+    checkDate = addCalendarDays(checkDate, -1);
   }
 
   return streak;
@@ -52,40 +68,42 @@ export function calculateStreak(data: { date: string; count: number }[]): number
 
 type Props = {
   data: { date: string; count: number }[];
+  timezone?: string;
 };
 
-export function InviteStreakGrid({ data }: Props) {
+export function InviteStreakGrid({ data, timezone = "UTC" }: Props) {
   const { grid, streak } = useMemo(() => {
     const dateMap = new Map(data.map((d) => [d.date, d.count]));
 
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    const rangeStart = new Date(today);
-    rangeStart.setDate(rangeStart.getDate() - 89);
+    const todayStr = toLocalDateStr(new Date(), timezone);
+    const rangeStartStr = addCalendarDays(todayStr, -89);
 
     // Go back to the Sunday before rangeStart
-    const gridStart = new Date(rangeStart);
-    gridStart.setDate(gridStart.getDate() - gridStart.getDay());
+    const gridStartStr = addCalendarDays(rangeStartStr, -dayOfWeek(rangeStartStr));
 
     const weeks: DayCell[][] = [];
-    const cur = new Date(gridStart);
+    let curStr = gridStartStr;
 
-    while (cur <= today) {
+    while (curStr <= todayStr) {
       const week: DayCell[] = [];
       for (let d = 0; d < 7; d++) {
-        const dateStr = toDateStr(cur);
-        const isPadding = cur < rangeStart || cur > today;
-        week.push({ date: dateStr, count: isPadding ? 0 : (dateMap.get(dateStr) ?? 0), isPadding });
-        cur.setDate(cur.getDate() + 1);
+        const isPadding = curStr < rangeStartStr || curStr > todayStr;
+        week.push({
+          date: curStr,
+          count: isPadding ? 0 : (dateMap.get(curStr) ?? 0),
+          isPadding,
+        });
+        curStr = addCalendarDays(curStr, 1);
       }
       weeks.push(week);
     }
 
-    return { grid: weeks, streak: calculateStreak(data) };
-  }, [data]);
+    return { grid: weeks, streak: calculateStreak(data, timezone) };
+  }, [data, timezone]);
 
   const DAY_LABELS = ["S", "M", "T", "W", "T", "F", "S"];
+
+  const todayStr = toLocalDateStr(new Date(), timezone);
 
   return (
     <div className="space-y-3">
@@ -117,7 +135,7 @@ export function InviteStreakGrid({ data }: Props) {
                   title={day.isPadding ? "" : `${day.date}: ${day.count} invite${day.count !== 1 ? "s" : ""}`}
                   className={`aspect-square w-full rounded-[3px] flex items-center justify-center ${
                     day.isPadding ? "opacity-0" : getIntensityClass(day.count)
-                  } ${!day.isPadding && day.date === toDateStr(new Date()) ? "ring-2 ring-primary ring-offset-1 ring-offset-background" : ""}`}
+                  } ${!day.isPadding && day.date === todayStr ? "ring-2 ring-primary ring-offset-1 ring-offset-background" : ""}`}
                 >
                   {!day.isPadding && (
                     <span className={`text-[clamp(6px,0.6cqw,9px)] font-medium leading-none tabular-nums ${getTextClass(day.count)}`}>

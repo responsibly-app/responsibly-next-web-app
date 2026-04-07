@@ -29,6 +29,7 @@ export function useCreateEvent() {
       title: string;
       description?: string;
       eventType?: "in_person" | "online" | "hybrid";
+      timezone?: string;
       startAt: string;
       endAt?: string;
     }) => orpc.event.create(input),
@@ -52,6 +53,7 @@ export function useUpdateEvent() {
       title?: string;
       description?: string | null;
       eventType?: "in_person" | "online" | "hybrid" | null;
+      timezone?: string;
       startAt?: string;
       endAt?: string | null;
     }) => orpc.event.update(input),

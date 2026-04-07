@@ -15,6 +15,7 @@ export const event = pgTable(
     title: text("title").notNull(),
     description: text("description"),
     eventType: text("event_type").default("in_person"),
+    timezone: text("timezone").notNull().default("UTC"),
     startAt: timestamp("start_at").notNull(),
     endAt: timestamp("end_at"),
     createdBy: text("created_by")
