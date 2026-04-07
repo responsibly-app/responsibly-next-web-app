@@ -2,13 +2,24 @@
 
 import { useMemo } from "react";
 import { TrendingUp } from "lucide-react";
+import { Bar, BarChart, XAxis, YAxis, CartesianGrid } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+  type ChartConfig,
+} from "@/components/ui/chart";
 import { useListPoints } from "@/lib/auth/hooks";
 import { routes } from "@/routes";
 import Link from "next/link";
 
 const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+const chartConfig = {
+  points: { label: "Points", color: "var(--color-primary)" },
+} satisfies ChartConfig;
 
 function currentMonthStr(): string {
   const now = new Date();
@@ -18,12 +29,11 @@ function currentMonthStr(): string {
 export function PointsSummaryCard() {
   const { data: items = [], isPending } = useListPoints();
 
-  const { totalAll, totalMonth, monthlyBars } = useMemo(() => {
+  const { totalAll, totalMonth, chartData } = useMemo(() => {
     const totalAll = items.reduce((s, i) => s + i.amount, 0);
     const thisMonth = currentMonthStr();
     const totalMonth = items.filter((i) => i.date.startsWith(thisMonth)).reduce((s, i) => s + i.amount, 0);
 
-    // Last 6 months for bar chart
     const map = new Map<string, number>();
     items.forEach((item) => {
       const month = item.date.substring(0, 7);
@@ -31,28 +41,34 @@ export function PointsSummaryCard() {
     });
 
     const now = new Date();
-    const months: { label: string; key: string; total: number }[] = [];
-    for (let i = 5; i >= 0; i--) {
-      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const chartData = Array.from({ length: 6 }, (_, idx) => {
+      const d = new Date(now.getFullYear(), now.getMonth() - (5 - idx), 1);
       const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-      months.push({ label: MONTH_NAMES[d.getMonth()], key, total: map.get(key) ?? 0 });
-    }
+      return { month: MONTH_NAMES[d.getMonth()], points: map.get(key) ?? 0 };
+    });
 
-    const maxVal = Math.max(...months.map((m) => m.total), 1);
-    const monthlyBars = months.map((m) => ({ ...m, pct: Math.round((m.total / maxVal) * 100) }));
-
-    return { totalAll, totalMonth, monthlyBars };
+    return { totalAll, totalMonth, chartData };
   }, [items]);
 
   if (isPending) {
     return (
       <Card>
-        <CardHeader>
-          <Skeleton className="h-5 w-28" />
+        <CardHeader className="pb-3">
+          <Skeleton className="h-5 w-16" />
         </CardHeader>
         <CardContent className="space-y-4">
-          <Skeleton className="h-8 w-24" />
-          <Skeleton className="h-16 w-full" />
+          <div className="flex gap-6">
+            <div className="space-y-1.5">
+              <Skeleton className="h-7 w-16" />
+              <Skeleton className="h-3 w-12" />
+            </div>
+            <div className="space-y-1.5">
+              <Skeleton className="h-7 w-16" />
+              <Skeleton className="h-3 w-16" />
+            </div>
+          </div>
+          <Skeleton className="h-36 w-full" />
+          <Skeleton className="h-3 w-24" />
         </CardContent>
       </Card>
     );
@@ -78,20 +94,15 @@ export function PointsSummaryCard() {
           </div>
         </div>
 
-        {/* Monthly bar chart */}
-        <div className="flex items-end gap-1.5 h-16">
-          {monthlyBars.map((m) => (
-            <div key={m.key} className="flex flex-col items-center gap-1 flex-1">
-              <div className="w-full flex items-end" style={{ height: "44px" }}>
-                <div
-                  className="w-full rounded-t-sm bg-primary/25 transition-all"
-                  style={{ height: m.pct === 0 ? "2px" : `${Math.max(m.pct * 0.44, 4)}px` }}
-                />
-              </div>
-              <span className="text-[10px] text-muted-foreground leading-none">{m.label}</span>
-            </div>
-          ))}
-        </div>
+        <ChartContainer config={chartConfig} className="h-36 w-full">
+          <BarChart data={chartData} margin={{ top: 4, right: 0, left: -20, bottom: 0 }}>
+            <CartesianGrid vertical={false} strokeDasharray="3 3" className="stroke-border" />
+            <XAxis dataKey="month" tickLine={false} axisLine={false} tick={{ fontSize: 11 }} />
+            <YAxis tickLine={false} axisLine={false} tick={{ fontSize: 11 }} allowDecimals={false} />
+            <ChartTooltip content={<ChartTooltipContent />} />
+            <Bar dataKey="points" fill="var(--color-primary)" radius={[4, 4, 0, 0]} minPointSize={3} />
+          </BarChart>
+        </ChartContainer>
 
         <Link href={routes.dashboard.points()} className="text-xs text-primary hover:underline block">
           View all points →

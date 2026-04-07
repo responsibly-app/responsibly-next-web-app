@@ -51,11 +51,11 @@ export function PersonalPage() {
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         {/* Left column: activity cards */}
         <div className="space-y-4 md:col-span-2">
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <PointsSummaryCard />
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_220px]">
+            <InviteStreakPreview />
             <InviteLogCard />
-            <PointsSummaryCard />
           </div>
-          <InviteStreakPreview />
         </div>
 
         {/* Right column: upcoming events */}

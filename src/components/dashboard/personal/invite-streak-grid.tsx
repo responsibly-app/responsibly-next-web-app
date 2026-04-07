@@ -16,6 +16,13 @@ function getIntensityClass(count: number): string {
   return "bg-green-800 dark:bg-green-300";
 }
 
+function getTextClass(count: number): string {
+  if (count === 0) return "text-muted-foreground/50";
+  if (count <= 2) return "text-green-800 dark:text-green-200";
+  if (count <= 5) return "text-green-900 dark:text-green-100";
+  return "text-white dark:text-green-950";
+}
+
 function toDateStr(d: Date): string {
   return d.toISOString().split("T")[0];
 }
@@ -87,12 +94,15 @@ export function InviteStreakGrid({ data }: Props) {
         <span className="text-sm text-muted-foreground">day streak</span>
       </div>
 
-      <div className="overflow-x-auto pb-1">
-        <div className="flex gap-[3px] min-w-max">
-          {/* Day-of-week labels */}
-          <div className="flex flex-col gap-[3px] mr-1">
+      <div className="w-full">
+        <div
+          className="grid gap-0.75"
+          style={{ gridTemplateColumns: `1.25rem repeat(${grid.length}, minmax(0, 18px))` }}
+        >
+          {/* Day-of-week labels column */}
+          <div className="flex flex-col gap-0.75">
             {DAY_LABELS.map((label, i) => (
-              <div key={i} className="h-[11px] w-3 flex items-center justify-end">
+              <div key={i} className="aspect-square flex items-center justify-end pr-0.5">
                 <span className="text-[9px] text-muted-foreground leading-none">{i % 2 === 1 ? label : ""}</span>
               </div>
             ))}
@@ -100,15 +110,21 @@ export function InviteStreakGrid({ data }: Props) {
 
           {/* Week columns */}
           {grid.map((week, wi) => (
-            <div key={wi} className="flex flex-col gap-[3px]">
+            <div key={wi} className="flex flex-col gap-0.75">
               {week.map((day, di) => (
                 <div
                   key={di}
                   title={day.isPadding ? "" : `${day.date}: ${day.count} invite${day.count !== 1 ? "s" : ""}`}
-                  className={`h-[11px] w-[11px] rounded-[2px] ${
+                  className={`aspect-square w-full rounded-[3px] flex items-center justify-center ${
                     day.isPadding ? "opacity-0" : getIntensityClass(day.count)
-                  }`}
-                />
+                  } ${!day.isPadding && day.date === toDateStr(new Date()) ? "ring-2 ring-primary ring-offset-1 ring-offset-background" : ""}`}
+                >
+                  {!day.isPadding && (
+                    <span className={`text-[clamp(6px,0.6cqw,9px)] font-medium leading-none tabular-nums ${getTextClass(day.count)}`}>
+                      {day.count}
+                    </span>
+                  )}
+                </div>
               ))}
             </div>
           ))}
@@ -119,7 +135,7 @@ export function InviteStreakGrid({ data }: Props) {
       <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
         <span>Less</span>
         {[0, 2, 5, 9, 10].map((v) => (
-          <div key={v} className={`h-[11px] w-[11px] rounded-[2px] ${getIntensityClass(v)}`} />
+          <div key={v} className={`h-4 w-4 rounded-[3px] shrink-0 ${getIntensityClass(v)}`} />
         ))}
         <span>More</span>
       </div>

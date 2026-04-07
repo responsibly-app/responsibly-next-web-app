@@ -1,12 +1,20 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Flame } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Flame, CalendarIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogClose,
+} from "@/components/ui/dialog";
 import {
   Table,
   TableBody,
@@ -32,20 +40,49 @@ export function InvitesPage() {
   const { data: history = [], isPending } = useGetInviteHistory(90);
   const { mutate: logInvites, isPending: isSaving } = useLogInvites();
 
+  // Today's log
   const todayEntry = history.find((h) => h.date === today);
-  const [selectedDate, setSelectedDate] = useState(today);
-  const [count, setCount] = useState<string>("");
+  const [logDate, setLogDate] = useState(today);
+  const [logCount, setLogCount] = useState<string>("");
+  const [showCustomDate, setShowCustomDate] = useState(false);
+  const dateInputRef = useRef<HTMLInputElement>(null);
 
-  const selectedEntry = history.find((h) => h.date === selectedDate);
+  const logEntry = history.find((h) => h.date === logDate);
 
   useEffect(() => {
-    setCount(selectedEntry ? String(selectedEntry.count) : "");
-  }, [selectedDate, selectedEntry]);
+    setLogCount(logEntry ? String(logEntry.count) : "");
+  }, [logDate, logEntry]);
 
-  function handleSave() {
-    const parsed = parseInt(count, 10);
+  function handleSaveLog() {
+    const parsed = parseInt(logCount, 10);
     if (isNaN(parsed) || parsed < 0) return;
-    logInvites({ date: selectedDate, count: parsed });
+    logInvites({ date: logDate, count: parsed });
+  }
+
+  function handleToggleCustomDate() {
+    if (showCustomDate) {
+      setShowCustomDate(false);
+      setLogDate(today);
+    } else {
+      setShowCustomDate(true);
+      setTimeout(() => dateInputRef.current?.showPicker?.(), 50);
+    }
+  }
+
+  // Edit dialog
+  const [editEntry, setEditEntry] = useState<{ date: string; count: number } | null>(null);
+  const [editCount, setEditCount] = useState<string>("");
+
+  function openEdit(entry: { date: string; count: number }) {
+    setEditEntry(entry);
+    setEditCount(String(entry.count));
+  }
+
+  function handleSaveEdit() {
+    if (!editEntry) return;
+    const parsed = parseInt(editCount, 10);
+    if (isNaN(parsed) || parsed < 0) return;
+    logInvites({ date: editEntry.date, count: parsed }, { onSuccess: () => setEditEntry(null) });
   }
 
   const totalInvites = history.reduce((s, h) => s + h.count, 0);
@@ -79,62 +116,77 @@ export function InvitesPage() {
         </Card>
       </div>
 
-      {/* Streak grid */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-base">
-            <Flame className="size-4 text-orange-500" />
-            90-Day Streak
-          </CardTitle>
-          <CardDescription>Your invite activity over the last 90 days</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {isPending ? (
-            <Skeleton className="h-24 w-full" />
-          ) : (
-            <InviteStreakGrid data={history} />
-          )}
-        </CardContent>
-      </Card>
+      {/* Streak + Log side by side */}
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Flame className="size-4 text-orange-500" />
+              90-Day Streak
+            </CardTitle>
+            <CardDescription>Your invite activity over the last 90 days</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {isPending ? (
+              <Skeleton className="h-24 w-full" />
+            ) : (
+              <InviteStreakGrid data={history} />
+            )}
+          </CardContent>
+        </Card>
 
-      {/* Log entry */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base">Log Invites</CardTitle>
-          <CardDescription>Update your invite count for any day</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
-            <div className="space-y-1.5">
-              <Label htmlFor="invite-date">Date</Label>
-              <Input
-                id="invite-date"
-                type="date"
-                value={selectedDate}
-                max={today}
-                onChange={(e) => setSelectedDate(e.target.value)}
-                className="w-44"
-              />
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base">Log Invites</CardTitle>
+            <CardDescription>Log your invite count for today</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-col gap-4">
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <Label>Date</Label>
+                  <button
+                    type="button"
+                    onClick={handleToggleCustomDate}
+                    className="flex items-center gap-1 text-xs text-primary hover:underline"
+                  >
+                    <CalendarIcon className="size-3" />
+                    {showCustomDate ? "Use today" : "Custom date"}
+                  </button>
+                </div>
+                {showCustomDate ? (
+                  <Input
+                    ref={dateInputRef}
+                    type="date"
+                    value={logDate}
+                    max={today}
+                    onChange={(e) => setLogDate(e.target.value)}
+                    className="w-full"
+                  />
+                ) : (
+                  <p className="text-sm font-medium text-foreground">Today — {formatDate(today)}</p>
+                )}
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="invite-count">Number of invites</Label>
+                <Input
+                  id="invite-count"
+                  type="number"
+                  min={0}
+                  max={9999}
+                  placeholder="0"
+                  value={logCount}
+                  onChange={(e) => setLogCount(e.target.value)}
+                  className="w-full"
+                />
+              </div>
+              <Button onClick={handleSaveLog} disabled={isSaving || logCount === ""} className="w-full">
+                {isSaving ? "Saving…" : logEntry ? "Update" : "Save"}
+              </Button>
             </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="invite-count">Number of invites</Label>
-              <Input
-                id="invite-count"
-                type="number"
-                min={0}
-                max={9999}
-                placeholder="0"
-                value={count}
-                onChange={(e) => setCount(e.target.value)}
-                className="w-32"
-              />
-            </div>
-            <Button onClick={handleSave} disabled={isSaving || count === ""}>
-              {isSaving ? "Saving…" : selectedEntry ? "Update" : "Save"}
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      </div>
 
       {/* History table */}
       <Card>
@@ -166,7 +218,11 @@ export function InvitesPage() {
                     .filter((h) => h.count > 0)
                     .sort((a, b) => b.date.localeCompare(a.date))
                     .map((entry) => (
-                      <TableRow key={entry.id}>
+                      <TableRow
+                        key={entry.id}
+                        className="cursor-pointer hover:bg-muted/50"
+                        onClick={() => openEdit(entry)}
+                      >
                         <TableCell className="text-sm">{formatDate(entry.date)}</TableCell>
                         <TableCell className="text-right font-medium tabular-nums">
                           {entry.count}
@@ -179,6 +235,41 @@ export function InvitesPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Edit dialog */}
+      <Dialog open={!!editEntry} onOpenChange={(open) => { if (!open) setEditEntry(null); }}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Edit Invites</DialogTitle>
+          </DialogHeader>
+          {editEntry && (
+            <div className="space-y-4 py-2">
+              <p className="text-sm text-muted-foreground">{formatDate(editEntry.date)}</p>
+              <div className="space-y-1.5">
+                <Label htmlFor="edit-count">Number of invites</Label>
+                <Input
+                  id="edit-count"
+                  type="number"
+                  min={0}
+                  max={9999}
+                  value={editCount}
+                  onChange={(e) => setEditCount(e.target.value)}
+                  className="w-full"
+                  autoFocus
+                />
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button variant="outline">Cancel</Button>
+            </DialogClose>
+            <Button onClick={handleSaveEdit} disabled={isSaving || editCount === ""}>
+              {isSaving ? "Saving…" : "Update"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

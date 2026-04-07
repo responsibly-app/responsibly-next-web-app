@@ -2,9 +2,16 @@
 
 import { useMemo } from "react";
 import { Trash2, TrendingUp } from "lucide-react";
+import { Bar, BarChart, XAxis, YAxis, CartesianGrid } from "recharts";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+  type ChartConfig,
+} from "@/components/ui/chart";
 import {
   Table,
   TableBody,
@@ -18,6 +25,10 @@ import { AddPointDialog } from "./add-point-dialog";
 
 const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
+const chartConfig = {
+  points: { label: "Points", color: "hsl(var(--primary) / 1)" },
+} satisfies ChartConfig;
+
 function formatDate(dateStr: string): string {
   const d = new Date(dateStr + "T00:00:00");
   return d.toLocaleDateString([], { month: "short", day: "numeric", year: "numeric" });
@@ -29,7 +40,7 @@ function currentMonthStr(): string {
 }
 
 function MonthlyChart({ items }: { items: { date: string; amount: number }[] }) {
-  const bars = useMemo(() => {
+  const data = useMemo(() => {
     const map = new Map<string, number>();
     items.forEach((i) => {
       const month = i.date.substring(0, 7);
@@ -40,29 +51,20 @@ function MonthlyChart({ items }: { items: { date: string; amount: number }[] }) 
     return Array.from({ length: 6 }, (_, idx) => {
       const d = new Date(now.getFullYear(), now.getMonth() - (5 - idx), 1);
       const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-      return { label: MONTH_NAMES[d.getMonth()], key, total: map.get(key) ?? 0 };
+      return { month: MONTH_NAMES[d.getMonth()], points: map.get(key) ?? 0 };
     });
   }, [items]);
 
-  const maxVal = Math.max(...bars.map((b) => b.total), 1);
-
   return (
-    <div className="space-y-2">
-      <div className="flex items-end gap-2 h-24">
-        {bars.map((b) => (
-          <div key={b.key} className="flex flex-col items-center gap-1 flex-1">
-            <span className="text-[10px] text-muted-foreground tabular-nums">{b.total > 0 ? b.total : ""}</span>
-            <div className="w-full flex items-end" style={{ height: "60px" }}>
-              <div
-                className="w-full rounded-t-sm bg-primary/30 transition-all"
-                style={{ height: b.total === 0 ? "2px" : `${Math.max((b.total / maxVal) * 60, 6)}px` }}
-              />
-            </div>
-            <span className="text-[10px] text-muted-foreground">{b.label}</span>
-          </div>
-        ))}
-      </div>
-    </div>
+    <ChartContainer config={chartConfig} className="h-48 w-full">
+      <BarChart data={data} margin={{ top: 4, right: 0, left: -20, bottom: 0 }}>
+        <CartesianGrid vertical={false} strokeDasharray="3 3" className="stroke-border" />
+        <XAxis dataKey="month" tickLine={false} axisLine={false} tick={{ fontSize: 12 }} />
+        <YAxis tickLine={false} axisLine={false} tick={{ fontSize: 12 }} allowDecimals={false} />
+        <ChartTooltip content={<ChartTooltipContent />} />
+        <Bar dataKey="points" fill="var(--color-primary)" radius={[4, 4, 0, 0]} minPointSize={3} />
+      </BarChart>
+    </ChartContainer>
   );
 }
 

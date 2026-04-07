@@ -28,6 +28,28 @@ function formatEventDate(date: Date): string {
   return new Date(date).toLocaleDateString([], { month: "short", day: "numeric" }) + ` · ${time}`;
 }
 
+type StatusBadge = { label: string; className: string };
+
+function getStatusBadge(startAt: Date, endAt?: Date | null): StatusBadge {
+  const now = new Date();
+  const start = new Date(startAt);
+  const end = endAt ? new Date(endAt) : null;
+
+  if (now >= start && (end ? now <= end : false)) {
+    return { label: "In Progress", className: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/20" };
+  }
+
+  const todayMidnight = new Date();
+  todayMidnight.setHours(0, 0, 0, 0);
+  const startMidnight = new Date(start);
+  startMidnight.setHours(0, 0, 0, 0);
+  const diffDays = Math.round((startMidnight.getTime() - todayMidnight.getTime()) / (1000 * 60 * 60 * 24));
+
+  if (diffDays === 0) return { label: "Today", className: "bg-orange-500/15 text-orange-600 dark:text-orange-400 border-orange-500/20" };
+  if (diffDays === 1) return { label: "Tomorrow", className: "bg-blue-500/15 text-blue-600 dark:text-blue-400 border-blue-500/20" };
+  return { label: `In ${diffDays} days`, className: "bg-muted text-muted-foreground border-border" };
+}
+
 export function UpcomingEventsCard() {
   const { data: events = [], isPending } = useListAllUpcomingEvents();
 
@@ -55,12 +77,13 @@ export function UpcomingEventsCard() {
           <ul className="space-y-2">
             {events.map((ev) => {
               const TypeIcon = EVENT_TYPE_ICONS[ev.eventType ?? "in_person"] ?? MapPin;
+              const status = getStatusBadge(ev.startAt, ev.endAt);
 
               return (
                 <li key={ev.id}>
                   <Link
                     href={routes.dashboard.eventDetail(ev.id)}
-                    className="flex flex-col gap-0.5 rounded-md border p-3 transition-colors hover:bg-muted/50"
+                    className="flex flex-col gap-1.5 rounded-md border p-3 transition-colors hover:bg-muted/50"
                   >
                     <div className="flex items-start justify-between gap-2">
                       <p className="text-sm font-medium leading-snug">{ev.title}</p>
@@ -68,9 +91,14 @@ export function UpcomingEventsCard() {
                         {ev.organizationName}
                       </Badge>
                     </div>
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <TypeIcon className="size-3 shrink-0" />
-                      <span>{formatEventDate(ev.startAt)}</span>
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <TypeIcon className="size-3 shrink-0" />
+                        <span>{formatEventDate(ev.startAt)}</span>
+                      </div>
+                      <Badge className={`shrink-0 text-[10px] border ${status.className}`}>
+                        {status.label}
+                      </Badge>
                     </div>
                   </Link>
                 </li>
