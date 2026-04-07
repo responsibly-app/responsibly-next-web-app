@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -36,12 +37,13 @@ export function HeaderUserDropdown({
   isPending: boolean;
 }) {
   const signOut = useSignOut();
+  const [open, setOpen] = useState(false);
 
   const userInitials = getInitials(user?.name ? user?.name : user?.email || "User");
 
 
   return (
-    <DropdownMenu>
+    <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger
         asChild
         className="cursor-pointer transition-opacity duration-200 hover:opacity-80 data-[state=open]:opacity-80"
@@ -67,7 +69,11 @@ export function HeaderUserDropdown({
         sideOffset={10}
       >
         <DropdownMenuLabel className="p-0 font-normal">
-          <div className="flex items-center gap-2 px-2 py-1.5 text-left text-sm">
+          <Link
+            href={routes.dashboard.settings()}
+            onClick={() => setOpen(false)}
+            className="flex items-center gap-2 px-2 py-1.5 text-left text-sm hover:bg-accent rounded-sm transition-colors"
+          >
             <Avatar className="relative h-8 w-8 rounded-full">
               {isPending || signOut.isPending ? (
                 <div className="soft-pulse bg-background absolute inset-0 rounded-full" />
@@ -84,7 +90,7 @@ export function HeaderUserDropdown({
               <span className="truncate font-medium">{user.name}</span>
               <span className="truncate text-xs">{user.email}</span>
             </div>
-          </div>
+          </Link>
         </DropdownMenuLabel>
 
         <DropdownMenuSeparator />
