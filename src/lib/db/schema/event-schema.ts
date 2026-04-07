@@ -2,6 +2,9 @@ import { relations } from "drizzle-orm";
 import { pgTable, text, timestamp, index, uniqueIndex } from "drizzle-orm/pg-core";
 import { organization, member, user } from "./better-auth-schema";
 
+export const EVENT_TYPES = ["in_person", "online", "hybrid"] as const;
+export type EventType = (typeof EVENT_TYPES)[number];
+
 export const event = pgTable(
   "event",
   {
@@ -11,6 +14,7 @@ export const event = pgTable(
       .references(() => organization.id, { onDelete: "cascade" }),
     title: text("title").notNull(),
     description: text("description"),
+    eventType: text("event_type").default("in_person"),
     startAt: timestamp("start_at").notNull(),
     endAt: timestamp("end_at"),
     createdBy: text("created_by")

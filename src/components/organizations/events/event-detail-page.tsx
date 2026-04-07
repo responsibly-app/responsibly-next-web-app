@@ -1,0 +1,342 @@
+"use client";
+
+import { useState } from "react";
+import Link from "next/link";
+import { format } from "date-fns";
+import {
+  ArrowLeft,
+  CalendarDays,
+  Clock,
+  MapPin,
+  Monitor,
+  Blend,
+  Pencil,
+  Users,
+  X,
+  Check,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Calendar } from "@/components/ui/calendar";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Spinner } from "@/components/ui/spinner";
+import { Textarea } from "@/components/ui/textarea";
+import { cn } from "@/lib/utils";
+import { useGetEvent, useUpdateEvent } from "@/lib/auth/hooks";
+import { ROLE_LEVELS, type OrgRole } from "@/lib/auth/hooks/oraganization/permissions";
+import { routes } from "@/routes";
+import { toast } from "sonner";
+
+type EventType = "in_person" | "online" | "hybrid";
+
+const EVENT_TYPE_OPTIONS: { value: EventType; label: string; icon: React.ElementType }[] = [
+  { value: "in_person", label: "In Person", icon: MapPin },
+  { value: "online", label: "Online", icon: Monitor },
+  { value: "hybrid", label: "Hybrid", icon: Blend },
+];
+
+function eventTypeLabel(type: string | null | undefined) {
+  return EVENT_TYPE_OPTIONS.find((o) => o.value === type) ?? EVENT_TYPE_OPTIONS[0];
+}
+
+function canEditEvent(role: string | undefined): boolean {
+  if (!role) return false;
+  const level = ROLE_LEVELS[role as OrgRole] ?? Infinity;
+  return level <= ROLE_LEVELS["admin"];
+}
+
+type Props = { eventId: string };
+
+export function EventDetailPage({ eventId }: Props) {
+  const { data: event, isPending } = useGetEvent(eventId);
+  const updateEvent = useUpdateEvent();
+
+  const [editing, setEditing] = useState(false);
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [eventType, setEventType] = useState<EventType>("in_person");
+  const [date, setDate] = useState<Date | undefined>(undefined);
+  const [startTime, setStartTime] = useState("09:00");
+  const [endTime, setEndTime] = useState("");
+  const [calendarOpen, setCalendarOpen] = useState(false);
+
+  function startEdit() {
+    if (!event) return;
+    setTitle(event.title);
+    setDescription(event.description ?? "");
+    setEventType((event.eventType as EventType) ?? "in_person");
+    setDate(new Date(event.startAt));
+    setStartTime(format(new Date(event.startAt), "HH:mm"));
+    setEndTime(event.endAt ? format(new Date(event.endAt), "HH:mm") : "");
+    setEditing(true);
+  }
+
+  function cancelEdit() {
+    setEditing(false);
+  }
+
+  function buildDateTime(date: Date, time: string): string {
+    const [hours, minutes] = time.split(":").map(Number);
+    const dt = new Date(date);
+    dt.setHours(hours, minutes, 0, 0);
+    return dt.toISOString();
+  }
+
+  function handleSave() {
+    if (!event || !date || !startTime) return;
+    updateEvent.mutate(
+      {
+        eventId: event.id,
+        organizationId: event.organizationId,
+        title,
+        description: description || null,
+        eventType,
+        startAt: buildDateTime(date, startTime),
+        endAt: endTime ? buildDateTime(date, endTime) : null,
+      },
+      {
+        onSuccess: () => {
+          setEditing(false);
+          toast.success("Event updated.");
+        },
+        onError: (err: { message?: string }) => {
+          toast.error(err?.message ?? "Failed to update event.");
+        },
+      },
+    );
+  }
+
+  const canSave = title.trim() && date && startTime && !updateEvent.isPending;
+  const isAdmin = canEditEvent(event?.userRole);
+
+  if (isPending) {
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-5 w-20" />
+        <div className="space-y-2">
+          <Skeleton className="h-8 w-64" />
+          <Skeleton className="h-4 w-48" />
+        </div>
+        <Skeleton className="h-48 w-full rounded-xl" />
+      </div>
+    );
+  }
+
+  if (!event) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 text-center">
+        <CalendarDays className="mb-3 size-8 text-muted-foreground" />
+        <p className="text-sm text-muted-foreground">Event not found.</p>
+        <Button variant="link" size="sm" asChild className="mt-2">
+          <Link href={routes.dashboard.events()}>Back to Events</Link>
+        </Button>
+      </div>
+    );
+  }
+
+  const typeInfo = eventTypeLabel(editing ? eventType : event.eventType);
+  const TypeIcon = typeInfo.icon;
+
+  return (
+    <div className="space-y-6">
+      {/* Back */}
+      <Link
+        href={routes.dashboard.events()}
+        className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+      >
+        <ArrowLeft className="size-4" />
+        Events
+      </Link>
+
+      {/* Header */}
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex items-start gap-3 min-w-0">
+          <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-muted">
+            <CalendarDays className="size-5 text-muted-foreground" />
+          </div>
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h1 className="text-2xl font-semibold tracking-tight">{event.title}</h1>
+              <Badge variant="secondary" className="text-xs">
+                {event.organizationName}
+              </Badge>
+            </div>
+            <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+              <span className="flex items-center gap-1">
+                <TypeIcon className="size-3.5" />
+                {typeInfo.label}
+              </span>
+              <span>·</span>
+              <span className="flex items-center gap-1">
+                <Clock className="size-3.5" />
+                {format(new Date(event.startAt), "EEEE, MMMM d, yyyy · h:mm a")}
+                {event.endAt && <> – {format(new Date(event.endAt), "h:mm a")}</>}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex shrink-0 items-center gap-2">
+          {isAdmin && !editing && (
+            <Button variant="outline" size="sm" onClick={startEdit}>
+              <Pencil className="mr-1.5 size-3.5" />
+              Edit
+            </Button>
+          )}
+          <Button variant="outline" size="sm" asChild>
+            <Link href={routes.dashboard.eventAttendance(event.id)}>
+              <Users className="mr-1.5 size-3.5" />
+              Attendance
+            </Link>
+          </Button>
+        </div>
+      </div>
+
+      {/* Edit form */}
+      {editing ? (
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base">Edit Event</CardTitle>
+          </CardHeader>
+          <CardContent className="grid gap-4">
+            {/* Title */}
+            <div className="grid gap-2">
+              <Label>Title</Label>
+              <Input value={title} onChange={(e) => setTitle(e.target.value)} />
+            </div>
+
+            {/* Event Type */}
+            <div className="grid gap-2">
+              <Label>Event Type</Label>
+              <div className="flex gap-2">
+                {EVENT_TYPE_OPTIONS.map(({ value, label, icon: Icon }) => (
+                  <button
+                    key={value}
+                    type="button"
+                    onClick={() => setEventType(value)}
+                    className={cn(
+                      "flex flex-1 items-center justify-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-medium transition-colors",
+                      eventType === value
+                        ? "border-primary bg-primary text-primary-foreground"
+                        : "border-input bg-background text-muted-foreground hover:border-foreground/30 hover:text-foreground",
+                    )}
+                  >
+                    <Icon className="size-3.5" />
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Date */}
+            <div className="grid gap-2">
+              <Label>Date</Label>
+              <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !date && "text-muted-foreground",
+                    )}
+                  >
+                    <CalendarDays className="mr-2 size-4" />
+                    {date ? format(date, "EEEE, MMMM d, yyyy") : "Pick a date"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={date}
+                    onSelect={(d) => {
+                      setDate(d);
+                      setCalendarOpen(false);
+                    }}
+                  />
+                  <div className="border-t p-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="w-full text-xs"
+                      onClick={() => {
+                        setDate(new Date());
+                        setCalendarOpen(false);
+                      }}
+                    >
+                      Today
+                    </Button>
+                  </div>
+                </PopoverContent>
+              </Popover>
+            </div>
+
+            {/* Start & End Time */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="grid gap-2">
+                <Label>Start Time</Label>
+                <Input
+                  type="time"
+                  value={startTime}
+                  onChange={(e) => setStartTime(e.target.value)}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label>
+                  End Time <span className="text-muted-foreground font-normal">(optional)</span>
+                </Label>
+                <Input
+                  type="time"
+                  value={endTime}
+                  onChange={(e) => setEndTime(e.target.value)}
+                  min={startTime}
+                />
+              </div>
+            </div>
+
+            {/* Description */}
+            <div className="grid gap-2">
+              <Label>
+                Description <span className="text-muted-foreground font-normal">(optional)</span>
+              </Label>
+              <Textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                rows={3}
+                placeholder="Add details about this event..."
+              />
+            </div>
+
+            {/* Actions */}
+            <div className="flex justify-end gap-2 pt-1">
+              <Button variant="outline" onClick={cancelEdit} disabled={updateEvent.isPending}>
+                <X className="mr-1.5 size-3.5" />
+                Cancel
+              </Button>
+              <Button onClick={handleSave} disabled={!canSave}>
+                {updateEvent.isPending ? (
+                  <Spinner className="mr-1.5 size-3.5" data-icon="inline-start" />
+                ) : (
+                  <Check className="mr-1.5 size-3.5" />
+                )}
+                Save Changes
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      ) : (
+        /* Detail view */
+        event.description ? (
+          <Card>
+            <CardContent className="pt-5">
+              <p className="text-sm text-muted-foreground whitespace-pre-line">{event.description}</p>
+            </CardContent>
+          </Card>
+        ) : null
+      )}
+    </div>
+  );
+}

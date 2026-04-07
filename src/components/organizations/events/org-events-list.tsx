@@ -2,10 +2,10 @@
 
 import { useState } from "react";
 import { format } from "date-fns";
-import { CalendarDays, MoreHorizontal, Users } from "lucide-react";
+import { CalendarDays, MapPin, Monitor, Blend, MoreHorizontal, Users } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -34,6 +34,7 @@ type EventRow = {
   id: string;
   title: string;
   description: string | null;
+  eventType: string | null;
   startAt: Date;
   endAt: Date | null;
   createdBy: string;
@@ -44,6 +45,18 @@ type EventRow = {
 type Props = {
   organizationId: string;
   canManage: boolean;
+};
+
+const EVENT_TYPE_ICONS: Record<string, React.ElementType> = {
+  in_person: MapPin,
+  online: Monitor,
+  hybrid: Blend,
+};
+
+const EVENT_TYPE_LABELS: Record<string, string> = {
+  in_person: "In Person",
+  online: "Online",
+  hybrid: "Hybrid",
 };
 
 function creatorInitials(name: string | null) {
@@ -108,70 +121,84 @@ export function OrgEventsList({ organizationId, canManage }: Props) {
             </div>
           ) : (
             <div className="divide-y">
-              {events.map((ev) => (
-                <div key={ev.id} className="flex items-start justify-between gap-4 px-5 py-4">
-                  <div className="flex items-start gap-3 min-w-0">
-                    <div className="bg-muted flex size-10 shrink-0 items-center justify-center rounded-xl">
-                      <CalendarDays className="text-muted-foreground size-5" />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium leading-tight">{ev.title}</p>
-                      {ev.description && (
-                        <p className="text-muted-foreground mt-0.5 text-xs line-clamp-1">
-                          {ev.description}
+              {events.map((ev) => {
+                const TypeIcon = EVENT_TYPE_ICONS[ev.eventType ?? "in_person"] ?? MapPin;
+                const typeLabel = EVENT_TYPE_LABELS[ev.eventType ?? "in_person"] ?? "In Person";
+
+                return (
+                  <div key={ev.id} className="flex items-start justify-between gap-4 px-5 py-4">
+                    <Link
+                      href={routes.dashboard.eventDetail(ev.id)}
+                      className="flex items-start gap-3 min-w-0 flex-1 group"
+                    >
+                      <div className="bg-muted flex size-10 shrink-0 items-center justify-center rounded-xl group-hover:bg-muted/70 transition-colors">
+                        <CalendarDays className="text-muted-foreground size-5" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium leading-tight group-hover:text-primary transition-colors">
+                          {ev.title}
                         </p>
-                      )}
-                      <div className="mt-1.5 flex flex-wrap items-center gap-2">
-                        <Badge variant="outline" className="text-xs font-normal">
-                          {format(new Date(ev.startAt), "MMM d, yyyy · h:mm a")}
-                          {ev.endAt && (
-                            <span className="text-muted-foreground ml-1">
-                              – {format(new Date(ev.endAt), "h:mm a")}
+                        {ev.description && (
+                          <p className="text-muted-foreground mt-0.5 text-xs line-clamp-1">
+                            {ev.description}
+                          </p>
+                        )}
+                        <div className="mt-1.5 flex flex-wrap items-center gap-2">
+                          <Badge variant="outline" className="text-xs font-normal gap-1">
+                            <TypeIcon className="size-3" />
+                            {typeLabel}
+                          </Badge>
+                          <Badge variant="outline" className="text-xs font-normal">
+                            {format(new Date(ev.startAt), "MMM d, yyyy · h:mm a")}
+                            {ev.endAt && (
+                              <span className="text-muted-foreground ml-1">
+                                – {format(new Date(ev.endAt), "h:mm a")}
+                              </span>
+                            )}
+                          </Badge>
+                          {ev.creatorName && (
+                            <span className="text-muted-foreground flex items-center gap-1 text-xs">
+                              <Avatar className="size-4">
+                                <AvatarFallback className="text-[9px]">
+                                  {creatorInitials(ev.creatorName)}
+                                </AvatarFallback>
+                              </Avatar>
+                              {ev.creatorName}
                             </span>
                           )}
-                        </Badge>
-                        {ev.creatorName && (
-                          <span className="text-muted-foreground flex items-center gap-1 text-xs">
-                            <Avatar className="size-4">
-                              <AvatarFallback className="text-[9px]">
-                                {creatorInitials(ev.creatorName)}
-                              </AvatarFallback>
-                            </Avatar>
-                            {ev.creatorName}
-                          </span>
-                        )}
+                        </div>
                       </div>
+                    </Link>
+
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <Button variant="outline" size="sm" className="h-8 gap-1.5" asChild>
+                        <Link href={routes.dashboard.eventAttendance(ev.id)}>
+                          <Users className="size-3.5" />
+                          <span className="hidden sm:inline">Attendance</span>
+                        </Link>
+                      </Button>
+                      {canManage && (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="size-8">
+                              <MoreHorizontal className="size-4" />
+                              <span className="sr-only">Event actions</span>
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem
+                              className="text-destructive focus:text-destructive"
+                              onClick={() => setDeleteTarget(ev as EventRow)}
+                            >
+                              Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      )}
                     </div>
                   </div>
-
-                  <div className="flex items-center gap-1.5 shrink-0">
-                    <Button variant="outline" size="sm" className="h-8 gap-1.5" asChild>
-                      <Link href={routes.dashboard.eventAttendance(ev.id)}>
-                        <Users className="size-3.5" />
-                        <span className="hidden sm:inline">Attendance</span>
-                      </Link>
-                    </Button>
-                    {canManage && (
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="size-8">
-                            <MoreHorizontal className="size-4" />
-                            <span className="sr-only">Event actions</span>
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem
-                            className="text-destructive focus:text-destructive"
-                            onClick={() => setDeleteTarget(ev as EventRow)}
-                          >
-                            Delete
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    )}
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </CardContent>

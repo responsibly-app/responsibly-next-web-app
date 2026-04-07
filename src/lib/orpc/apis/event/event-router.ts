@@ -1,7 +1,7 @@
 import { ORPCError } from "@orpc/server";
-import { and, desc, eq } from "drizzle-orm";
+import { and, asc, desc, eq, gte, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { member, user } from "@/lib/db/schema/better-auth-schema";
+import { member, organization, user } from "@/lib/db/schema/better-auth-schema";
 import { event, eventAttendance } from "@/lib/db/schema/event-schema";
 import { authed } from "@/lib/orpc/base";
 import { ROLE_LEVELS, type OrgRole } from "@/lib/auth/hooks/oraganization/permissions";
@@ -10,10 +10,16 @@ import {
   ListEventsOutputSchema,
   EventSchema,
   CreateEventInputSchema,
+  GetEventInputSchema,
+  GetEventOutputSchema,
+  UpdateEventInputSchema,
   DeleteEventInputSchema,
   GetEventAttendanceInputSchema,
   GetEventAttendanceOutputSchema,
   MarkAttendanceInputSchema,
+  GetLeaderboardInputSchema,
+  GetLeaderboardOutputSchema,
+  ListAllUpcomingOutputSchema,
 } from "./event-schemas";
 
 async function requireOrgMember(organizationId: string, userId: string) {
@@ -53,6 +59,7 @@ export const eventRouter = {
           organizationId: event.organizationId,
           title: event.title,
           description: event.description,
+          eventType: event.eventType,
           startAt: event.startAt,
           endAt: event.endAt,
           createdBy: event.createdBy,
@@ -65,6 +72,44 @@ export const eventRouter = {
         .orderBy(desc(event.startAt));
 
       return rows;
+    }),
+
+  getEvent: authed
+    .route({
+      method: "GET",
+      path: "/event/get",
+      summary: "Get a single event by ID",
+      tags: ["Event"],
+    })
+    .input(GetEventInputSchema)
+    .output(GetEventOutputSchema)
+    .handler(async ({ input, context }) => {
+      const rows = await db
+        .select({
+          id: event.id,
+          organizationId: event.organizationId,
+          organizationName: organization.name,
+          title: event.title,
+          description: event.description,
+          eventType: event.eventType,
+          startAt: event.startAt,
+          endAt: event.endAt,
+          createdBy: event.createdBy,
+          createdAt: event.createdAt,
+          creatorName: user.name,
+        })
+        .from(event)
+        .innerJoin(organization, eq(event.organizationId, organization.id))
+        .leftJoin(user, eq(event.createdBy, user.id))
+        .where(eq(event.id, input.eventId))
+        .limit(1);
+
+      const row = rows[0];
+      if (!row) throw new ORPCError("NOT_FOUND");
+
+      const userRole = await requireOrgMember(row.organizationId, context.session.user.id);
+
+      return { ...row, userRole };
     }),
 
   create: authed
@@ -88,6 +133,7 @@ export const eventRouter = {
           organizationId: input.organizationId,
           title: input.title,
           description: input.description ?? null,
+          eventType: input.eventType ?? "in_person",
           startAt: new Date(input.startAt),
           endAt: input.endAt ? new Date(input.endAt) : null,
           createdBy: userId,
@@ -96,6 +142,42 @@ export const eventRouter = {
         .returning();
 
       return { ...row, creatorName: context.session.user.name ?? null };
+    }),
+
+  update: authed
+    .route({
+      method: "PATCH",
+      path: "/event/update",
+      summary: "Update an event",
+      tags: ["Event"],
+    })
+    .input(UpdateEventInputSchema)
+    .output(EventSchema)
+    .handler(async ({ input, context }) => {
+      await requireAtLeastRole(input.organizationId, context.session.user.id, "admin");
+
+      const updateValues: Partial<typeof event.$inferInsert> = {};
+      if (input.title !== undefined) updateValues.title = input.title;
+      if (input.description !== undefined) updateValues.description = input.description;
+      if (input.eventType !== undefined) updateValues.eventType = input.eventType;
+      if (input.startAt !== undefined) updateValues.startAt = new Date(input.startAt);
+      if ("endAt" in input) updateValues.endAt = input.endAt ? new Date(input.endAt) : null;
+
+      const [row] = await db
+        .update(event)
+        .set(updateValues)
+        .where(eq(event.id, input.eventId))
+        .returning();
+
+      if (!row) throw new ORPCError("NOT_FOUND");
+
+      const creatorRow = await db
+        .select({ name: user.name })
+        .from(user)
+        .where(eq(user.id, row.createdBy))
+        .limit(1);
+
+      return { ...row, creatorName: creatorRow[0]?.name ?? null };
     }),
 
   delete: authed
@@ -176,5 +258,73 @@ export const eventRouter = {
         });
 
       return { success: true };
+    }),
+
+  getLeaderboard: authed
+    .route({
+      method: "GET",
+      path: "/event/leaderboard",
+      summary: "Get attendance leaderboard for an organization",
+      tags: ["Event"],
+    })
+    .input(GetLeaderboardInputSchema)
+    .output(GetLeaderboardOutputSchema)
+    .handler(async ({ input, context }) => {
+      await requireOrgMember(input.organizationId, context.session.user.id);
+
+      const rows = await db
+        .select({
+          memberId: member.id,
+          memberName: user.name,
+          memberEmail: user.email,
+          memberImage: user.image,
+          present: sql<number>`cast(count(case when ${eventAttendance.status} = 'present' then 1 end) as int)`,
+          absent: sql<number>`cast(count(case when ${eventAttendance.status} = 'absent' then 1 end) as int)`,
+          excused: sql<number>`cast(count(case when ${eventAttendance.status} = 'excused' then 1 end) as int)`,
+        })
+        .from(member)
+        .innerJoin(user, eq(member.userId, user.id))
+        .leftJoin(eventAttendance, eq(eventAttendance.memberId, member.id))
+        .where(eq(member.organizationId, input.organizationId))
+        .groupBy(member.id, user.name, user.email, user.image)
+        .orderBy(
+          desc(sql`count(case when ${eventAttendance.status} = 'present' then 1 end)`),
+        );
+
+      return rows;
+    }),
+
+  listAllUpcoming: authed
+    .route({
+      method: "GET",
+      path: "/event/list-all-upcoming",
+      summary: "List upcoming events from all organizations the user belongs to",
+      tags: ["Event"],
+    })
+    .output(ListAllUpcomingOutputSchema)
+    .handler(async ({ context }) => {
+      const userId = context.session.user.id;
+      const now = new Date();
+
+      return db
+        .select({
+          id: event.id,
+          organizationId: event.organizationId,
+          organizationName: organization.name,
+          title: event.title,
+          description: event.description,
+          eventType: event.eventType,
+          startAt: event.startAt,
+          endAt: event.endAt,
+        })
+        .from(event)
+        .innerJoin(organization, eq(event.organizationId, organization.id))
+        .innerJoin(
+          member,
+          and(eq(member.organizationId, event.organizationId), eq(member.userId, userId)),
+        )
+        .where(gte(event.startAt, now))
+        .orderBy(asc(event.startAt))
+        .limit(10);
     }),
 };
