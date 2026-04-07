@@ -15,14 +15,12 @@ import { useSignOut } from "@/lib/auth/hooks";
 import { proxiedAvatarUrl } from "@/lib/helpers/image";
 import { ThemeSwitch } from "@/components/theme-toggle";
 import {
-  BellIcon,
-  CircleUserRoundIcon,
-  CreditCardIcon,
   LogOutIcon,
-  SparklesIcon,
+  SettingsIcon,
 } from "lucide-react";
 import Link from "next/link";
 import { getInitials } from "@/lib/helpers/user";
+import { routes } from "@/routes";
 
 export interface NavUserType {
   name: string;
@@ -92,28 +90,11 @@ export function HeaderUserDropdown({
         <DropdownMenuSeparator />
 
         <DropdownMenuGroup>
-          <DropdownMenuItem>
-            <SparklesIcon className="mr-2 h-4 w-4" />
-            Upgrade to Pro
-          </DropdownMenuItem>
-        </DropdownMenuGroup>
-
-        <DropdownMenuSeparator />
-
-        <DropdownMenuGroup>
           <DropdownMenuItem asChild>
-            <Link href="/dashboard/account">
-              <CircleUserRoundIcon className="mr-2 h-4 w-4" />
-              Account
+            <Link href={routes.dashboard.settings()}>
+              <SettingsIcon className="mr-2 h-4 w-4" />
+              Settings
             </Link>
-          </DropdownMenuItem>
-          <DropdownMenuItem>
-            <CreditCardIcon className="mr-2 h-4 w-4" />
-            Billing
-          </DropdownMenuItem>
-          <DropdownMenuItem>
-            <BellIcon className="mr-2 h-4 w-4" />
-            Notifications
           </DropdownMenuItem>
         </DropdownMenuGroup>
 

@@ -8,10 +8,11 @@ import {
   Flame,
   LayoutDashboard,
   Plug,
+  Settings,
   TrendingUp,
-  User,
   Users,
   Trophy,
+  Building2,
 } from "lucide-react";
 import {
   SidebarGroup,
@@ -43,6 +44,8 @@ const organizationItems = [
 ];
 
 const settingsItems = [
+  { title: "Organizations", url: routes.dashboard.organizations(), icon: Building2 },
+  { title: "Settings", url: routes.dashboard.settings(), icon: Settings },
   { title: "Integrations", url: routes.dashboard.integrations(), icon: Plug },
 ];
 
