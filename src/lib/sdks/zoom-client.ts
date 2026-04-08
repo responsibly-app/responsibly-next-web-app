@@ -50,6 +50,13 @@ export interface ZoomMeetingsListResponse {
   meetings: ZoomMeeting[];
 }
 
+export interface ZoomRegistrant {
+  registrant_id: string;
+  join_url: string;
+  topic: string;
+  start_time: string;
+}
+
 export interface CreateMeetingParams {
   topic: string;
   /** 1=instant, 2=scheduled, 3=recurring no fixed time, 8=recurring fixed time. Defaults to 2. */
@@ -67,6 +74,13 @@ export interface CreateMeetingParams {
     join_before_host?: boolean;
     mute_upon_entry?: boolean;
     waiting_room?: boolean;
+    /**
+     * 0 = auto-approve (registration required, instant approval)
+     * 1 = manual approve
+     * 2 = no registration required (default)
+     */
+    approval_type?: 0 | 1 | 2;
+    registration_type?: number;
   };
 }
 
@@ -162,6 +176,20 @@ export class ZoomClient {
   deleteMeeting(meetingId: string | number): Promise<void> {
     return this.request<void>(`/meetings/${meetingId}`, {
       method: "DELETE",
+    });
+  }
+
+  /**
+   * Add a registrant to a meeting that has registration enabled (approval_type 0 or 1).
+   * Returns a unique join URL for this registrant and Zoom's registrant_id.
+   */
+  addRegistrant(
+    meetingId: string | number,
+    params: { email: string; first_name: string; last_name?: string },
+  ): Promise<ZoomRegistrant> {
+    return this.request<ZoomRegistrant>(`/meetings/${meetingId}/registrants`, {
+      method: "POST",
+      body: JSON.stringify(params),
     });
   }
 }

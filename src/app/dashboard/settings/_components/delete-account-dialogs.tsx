@@ -17,7 +17,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
-import { maskEmail } from "@/lib/helpers/user";
+import { maskEmail } from "@/lib/utils/user";
 import { useSignOut } from "@/lib/auth/hooks";
 
 interface TypeToConfirmDialogProps {

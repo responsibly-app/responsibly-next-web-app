@@ -2,9 +2,15 @@ import { ORPCError } from "@orpc/server";
 import { and, asc, desc, eq, gte, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { member, organization, user } from "@/lib/db/schema/better-auth-schema";
-import { event, eventAttendance } from "@/lib/db/schema/event-schema";
+import {
+  event,
+  eventAttendance,
+  eventQrCode,
+} from "@/lib/db/schema/event-schema";
+import { organizationSettings } from "@/lib/db/schema/org-settings-schema";
 import { authed } from "@/lib/orpc/base";
 import { ROLE_LEVELS, type OrgRole } from "@/lib/auth/hooks/oraganization/permissions";
+import { getZoomClient } from "@/lib/sdks/zoom-client";
 import {
   ListEventsInputSchema,
   ListEventsOutputSchema,
@@ -20,6 +26,12 @@ import {
   GetLeaderboardInputSchema,
   GetLeaderboardOutputSchema,
   ListAllUpcomingOutputSchema,
+  GenerateQRCodeInputSchema,
+  GenerateQRCodeOutputSchema,
+  GetEventQRCodeInputSchema,
+  GetEventQRCodeOutputSchema,
+  CheckInWithQRInputSchema,
+  ScanMemberQRInputSchema,
 } from "./event-schemas";
 
 async function requireOrgMember(organizationId: string, userId: string) {
@@ -40,6 +52,31 @@ async function requireAtLeastRole(organizationId: string, userId: string, minRol
   if (userLevel > requiredLevel) throw new ORPCError("FORBIDDEN");
 }
 
+/** Default attendance methods based on event type */
+function defaultAttendanceMethods(eventType: string): string[] {
+  if (eventType === "online") return ["manual", "zoom"];
+  if (eventType === "hybrid") return ["manual", "qr", "zoom"];
+  return ["manual", "qr"]; // in_person
+}
+
+const eventSelectFields = {
+  id: event.id,
+  organizationId: event.organizationId,
+  title: event.title,
+  description: event.description,
+  eventType: event.eventType,
+  timezone: event.timezone,
+  location: event.location,
+  startAt: event.startAt,
+  endAt: event.endAt,
+  zoomMeetingId: event.zoomMeetingId,
+  zoomJoinUrl: event.zoomJoinUrl,
+  zoomStartUrl: event.zoomStartUrl,
+  attendanceMethods: event.attendanceMethods,
+  createdBy: event.createdBy,
+  createdAt: event.createdAt,
+};
+
 export const eventRouter = {
   list: authed
     .route({
@@ -54,19 +91,7 @@ export const eventRouter = {
       await requireOrgMember(input.organizationId, context.session.user.id);
 
       const rows = await db
-        .select({
-          id: event.id,
-          organizationId: event.organizationId,
-          title: event.title,
-          description: event.description,
-          eventType: event.eventType,
-          timezone: event.timezone,
-          startAt: event.startAt,
-          endAt: event.endAt,
-          createdBy: event.createdBy,
-          createdAt: event.createdAt,
-          creatorName: user.name,
-        })
+        .select({ ...eventSelectFields, creatorName: user.name })
         .from(event)
         .leftJoin(user, eq(event.createdBy, user.id))
         .where(eq(event.organizationId, input.organizationId))
@@ -87,17 +112,8 @@ export const eventRouter = {
     .handler(async ({ input, context }) => {
       const rows = await db
         .select({
-          id: event.id,
-          organizationId: event.organizationId,
+          ...eventSelectFields,
           organizationName: organization.name,
-          title: event.title,
-          description: event.description,
-          eventType: event.eventType,
-          timezone: event.timezone,
-          startAt: event.startAt,
-          endAt: event.endAt,
-          createdBy: event.createdBy,
-          createdAt: event.createdAt,
           creatorName: user.name,
         })
         .from(event)
@@ -127,6 +143,72 @@ export const eventRouter = {
       const userId = context.session.user.id;
       await requireAtLeastRole(input.organizationId, userId, "admin");
 
+      const resolvedType = input.eventType ?? "in_person";
+      const resolvedMethods =
+        input.attendanceMethods ??
+        defaultAttendanceMethods(resolvedType);
+
+      // Validate Zoom usage
+      if (
+        input.zoomOption !== "none" &&
+        input.zoomOption !== undefined &&
+        resolvedType === "in_person"
+      ) {
+        throw new ORPCError("BAD_REQUEST", {
+          message: "Zoom meetings are only available for online and hybrid events",
+        });
+      }
+
+      let zoomMeetingId: string | null = null;
+      let zoomJoinUrl: string | null = null;
+      let zoomStartUrl: string | null = null;
+
+      if (input.zoomOption === "create") {
+        const zoom = await getZoomClient(context.headers);
+        if (!zoom) {
+          throw new ORPCError("PRECONDITION_FAILED", {
+            message: "Zoom account not connected. Connect Zoom in Integrations first.",
+          });
+        }
+        const meeting = await zoom.createMeeting({
+          topic: input.title,
+          type: 2,
+          start_time: input.startAt,
+          duration: input.endAt
+            ? Math.round(
+                (new Date(input.endAt).getTime() - new Date(input.startAt).getTime()) / 60000,
+              )
+            : 60,
+          timezone: input.timezone,
+          agenda: input.description,
+          settings: {
+            join_before_host: true,
+            waiting_room: false,
+            // approval_type 0 = registration required, auto-approve.
+            // Zoom will require participants to register (email collected),
+            // so the webhook carries a registrant_id for reliable identity matching.
+            approval_type: 0,
+          },
+        });
+        zoomMeetingId = String(meeting.id);
+        zoomJoinUrl = meeting.join_url;
+        zoomStartUrl = (meeting as unknown as { start_url?: string }).start_url ?? null;
+      } else if (input.zoomOption === "link" && input.zoomMeetingId) {
+        const zoom = await getZoomClient(context.headers);
+        if (zoom) {
+          try {
+            const meeting = await zoom.getMeeting(input.zoomMeetingId);
+            zoomMeetingId = String(meeting.id);
+            zoomJoinUrl = meeting.join_url;
+          } catch {
+            // Use provided ID even if we can't verify
+            zoomMeetingId = input.zoomMeetingId;
+          }
+        } else {
+          zoomMeetingId = input.zoomMeetingId;
+        }
+      }
+
       const id = crypto.randomUUID();
       const [row] = await db
         .insert(event)
@@ -135,10 +217,15 @@ export const eventRouter = {
           organizationId: input.organizationId,
           title: input.title,
           description: input.description ?? null,
-          eventType: input.eventType ?? "in_person",
+          eventType: resolvedType,
           timezone: input.timezone ?? "UTC",
+          location: input.location ?? null,
           startAt: new Date(input.startAt),
           endAt: input.endAt ? new Date(input.endAt) : null,
+          zoomMeetingId,
+          zoomJoinUrl,
+          zoomStartUrl,
+          attendanceMethods: resolvedMethods,
           createdBy: userId,
           createdAt: new Date(),
         })
@@ -164,8 +251,51 @@ export const eventRouter = {
       if (input.description !== undefined) updateValues.description = input.description;
       if (input.eventType !== undefined) updateValues.eventType = input.eventType;
       if (input.timezone !== undefined) updateValues.timezone = input.timezone;
+      if (input.location !== undefined) updateValues.location = input.location;
       if (input.startAt !== undefined) updateValues.startAt = new Date(input.startAt);
       if ("endAt" in input) updateValues.endAt = input.endAt ? new Date(input.endAt) : null;
+      if (input.attendanceMethods !== undefined)
+        updateValues.attendanceMethods = input.attendanceMethods;
+
+      // Handle Zoom update
+      if (input.zoomOption === "none") {
+        updateValues.zoomMeetingId = null;
+        updateValues.zoomJoinUrl = null;
+        updateValues.zoomStartUrl = null;
+      } else if (input.zoomOption === "create") {
+        const zoom = await getZoomClient(context.headers);
+        if (!zoom)
+          throw new ORPCError("PRECONDITION_FAILED", {
+            message: "Zoom account not connected",
+          });
+        const currentEvent = await db
+          .select({ title: event.title, startAt: event.startAt, endAt: event.endAt, timezone: event.timezone })
+          .from(event)
+          .where(eq(event.id, input.eventId))
+          .limit(1)
+          .then((r) => r[0]);
+
+        const startAt = input.startAt ?? currentEvent?.startAt?.toISOString() ?? "";
+        const endAt = input.endAt ?? currentEvent?.endAt?.toISOString();
+        const meeting = await zoom.createMeeting({
+          topic: input.title ?? currentEvent?.title ?? "Meeting",
+          type: 2,
+          start_time: startAt,
+          duration: endAt
+            ? Math.round(
+                (new Date(endAt).getTime() - new Date(startAt).getTime()) / 60000,
+              )
+            : 60,
+          timezone: input.timezone ?? currentEvent?.timezone ?? "UTC",
+          settings: { join_before_host: true, waiting_room: false, approval_type: 0 },
+        });
+        updateValues.zoomMeetingId = String(meeting.id);
+        updateValues.zoomJoinUrl = meeting.join_url;
+        updateValues.zoomStartUrl =
+          (meeting as unknown as { start_url?: string }).start_url ?? null;
+      } else if (input.zoomOption === "link" && input.zoomMeetingId) {
+        updateValues.zoomMeetingId = input.zoomMeetingId;
+      }
 
       const [row] = await db
         .update(event)
@@ -219,6 +349,12 @@ export const eventRouter = {
           memberName: user.name,
           memberEmail: user.email,
           memberImage: user.image,
+          zoomDuration: eventAttendance.zoomDuration,
+          zoomFirstJoinedAt: eventAttendance.zoomFirstJoinedAt,
+          onlinePresentViaZoom: eventAttendance.onlinePresentViaZoom,
+          qrCheckedInAt: eventAttendance.qrCheckedInAt,
+          inPersonPresent: eventAttendance.inPersonPresent,
+          sources: eventAttendance.sources,
         })
         .from(eventAttendance)
         .leftJoin(member, eq(eventAttendance.memberId, member.id))
@@ -242,6 +378,26 @@ export const eventRouter = {
     .handler(async ({ input, context }) => {
       await requireAtLeastRole(input.organizationId, context.session.user.id, "assistant");
 
+      const existing = await db
+        .select({
+          sources: eventAttendance.sources,
+          inPersonPresent: eventAttendance.inPersonPresent,
+        })
+        .from(eventAttendance)
+        .where(
+          and(
+            eq(eventAttendance.eventId, input.eventId),
+            eq(eventAttendance.memberId, input.memberId),
+          ),
+        )
+        .limit(1)
+        .then((r) => r[0]);
+
+      const currentSources = existing?.sources ?? [];
+      const newSources = currentSources.includes("manual")
+        ? currentSources
+        : [...currentSources, "manual"];
+
       await db
         .insert(eventAttendance)
         .values({
@@ -251,6 +407,8 @@ export const eventRouter = {
           status: input.status,
           markedAt: new Date(),
           markedBy: context.session.user.id,
+          inPersonPresent: input.inPerson ?? false,
+          sources: ["manual"],
         })
         .onConflictDoUpdate({
           target: [eventAttendance.eventId, eventAttendance.memberId],
@@ -258,6 +416,8 @@ export const eventRouter = {
             status: input.status,
             markedAt: new Date(),
             markedBy: context.session.user.id,
+            inPersonPresent: input.inPerson ?? (existing?.inPersonPresent ?? false),
+            sources: newSources,
           },
         });
 
@@ -319,8 +479,12 @@ export const eventRouter = {
           description: event.description,
           eventType: event.eventType,
           timezone: event.timezone,
+          location: event.location,
           startAt: event.startAt,
           endAt: event.endAt,
+          zoomMeetingId: event.zoomMeetingId,
+          zoomJoinUrl: event.zoomJoinUrl,
+          attendanceMethods: event.attendanceMethods,
         })
         .from(event)
         .innerJoin(organization, eq(event.organizationId, organization.id))
@@ -331,5 +495,216 @@ export const eventRouter = {
         .where(gte(event.startAt, now))
         .orderBy(asc(event.startAt))
         .limit(10);
+    }),
+
+  // --- QR Code procedures ---
+
+  generateQRCode: authed
+    .route({
+      method: "POST",
+      path: "/event/qr-code/generate",
+      summary: "Generate a QR code for an event (for member self check-in)",
+      tags: ["Event"],
+    })
+    .input(GenerateQRCodeInputSchema)
+    .output(GenerateQRCodeOutputSchema)
+    .handler(async ({ input, context }) => {
+      await requireAtLeastRole(input.organizationId, context.session.user.id, "assistant");
+
+      // Rotate: delete any existing QR for this event
+      await db.delete(eventQrCode).where(eq(eventQrCode.eventId, input.eventId));
+
+      const code = crypto.randomUUID();
+      const expiresAt = input.expiresInHours
+        ? new Date(Date.now() + input.expiresInHours * 60 * 60 * 1000)
+        : null;
+
+      const [row] = await db
+        .insert(eventQrCode)
+        .values({
+          id: crypto.randomUUID(),
+          eventId: input.eventId,
+          code,
+          expiresAt,
+          createdBy: context.session.user.id,
+          createdAt: new Date(),
+        })
+        .returning();
+
+      return { id: row.id, code: row.code, expiresAt: row.expiresAt };
+    }),
+
+  getEventQRCode: authed
+    .route({
+      method: "GET",
+      path: "/event/qr-code",
+      summary: "Get the active QR code for an event",
+      tags: ["Event"],
+    })
+    .input(GetEventQRCodeInputSchema)
+    .output(GetEventQRCodeOutputSchema)
+    .handler(async ({ input }) => {
+      const row = await db
+        .select()
+        .from(eventQrCode)
+        .where(eq(eventQrCode.eventId, input.eventId))
+        .orderBy(desc(eventQrCode.createdAt))
+        .limit(1)
+        .then((r) => r[0]);
+
+      if (!row) return null;
+      return { id: row.id, code: row.code, expiresAt: row.expiresAt, createdAt: row.createdAt };
+    }),
+
+  /** Member scans the event's QR code to self-check-in */
+  checkInWithQR: authed
+    .route({
+      method: "POST",
+      path: "/event/qr-code/check-in",
+      summary: "Check in to an event using a QR code",
+      tags: ["Event"],
+    })
+    .input(CheckInWithQRInputSchema)
+    .handler(async ({ input, context }) => {
+      const userId = context.session.user.id;
+
+      const qr = await db
+        .select()
+        .from(eventQrCode)
+        .where(eq(eventQrCode.code, input.code))
+        .limit(1)
+        .then((r) => r[0]);
+
+      if (!qr) throw new ORPCError("NOT_FOUND", { message: "Invalid QR code" });
+
+      if (qr.expiresAt && qr.expiresAt < new Date()) {
+        throw new ORPCError("BAD_REQUEST", { message: "QR code has expired" });
+      }
+
+      // Find this user's member record for the event's org
+      const eventRow = await db
+        .select({ organizationId: event.organizationId })
+        .from(event)
+        .where(eq(event.id, qr.eventId))
+        .limit(1)
+        .then((r) => r[0]);
+
+      if (!eventRow) throw new ORPCError("NOT_FOUND", { message: "Event not found" });
+
+      const memberRow = await db
+        .select({ id: member.id })
+        .from(member)
+        .where(
+          and(
+            eq(member.organizationId, eventRow.organizationId),
+            eq(member.userId, userId),
+          ),
+        )
+        .limit(1)
+        .then((r) => r[0]);
+
+      if (!memberRow)
+        throw new ORPCError("FORBIDDEN", { message: "You are not a member of this organization" });
+
+      const now = new Date();
+
+      const existing = await db
+        .select({ sources: eventAttendance.sources })
+        .from(eventAttendance)
+        .where(
+          and(
+            eq(eventAttendance.eventId, qr.eventId),
+            eq(eventAttendance.memberId, memberRow.id),
+          ),
+        )
+        .limit(1)
+        .then((r) => r[0]);
+
+      const currentSources = existing?.sources ?? [];
+      const newSources = currentSources.includes("qr")
+        ? currentSources
+        : [...currentSources, "qr"];
+
+      await db
+        .insert(eventAttendance)
+        .values({
+          id: crypto.randomUUID(),
+          eventId: qr.eventId,
+          memberId: memberRow.id,
+          status: "present",
+          markedAt: now,
+          markedBy: userId,
+          qrCheckedInAt: now,
+          inPersonPresent: true,
+          sources: ["qr"],
+        })
+        .onConflictDoUpdate({
+          target: [eventAttendance.eventId, eventAttendance.memberId],
+          set: {
+            status: "present",
+            qrCheckedInAt: now,
+            inPersonPresent: true,
+            sources: newSources,
+          },
+        });
+
+      return { success: true, eventId: qr.eventId };
+    }),
+
+  /** Admin/assistant scans a member's QR code to mark them present in-person */
+  scanMemberQR: authed
+    .route({
+      method: "POST",
+      path: "/event/qr-code/scan-member",
+      summary: "Mark a member present in-person by scanning their member QR",
+      tags: ["Event"],
+    })
+    .input(ScanMemberQRInputSchema)
+    .handler(async ({ input, context }) => {
+      await requireAtLeastRole(input.organizationId, context.session.user.id, "assistant");
+
+      const now = new Date();
+
+      const existing = await db
+        .select({ sources: eventAttendance.sources })
+        .from(eventAttendance)
+        .where(
+          and(
+            eq(eventAttendance.eventId, input.eventId),
+            eq(eventAttendance.memberId, input.memberId),
+          ),
+        )
+        .limit(1)
+        .then((r) => r[0]);
+
+      const currentSources = existing?.sources ?? [];
+      const newSources = currentSources.includes("qr")
+        ? currentSources
+        : [...currentSources, "qr"];
+
+      await db
+        .insert(eventAttendance)
+        .values({
+          id: crypto.randomUUID(),
+          eventId: input.eventId,
+          memberId: input.memberId,
+          status: "present",
+          markedAt: now,
+          markedBy: context.session.user.id,
+          qrCheckedInAt: now,
+          inPersonPresent: true,
+          sources: ["qr"],
+        })
+        .onConflictDoUpdate({
+          target: [eventAttendance.eventId, eventAttendance.memberId],
+          set: {
+            status: "present",
+            qrCheckedInAt: now,
+            inPersonPresent: true,
+            sources: newSources,
+          },
+        });
+
+      return { success: true };
     }),
 };

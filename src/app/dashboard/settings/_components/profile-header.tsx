@@ -29,10 +29,10 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
 import { authClient } from "@/lib/auth/auth-client";
-import { proxiedAvatarUrl } from "@/lib/helpers/image";
+import { proxiedAvatarUrl } from "@/lib/utils/image";
 import { useDeleteAvatar, useUploadAvatar } from "@/lib/hooks/use-upload-avatar";
 import { AvatarCropperDialog } from "./avatar-cropper-dialog";
-import { getInitials } from "@/lib/helpers/user";
+import { getInitials } from "@/lib/utils/user";
 
 function ProfileHeaderSkeleton() {
   return (

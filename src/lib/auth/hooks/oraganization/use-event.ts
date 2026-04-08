@@ -30,8 +30,12 @@ export function useCreateEvent() {
       description?: string;
       eventType?: "in_person" | "online" | "hybrid";
       timezone?: string;
+      location?: string;
       startAt: string;
       endAt?: string;
+      zoomOption?: "none" | "create" | "link";
+      zoomMeetingId?: string;
+      attendanceMethods?: ("manual" | "qr" | "zoom")[];
     }) => orpc.event.create(input),
     onSuccess: (_, { organizationId }) => {
       queryClient.invalidateQueries({
@@ -54,8 +58,12 @@ export function useUpdateEvent() {
       description?: string | null;
       eventType?: "in_person" | "online" | "hybrid" | null;
       timezone?: string;
+      location?: string | null;
       startAt?: string;
       endAt?: string | null;
+      zoomOption?: "none" | "create" | "link";
+      zoomMeetingId?: string | null;
+      attendanceMethods?: ("manual" | "qr" | "zoom")[];
     }) => orpc.event.update(input),
     onSuccess: (data, { organizationId }) => {
       queryClient.invalidateQueries({
@@ -116,7 +124,55 @@ export function useMarkAttendance() {
       memberId: string;
       status: "present" | "absent" | "excused";
       organizationId: string;
+      inPerson?: boolean;
     }) => orpc.event.markAttendance(input),
+    onSuccess: (_, { eventId }) => {
+      queryClient.invalidateQueries({
+        queryKey: orpcTQUtils.event.getAttendance.queryOptions({ input: { eventId } }).queryKey,
+      });
+    },
+  });
+}
+
+export function useGenerateQRCode() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: {
+      eventId: string;
+      organizationId: string;
+      expiresInHours?: number;
+    }) => orpc.event.generateQRCode(input),
+    onSuccess: (_, { eventId }) => {
+      queryClient.invalidateQueries({
+        queryKey: orpcTQUtils.event.getEventQRCode.queryOptions({ input: { eventId } }).queryKey,
+      });
+    },
+  });
+}
+
+export function useGetEventQRCode(eventId: string) {
+  return useQuery(
+    orpcTQUtils.event.getEventQRCode.queryOptions({
+      input: { eventId },
+      enabled: !!eventId,
+    }),
+  );
+}
+
+export function useCheckInWithQR() {
+  return useMutation({
+    mutationFn: (input: { code: string }) => orpc.event.checkInWithQR(input),
+  });
+}
+
+export function useScanMemberQR() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: {
+      eventId: string;
+      memberId: string;
+      organizationId: string;
+    }) => orpc.event.scanMemberQR(input),
     onSuccess: (_, { eventId }) => {
       queryClient.invalidateQueries({
         queryKey: orpcTQUtils.event.getAttendance.queryOptions({ input: { eventId } }).queryKey,

@@ -13,7 +13,12 @@ import {
   Users,
   X,
   Check,
+  Video,
+  Link as LinkIcon,
+  QrCode,
+  CheckSquare,
 } from "lucide-react";
+import { JoinMeetingButton } from "./join-meeting-button";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Calendar } from "@/components/ui/calendar";
@@ -21,6 +26,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
@@ -33,12 +39,26 @@ import { routes } from "@/routes";
 import { toast } from "sonner";
 
 type EventType = "in_person" | "online" | "hybrid";
+type ZoomOption = "none" | "create" | "link";
+type AttendanceMethod = "manual" | "qr" | "zoom";
 
 const EVENT_TYPE_OPTIONS: { value: EventType; label: string; icon: React.ElementType }[] = [
   { value: "in_person", label: "In Person", icon: MapPin },
   { value: "online", label: "Online", icon: Monitor },
   { value: "hybrid", label: "Hybrid", icon: Blend },
 ];
+
+const ZOOM_OPTION_OPTIONS: { value: ZoomOption; label: string; icon: React.ElementType; description: string }[] = [
+  { value: "none", label: "No Zoom", icon: Video, description: "No Zoom meeting" },
+  { value: "create", label: "Create Meeting", icon: Video, description: "Auto-create a Zoom meeting" },
+  { value: "link", label: "Link Existing", icon: LinkIcon, description: "Link an existing meeting ID" },
+];
+
+function defaultAttendanceMethods(eventType: EventType): AttendanceMethod[] {
+  if (eventType === "online") return ["manual", "zoom"];
+  if (eventType === "hybrid") return ["manual", "qr", "zoom"];
+  return ["manual", "qr"];
+}
 
 function eventTypeLabel(type: string | null | undefined) {
   return EVENT_TYPE_OPTIONS.find((o) => o.value === type) ?? EVENT_TYPE_OPTIONS[0];
@@ -65,6 +85,12 @@ export function EventDetailPage({ eventId }: Props) {
   const [startTime, setStartTime] = useState("09:00");
   const [endTime, setEndTime] = useState("");
   const [calendarOpen, setCalendarOpen] = useState(false);
+  const [location, setLocation] = useState("");
+  const [zoomOption, setZoomOption] = useState<ZoomOption>("none");
+  const [linkedZoomId, setLinkedZoomId] = useState("");
+  const [attendanceMethods, setAttendanceMethods] = useState<AttendanceMethod[]>(
+    defaultAttendanceMethods("in_person"),
+  );
 
   function startEdit() {
     if (!event) return;
@@ -79,7 +105,25 @@ export function EventDetailPage({ eventId }: Props) {
     setDate(new Date(localDateStr + "T12:00:00"));
     setStartTime(extractTimeInTimezone(new Date(event.startAt), tz));
     setEndTime(event.endAt ? extractTimeInTimezone(new Date(event.endAt), tz) : "");
+    setLocation(event.location ?? "");
+    setZoomOption(event.zoomMeetingId ? "link" : "none");
+    setLinkedZoomId(event.zoomMeetingId ?? "");
+    setAttendanceMethods(
+      (event.attendanceMethods as AttendanceMethod[]) ?? defaultAttendanceMethods((event.eventType as EventType) ?? "in_person"),
+    );
     setEditing(true);
+  }
+
+  function handleEventTypeChange(type: EventType) {
+    setEventType(type);
+    setAttendanceMethods(defaultAttendanceMethods(type));
+    if (type === "in_person") setZoomOption("none");
+  }
+
+  function toggleAttendanceMethod(method: AttendanceMethod) {
+    setAttendanceMethods((prev) =>
+      prev.includes(method) ? prev.filter((m) => m !== method) : [...prev, method],
+    );
   }
 
   function cancelEdit() {
@@ -96,8 +140,12 @@ export function EventDetailPage({ eventId }: Props) {
         description: description || null,
         eventType,
         timezone,
+        location: location || null,
         startAt: buildDateTimeInTimezone(date, startTime, timezone),
         endAt: endTime ? buildDateTimeInTimezone(date, endTime, timezone) : null,
+        zoomOption,
+        zoomMeetingId: zoomOption === "link" ? linkedZoomId : undefined,
+        attendanceMethods,
       },
       {
         onSuccess: () => {
@@ -111,7 +159,12 @@ export function EventDetailPage({ eventId }: Props) {
     );
   }
 
-  const canSave = title.trim() && date && startTime && !updateEvent.isPending;
+  const canSave =
+    title.trim() &&
+    date &&
+    startTime &&
+    !updateEvent.isPending &&
+    (zoomOption !== "link" || linkedZoomId.trim());
   const isAdmin = canEditEvent(event?.userRole);
 
   if (isPending) {
@@ -189,6 +242,11 @@ export function EventDetailPage({ eventId }: Props) {
               Edit
             </Button>
           )}
+          {(event.eventType === "online" || event.eventType === "hybrid") && event.zoomJoinUrl && (
+            <JoinMeetingButton
+              zoomJoinUrl={event.zoomJoinUrl}
+            />
+          )}
           <Button variant="outline" size="sm" asChild>
             <Link href={routes.dashboard.eventAttendance(event.id)}>
               <Users className="mr-1.5 size-3.5" />
@@ -219,7 +277,7 @@ export function EventDetailPage({ eventId }: Props) {
                   <button
                     key={value}
                     type="button"
-                    onClick={() => setEventType(value)}
+                    onClick={() => handleEventTypeChange(value)}
                     className={cn(
                       "flex flex-1 items-center justify-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-medium transition-colors",
                       eventType === value
@@ -233,6 +291,57 @@ export function EventDetailPage({ eventId }: Props) {
                 ))}
               </div>
             </div>
+
+            {/* Location (in_person + hybrid) */}
+            {(eventType === "in_person" || eventType === "hybrid") && (
+              <div className="grid gap-2">
+                <Label>
+                  Location <span className="text-muted-foreground font-normal">(optional)</span>
+                </Label>
+                <Input
+                  placeholder="123 Main St, Room 4B"
+                  value={location}
+                  onChange={(e) => setLocation(e.target.value)}
+                />
+              </div>
+            )}
+
+            {/* Zoom (online + hybrid) */}
+            {(eventType === "online" || eventType === "hybrid") && (
+              <div className="grid gap-2">
+                <Label>Zoom Meeting</Label>
+                <div className="flex gap-2">
+                  {ZOOM_OPTION_OPTIONS.map(({ value, label, icon: Icon }) => (
+                    <button
+                      key={value}
+                      type="button"
+                      onClick={() => setZoomOption(value)}
+                      className={cn(
+                        "flex flex-1 items-center justify-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-medium transition-colors",
+                        zoomOption === value
+                          ? "border-primary bg-primary text-primary-foreground"
+                          : "border-input bg-background text-muted-foreground hover:border-foreground/30 hover:text-foreground",
+                      )}
+                    >
+                      <Icon className="size-3.5" />
+                      {label}
+                    </button>
+                  ))}
+                </div>
+                {zoomOption === "create" && (
+                  <p className="text-muted-foreground text-xs">
+                    A Zoom meeting will be created automatically using your connected Zoom account.
+                  </p>
+                )}
+                {zoomOption === "link" && (
+                  <Input
+                    placeholder="Zoom Meeting ID (e.g. 123 456 7890)"
+                    value={linkedZoomId}
+                    onChange={(e) => setLinkedZoomId(e.target.value)}
+                  />
+                )}
+              </div>
+            )}
 
             {/* Date */}
             <div className="grid gap-2">
@@ -303,6 +412,43 @@ export function EventDetailPage({ eventId }: Props) {
             <div className="grid gap-2">
               <Label>Timezone</Label>
               <TimezoneSelect value={timezone} onChange={setTimezone} />
+            </div>
+
+            {/* Attendance Methods */}
+            <div className="grid gap-2">
+              <Label>Attendance Tracking</Label>
+              <div className="flex flex-wrap gap-3">
+                {([
+                  { value: "manual" as AttendanceMethod, label: "Manual", icon: CheckSquare },
+                  ...((eventType === "in_person" || eventType === "hybrid")
+                    ? [{ value: "qr" as AttendanceMethod, label: "QR Code", icon: QrCode }]
+                    : []),
+                  ...((eventType === "online" || eventType === "hybrid")
+                    ? [{ value: "zoom" as AttendanceMethod, label: "Zoom", icon: Video }]
+                    : []),
+                ]).map(({ value, label, icon: Icon }) => (
+                  <label
+                    key={value}
+                    className={cn(
+                      "flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 text-xs font-medium transition-colors",
+                      attendanceMethods.includes(value)
+                        ? "border-primary bg-primary/5 text-foreground"
+                        : "border-input text-muted-foreground hover:border-foreground/30",
+                      value === "manual" && "opacity-70 cursor-not-allowed",
+                    )}
+                  >
+                    <Checkbox
+                      checked={attendanceMethods.includes(value)}
+                      onCheckedChange={() => value !== "manual" && toggleAttendanceMethod(value)}
+                      disabled={value === "manual"}
+                      className="size-3.5"
+                    />
+                    <Icon className="size-3.5" />
+                    {label}
+                  </label>
+                ))}
+              </div>
+              <p className="text-muted-foreground text-xs">Manual attendance is always enabled.</p>
             </div>
 
             {/* Description */}

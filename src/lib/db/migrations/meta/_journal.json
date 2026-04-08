@@ -120,6 +120,27 @@
       "when": 1775594870240,
       "tag": "0016_dashing_warpath",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1775625398171,
+      "tag": "0017_long_nitro",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1775627912958,
+      "tag": "0018_early_miss_america",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1775631952009,
+      "tag": "0019_eager_legion",
+      "breakpoints": true
     }
   ]
 }

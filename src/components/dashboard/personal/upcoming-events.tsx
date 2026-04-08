@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { CalendarDays, MapPin, Monitor, Blend } from "lucide-react";
+import { JoinMeetingButton } from "@/components/organizations/events/join-meeting-button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -87,11 +88,14 @@ export function UpcomingEventsCard() {
               const TypeIcon = EVENT_TYPE_ICONS[ev.eventType ?? "in_person"] ?? MapPin;
               const status = getStatusBadge(ev.startAt, ev.endAt, userTz);
 
+              const hasZoom =
+                (ev.eventType === "online" || ev.eventType === "hybrid") && ev.zoomJoinUrl;
+
               return (
-                <li key={ev.id}>
+                <li key={ev.id} className="flex items-stretch gap-2">
                   <Link
                     href={routes.dashboard.eventDetail(ev.id)}
-                    className="flex flex-col gap-1.5 rounded-md border p-3 transition-colors hover:bg-muted/50"
+                    className="flex min-w-0 flex-1 flex-col gap-1.5 rounded-md border p-3 transition-colors hover:bg-muted/50"
                   >
                     <div className="flex items-start justify-between gap-2">
                       <p className="text-sm font-medium leading-snug">{ev.title}</p>
@@ -109,6 +113,14 @@ export function UpcomingEventsCard() {
                       </Badge>
                     </div>
                   </Link>
+                  {hasZoom && (
+                    <div className="flex items-center">
+                      <JoinMeetingButton
+                        zoomJoinUrl={ev.zoomJoinUrl}
+                        compact
+                      />
+                    </div>
+                  )}
                 </li>
               );
             })}

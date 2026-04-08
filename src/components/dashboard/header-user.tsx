@@ -13,14 +13,14 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Spinner } from "@/components/ui/spinner";
 import { useSignOut } from "@/lib/auth/hooks";
-import { proxiedAvatarUrl } from "@/lib/helpers/image";
+import { proxiedAvatarUrl } from "@/lib/utils/image";
 import { ThemeSwitch } from "@/components/theme-toggle";
 import {
   LogOutIcon,
   SettingsIcon,
 } from "lucide-react";
 import Link from "next/link";
-import { getInitials } from "@/lib/helpers/user";
+import { getInitials } from "@/lib/utils/user";
 import { routes } from "@/routes";
 
 export interface NavUserType {

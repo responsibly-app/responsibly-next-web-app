@@ -9,7 +9,7 @@ import { PasswordCard } from "./password-card";
 import { SessionsCard } from "./sessions-card";
 import { useTabSearchParam } from "@/lib/hooks/use-tab-search-param";
 
-export function AccountProfile() {
+export function SettingsTabs() {
   const [activeTab, setTab] = useTabSearchParam("profile");
 
   return (

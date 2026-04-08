@@ -1,4 +1,4 @@
-import { AccountProfile } from "./_components/account-profile";
+import { SettingsTabs } from "./_components/settings-tabs";
 
 export default function SettingsPage() {
   return (
@@ -10,7 +10,7 @@ export default function SettingsPage() {
         </p>
       </div>
 
-      <AccountProfile />
+      <SettingsTabs />
     </div>
   );
 }
