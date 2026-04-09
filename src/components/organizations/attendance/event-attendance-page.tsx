@@ -5,12 +5,24 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { format } from "date-fns";
-import { ArrowLeft, CalendarDays, Lock, QrCode, Search, Users, Video } from "lucide-react";
+import {
+  ArrowLeft,
+  CalendarDays,
+  Camera,
+  CheckCircle2,
+  ChevronDown,
+  ChevronUp,
+  Lock,
+  QrCode,
+  Search,
+  Users,
+  Video,
+} from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ButtonGroup } from "@/components/ui/button-group";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
@@ -25,6 +37,9 @@ import { getPermissions } from "@/lib/auth/hooks/oraganization/access-control";
 import { OrgRole } from "@/lib/auth/hooks/oraganization/permissions";
 import { routes } from "@/routes";
 import { cn } from "@/lib/utils";
+import { EventQRCode } from "@/components/organizations/events/event-qr-code";
+import { MemberQRDialog } from "./member-qr-dialog";
+import { ScannerDialog } from "./scanner-dialog";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -109,6 +124,9 @@ export function EventAttendancePage({ eventId, organizationId }: Props) {
   const router = useRouter();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<DisplayStatus | "all">("all");
+  const [qrPanelOpen, setQrPanelOpen] = useState(false);
+  const [scannerOpen, setScannerOpen] = useState(false);
+  const [memberQR, setMemberQR] = useState<{ userId: string; name: string } | null>(null);
 
   const { data: events = [], isPending: eventsPending } = useListEvents(organizationId);
   const { data: membersRaw, isPending: membersPending } = useListMembers({ organizationId });
@@ -260,6 +278,64 @@ export function EventAttendancePage({ eventId, organizationId }: Props) {
         </div>
       )}
 
+      {/* QR panel — admins only, when event uses QR attendance */}
+      {canManage && showQR && (
+        <Card>
+          <CardHeader className="pb-0 pt-4">
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2 text-sm font-medium">
+                <QrCode className="size-4 text-muted-foreground" />
+                QR Attendance
+              </CardTitle>
+              <div className="flex items-center gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-7 gap-1.5 text-xs"
+                  onClick={() => setScannerOpen(true)}
+                >
+                  <Camera className="size-3.5" />
+                  Scan Member
+                </Button>
+                <button
+                  onClick={() => setQrPanelOpen((v) => !v)}
+                  className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  {qrPanelOpen ? (
+                    <ChevronUp className="size-4" />
+                  ) : (
+                    <ChevronDown className="size-4" />
+                  )}
+                  {qrPanelOpen ? "Hide" : "Show"} Event QR
+                </button>
+              </div>
+            </div>
+          </CardHeader>
+          {qrPanelOpen && (
+            <CardContent className="pt-4">
+              <EventQRCode eventId={eventId} organizationId={organizationId} />
+            </CardContent>
+          )}
+        </Card>
+      )}
+
+      {/* Dialogs */}
+      <ScannerDialog
+        open={scannerOpen}
+        onClose={() => setScannerOpen(false)}
+        eventId={eventId}
+        organizationId={organizationId}
+        members={members}
+      />
+      {memberQR && (
+        <MemberQRDialog
+          open={!!memberQR}
+          onClose={() => setMemberQR(null)}
+          memberUserId={memberQR.userId}
+          memberName={memberQR.name}
+        />
+      )}
+
       {/* Toolbar */}
       {!isLoading && members.length > 0 && (
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -348,14 +424,27 @@ export function EventAttendancePage({ eventId, organizationId }: Props) {
                   >
                     {/* Left: avatar + name + source badges */}
                     <div className="flex min-w-0 items-start gap-3">
-                      <Avatar className="mt-0.5 size-9 shrink-0">
-                        <AvatarImage src={member.user?.image ?? undefined} />
-                        <AvatarFallback className="text-xs">
-                          {member.user?.name ? initials(member.user.name) : "?"}
-                        </AvatarFallback>
-                      </Avatar>
+                      <button
+                        onClick={() =>
+                          setMemberQR({ userId: member.userId, name: member.user?.name ?? "Member" })
+                        }
+                        className="mt-0.5 shrink-0"
+                        title="Show member QR code"
+                      >
+                        <Avatar className="size-9 ring-2 ring-transparent hover:ring-border transition-all">
+                          <AvatarImage src={member.user?.image ?? undefined} />
+                          <AvatarFallback className="text-xs">
+                            {member.user?.name ? initials(member.user.name) : "?"}
+                          </AvatarFallback>
+                        </Avatar>
+                      </button>
                       <div className="min-w-0">
-                        <p className="truncate text-sm font-medium">{member.user?.name}</p>
+                        <p className="flex items-center gap-1.5 truncate text-sm font-medium">
+                          {member.user?.name}
+                          {(displayStatus === "in_person" || displayStatus === "online") && (
+                            <CheckCircle2 className="size-3.5 shrink-0 text-emerald-500" />
+                          )}
+                        </p>
                         <p className="truncate text-xs text-muted-foreground">
                           {member.user?.email}
                         </p>
@@ -547,7 +636,8 @@ function MemberControls({
       <Button
         size="sm"
         variant="outline"
-        className={cn(baseBtn, isExcused && BTN.excused)}
+        disabled={qrLocked || zoomLocked}
+        className={cn(baseBtn, isExcused && BTN.excused, (qrLocked || zoomLocked) && "cursor-not-allowed")}
         onClick={() => { if (record?.status !== "excused") m("excused"); }}
       >
         Excused

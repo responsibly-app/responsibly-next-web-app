@@ -23,6 +23,7 @@ export function DasboardHeader() {
   } = authClient.useSession();
 
   const user: NavUserType = {
+    id: session?.user.id || "",
     name: session?.user.name || "",
     email: session?.user.email || "",
     avatar: session?.user.image || "avatar",

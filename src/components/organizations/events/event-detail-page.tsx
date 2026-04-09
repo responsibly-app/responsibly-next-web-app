@@ -19,6 +19,7 @@ import {
   CheckSquare,
 } from "lucide-react";
 import { JoinMeetingButton } from "./join-meeting-button";
+import { EventQRCode } from "./event-qr-code";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Calendar } from "@/components/ui/calendar";
@@ -483,13 +484,18 @@ export function EventDetailPage({ eventId }: Props) {
         </Card>
       ) : (
         /* Detail view */
-        event.description ? (
-          <Card>
-            <CardContent className="pt-5">
-              <p className="text-sm text-muted-foreground whitespace-pre-line">{event.description}</p>
-            </CardContent>
-          </Card>
-        ) : null
+        <>
+          {event.description && (
+            <Card>
+              <CardContent className="pt-5">
+                <p className="text-sm text-muted-foreground whitespace-pre-line">{event.description}</p>
+              </CardContent>
+            </Card>
+          )}
+          {isAdmin && (event.attendanceMethods as string[] | null)?.includes("qr") && (
+            <EventQRCode eventId={event.id} organizationId={event.organizationId} />
+          )}
+        </>
       )}
     </div>
   );

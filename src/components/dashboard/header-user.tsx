@@ -15,15 +15,14 @@ import { Spinner } from "@/components/ui/spinner";
 import { useSignOut } from "@/lib/auth/hooks";
 import { proxiedAvatarUrl } from "@/lib/utils/image";
 import { ThemeSwitch } from "@/components/theme-toggle";
-import {
-  LogOutIcon,
-  SettingsIcon,
-} from "lucide-react";
+import { LogOutIcon, QrCode, SettingsIcon } from "lucide-react";
 import Link from "next/link";
 import { getInitials } from "@/lib/utils/user";
 import { routes } from "@/routes";
+import { UserQRDialog } from "./user-qr-dialog";
 
 export interface NavUserType {
+  id: string;
   name: string;
   email: string;
   avatar: string;
@@ -38,11 +37,13 @@ export function HeaderUserDropdown({
 }) {
   const signOut = useSignOut();
   const [open, setOpen] = useState(false);
+  const [qrOpen, setQrOpen] = useState(false);
 
   const userInitials = getInitials(user?.name ? user?.name : user?.email || "User");
 
 
   return (
+    <>
     <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger
         asChild
@@ -96,6 +97,15 @@ export function HeaderUserDropdown({
         <DropdownMenuSeparator />
 
         <DropdownMenuGroup>
+          <DropdownMenuItem
+            onClick={() => {
+              setOpen(false);
+              setQrOpen(true);
+            }}
+          >
+            <QrCode className="mr-2 h-4 w-4" />
+            My Check-in QR
+          </DropdownMenuItem>
           <DropdownMenuItem asChild>
             <Link href={routes.dashboard.settings()}>
               <SettingsIcon className="mr-2 h-4 w-4" />
@@ -122,5 +132,13 @@ export function HeaderUserDropdown({
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
+
+    <UserQRDialog
+      open={qrOpen}
+      onClose={() => setQrOpen(false)}
+      userId={user.id}
+      name={user.name}
+    />
+    </>
   );
 }

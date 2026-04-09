@@ -28,6 +28,7 @@ import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 
 export interface NavUserType {
+  id: string;
   name: string;
   email: string;
   avatar: string;
