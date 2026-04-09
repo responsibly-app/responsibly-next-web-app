@@ -351,10 +351,11 @@ export const eventRouter = {
           memberImage: user.image,
           zoomDuration: eventAttendance.zoomDuration,
           zoomFirstJoinedAt: eventAttendance.zoomFirstJoinedAt,
-          onlinePresentViaZoom: eventAttendance.onlinePresentViaZoom,
           qrCheckedInAt: eventAttendance.qrCheckedInAt,
-          inPersonPresent: eventAttendance.inPersonPresent,
-          sources: eventAttendance.sources,
+          onlineZoom: eventAttendance.onlineZoom,
+          inPersonQr: eventAttendance.inPersonQr,
+          inPersonManual: eventAttendance.inPersonManual,
+          onlineManual: eventAttendance.onlineManual,
         })
         .from(eventAttendance)
         .leftJoin(member, eq(eventAttendance.memberId, member.id))
@@ -380,8 +381,8 @@ export const eventRouter = {
 
       const existing = await db
         .select({
-          sources: eventAttendance.sources,
-          inPersonPresent: eventAttendance.inPersonPresent,
+          inPersonManual: eventAttendance.inPersonManual,
+          onlineManual: eventAttendance.onlineManual,
         })
         .from(eventAttendance)
         .where(
@@ -393,10 +394,7 @@ export const eventRouter = {
         .limit(1)
         .then((r) => r[0]);
 
-      const currentSources = existing?.sources ?? [];
-      const newSources = currentSources.includes("manual")
-        ? currentSources
-        : [...currentSources, "manual"];
+      const isPresent = input.status === "present";
 
       await db
         .insert(eventAttendance)
@@ -407,8 +405,8 @@ export const eventRouter = {
           status: input.status,
           markedAt: new Date(),
           markedBy: context.session.user.id,
-          inPersonPresent: input.inPerson ?? false,
-          sources: ["manual"],
+          inPersonManual: isPresent ? (input.inPersonManual ?? false) : false,
+          onlineManual: isPresent ? (input.onlineManual ?? false) : false,
         })
         .onConflictDoUpdate({
           target: [eventAttendance.eventId, eventAttendance.memberId],
@@ -416,8 +414,12 @@ export const eventRouter = {
             status: input.status,
             markedAt: new Date(),
             markedBy: context.session.user.id,
-            inPersonPresent: input.inPerson ?? (existing?.inPersonPresent ?? false),
-            sources: newSources,
+            inPersonManual: isPresent
+              ? (input.inPersonManual ?? existing?.inPersonManual ?? false)
+              : false,
+            onlineManual: isPresent
+              ? (input.onlineManual ?? existing?.onlineManual ?? false)
+              : false,
           },
         });
 
@@ -608,23 +610,6 @@ export const eventRouter = {
 
       const now = new Date();
 
-      const existing = await db
-        .select({ sources: eventAttendance.sources })
-        .from(eventAttendance)
-        .where(
-          and(
-            eq(eventAttendance.eventId, qr.eventId),
-            eq(eventAttendance.memberId, memberRow.id),
-          ),
-        )
-        .limit(1)
-        .then((r) => r[0]);
-
-      const currentSources = existing?.sources ?? [];
-      const newSources = currentSources.includes("qr")
-        ? currentSources
-        : [...currentSources, "qr"];
-
       await db
         .insert(eventAttendance)
         .values({
@@ -635,16 +620,14 @@ export const eventRouter = {
           markedAt: now,
           markedBy: userId,
           qrCheckedInAt: now,
-          inPersonPresent: true,
-          sources: ["qr"],
+          inPersonQr: true,
         })
         .onConflictDoUpdate({
           target: [eventAttendance.eventId, eventAttendance.memberId],
           set: {
             status: "present",
             qrCheckedInAt: now,
-            inPersonPresent: true,
-            sources: newSources,
+            inPersonQr: true,
           },
         });
 
@@ -665,23 +648,6 @@ export const eventRouter = {
 
       const now = new Date();
 
-      const existing = await db
-        .select({ sources: eventAttendance.sources })
-        .from(eventAttendance)
-        .where(
-          and(
-            eq(eventAttendance.eventId, input.eventId),
-            eq(eventAttendance.memberId, input.memberId),
-          ),
-        )
-        .limit(1)
-        .then((r) => r[0]);
-
-      const currentSources = existing?.sources ?? [];
-      const newSources = currentSources.includes("qr")
-        ? currentSources
-        : [...currentSources, "qr"];
-
       await db
         .insert(eventAttendance)
         .values({
@@ -692,16 +658,14 @@ export const eventRouter = {
           markedAt: now,
           markedBy: context.session.user.id,
           qrCheckedInAt: now,
-          inPersonPresent: true,
-          sources: ["qr"],
+          inPersonQr: true,
         })
         .onConflictDoUpdate({
           target: [eventAttendance.eventId, eventAttendance.memberId],
           set: {
             status: "present",
             qrCheckedInAt: now,
-            inPersonPresent: true,
-            sources: newSources,
+            inPersonQr: true,
           },
         });
 

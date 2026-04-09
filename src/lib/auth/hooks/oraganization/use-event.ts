@@ -124,7 +124,8 @@ export function useMarkAttendance() {
       memberId: string;
       status: "present" | "absent" | "excused";
       organizationId: string;
-      inPerson?: boolean;
+      inPersonManual?: boolean;
+      onlineManual?: boolean;
     }) => orpc.event.markAttendance(input),
     onSuccess: (_, { eventId }) => {
       queryClient.invalidateQueries({

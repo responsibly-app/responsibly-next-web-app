@@ -13,9 +13,6 @@ import { organization, member, user } from "./better-auth-schema";
 export const EVENT_TYPES = ["in_person", "online", "hybrid"] as const;
 export type EventType = (typeof EVENT_TYPES)[number];
 
-export const ATTENDANCE_METHODS = ["manual", "qr", "zoom"] as const;
-export type AttendanceMethod = (typeof ATTENDANCE_METHODS)[number];
-
 export const event = pgTable(
   "event",
   {
@@ -62,12 +59,13 @@ export const eventAttendance = pgTable(
     // Zoom attendance tracking
     zoomDuration: integer("zoom_duration"), // total minutes attended via Zoom
     zoomFirstJoinedAt: timestamp("zoom_first_joined_at"),
-    onlinePresentViaZoom: boolean("online_present_via_zoom").default(false),
-    // QR attendance tracking
+    // Presence flags — one per source, independently set
+    onlineZoom: boolean("online_zoom").default(false),     // auto: Zoom webhook
+    inPersonQr: boolean("in_person_qr").default(false),   // auto: QR scan
+    inPersonManual: boolean("in_person_manual").default(false), // manual: admin
+    onlineManual: boolean("online_manual").default(false),      // manual: admin
+    // QR timestamp kept for display
     qrCheckedInAt: timestamp("qr_checked_in_at"),
-    inPersonPresent: boolean("in_person_present").default(false),
-    // Which methods contributed: ["zoom"], ["qr"], ["manual"], or combination
-    sources: text("sources").array(),
   },
   (table) => [
     index("event_attendance_event_id_idx").on(table.eventId),

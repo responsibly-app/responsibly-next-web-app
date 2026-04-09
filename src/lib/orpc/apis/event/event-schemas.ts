@@ -87,10 +87,11 @@ export const AttendanceRecordSchema = z.object({
   // Extended fields
   zoomDuration: z.number().nullable(),
   zoomFirstJoinedAt: z.date().nullable(),
-  onlinePresentViaZoom: z.boolean().nullable(),
   qrCheckedInAt: z.date().nullable(),
-  inPersonPresent: z.boolean().nullable(),
-  sources: z.array(z.string()).nullable(),
+  onlineZoom: z.boolean().nullable(),
+  inPersonQr: z.boolean().nullable(),
+  inPersonManual: z.boolean().nullable(),
+  onlineManual: z.boolean().nullable(),
 });
 
 export const GetEventAttendanceInputSchema = z.object({
@@ -104,7 +105,8 @@ export const MarkAttendanceInputSchema = z.object({
   memberId: z.string(),
   status: z.enum(["present", "absent", "excused"]),
   organizationId: z.string(),
-  inPerson: z.boolean().optional(), // for hybrid: explicitly mark in-person
+  inPersonManual: z.boolean().optional(),
+  onlineManual: z.boolean().optional(),
 });
 
 export const GetLeaderboardInputSchema = z.object({
