@@ -11,18 +11,18 @@ interface configItem {
 export const ENVIRONMENT = process.env.NEXT_PUBLIC_ENV || "local";
 // console.log("USING CONFIG ENV:", ENVIRONMENT);
 // -------------------------------------------------------------------------------------
-export const appName = "Alvintech AI";
+export const appName = "Responsibly";
 // -------------------------------------------------------------------------------------
 export const config: { [env: string]: configItem } = {
     test: {
         app_name: appName,
-        backend_base_url: "https://api.alvintech.ca",
-        landing_page_url: "https://alvintech.ca",
+        backend_base_url: "https://responsibly.vercel.app",
+        landing_page_url: "https://responsibly.vercel.app",
     },
     prod: {
         app_name: appName,
-        backend_base_url: "https://responsibly-next-web-app-yh7q.vercel.app",
-        landing_page_url: "https://alvintech.ca",
+        backend_base_url: "https://responsibly.vercel.app",
+        landing_page_url: "https://responsibly.vercel.app",
     },
     local: {
         app_name: appName,
@@ -36,7 +36,7 @@ export const config: { [env: string]: configItem } = {
     },
     ngrok: {
         app_name: appName,
-        backend_base_url: "https://responsibly-next-web-app-yh7q.vercel.app",
+        backend_base_url: "https://responsibly.vercel.app",
         landing_page_url: "",
     },
 };
