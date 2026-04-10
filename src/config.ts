@@ -13,6 +13,8 @@ export const ENVIRONMENT = process.env.NEXT_PUBLIC_ENV || "local";
 // -------------------------------------------------------------------------------------
 export const appName = "Responsibly";
 // -------------------------------------------------------------------------------------
+export const DEBUG_MODE = ENVIRONMENT === "local" || ENVIRONMENT === "local_https";
+// -------------------------------------------------------------------------------------
 export const config: { [env: string]: configItem } = {
     test: {
         app_name: appName,

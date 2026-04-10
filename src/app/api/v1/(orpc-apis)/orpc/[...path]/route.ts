@@ -24,8 +24,12 @@ async function handleRequest(req: Request) {
     context: { session, headers: req.headers },
   });
 
-  if (matched) return response;
-  return new Response("Not found", { status: 404 });
+  if (matched) {
+    return response;
+  }
+
+  const notFoundRes = new Response("Not found", { status: 404 });
+  return notFoundRes;
 }
 
 export {

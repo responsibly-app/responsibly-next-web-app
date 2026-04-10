@@ -12,6 +12,7 @@ import {
   TelegramInitiateOutputSchema,
   TelegramUpdateSchema,
 } from "./telegram-schemas";
+import { debugLog } from "@/debug";
 
 export const telegramRouter = {
   status: authed
@@ -121,6 +122,9 @@ export const telegramRouter = {
         const header = context.headers.get("x-telegram-bot-api-secret-token");
         if (header !== secret) throw new ORPCError("UNAUTHORIZED");
       }
+
+      debugLog("telegramWebhookRequests",
+        "Received Telegram webhook event:", JSON.stringify(input, null, 2));
 
       const telegram = createTelegramClient();
       const from = input.message?.from;

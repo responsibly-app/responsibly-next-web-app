@@ -106,7 +106,7 @@ export const zoomParticipantSession = pgTable(
       .notNull()
       .references(() => event.id, { onDelete: "cascade" }),
     zoomMeetingId: text("zoom_meeting_id").notNull(),
-    participantUserId: text("participant_user_id"),
+    participantUuid: text("participant_uuid"),
     participantEmail: text("participant_email"),
     joinedAt: timestamp("joined_at").notNull(),
     leftAt: timestamp("left_at"),

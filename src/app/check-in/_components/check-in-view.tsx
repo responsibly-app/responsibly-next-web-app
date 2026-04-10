@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useCheckInWithQR } from "@/lib/auth/hooks";
 import { authClient } from "@/lib/auth/auth-client";
+import { routes } from "@/routes";
 
 export function CheckInView() {
   const searchParams = useSearchParams();
@@ -24,7 +25,7 @@ export function CheckInView() {
     if (!code || sessionPending) return;
     if (!session) {
       // Redirect to sign-in, return here after
-      router.push(`/sign-in?redirect=/check-in?code=${encodeURIComponent(code)}`);
+      router.push(routes.auth.signIn(`/check-in?code=${encodeURIComponent(code)}`));
       return;
     }
     if (status !== "idle") return;

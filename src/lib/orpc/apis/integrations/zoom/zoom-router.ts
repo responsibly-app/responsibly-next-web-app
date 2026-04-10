@@ -17,6 +17,7 @@ import {
     ZoomStatusOutputSchema,
     ZoomUserSchema,
 } from "./zoom-schemas";
+import { debugLog } from "@/debug";
 
 export const zoomRouter = {
     status: authed
@@ -88,6 +89,9 @@ export const zoomRouter = {
             if (secret && !verifyHmacSignature({ rawBody: JSON.stringify(input), timestamp, signature, secret })) {
                 return { error: "Invalid signature" };
             }
+
+            debugLog("zoomWebhookRequests", 
+                "Received Zoom webhook event:", JSON.stringify(input, null, 2));
 
             return dispatchZoomEvent(input as ZoomWebhookPayload);
         }),

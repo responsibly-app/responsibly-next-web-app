@@ -177,6 +177,7 @@ async function tryAutoMarkAttendance(opts: {
   organizationId: string;
   participantEmail: string;
 }): Promise<void> {
+
   const { eventId, organizationId, participantEmail } = opts;
 
   const settings = await findAttendanceSettings(organizationId);
@@ -244,13 +245,13 @@ export async function handleParticipantJoined(
 ): Promise<void> {
   const joinedAt = new Date(participant.join_time ?? participant.date_time);
   const participantEmail = participant.email?.toLowerCase() ?? "";
-  const participantUserId = participant.user_id ?? "";
+  const participantUuid = participant.participant_uuid ?? "";
 
   await db.insert(zoomParticipantSession).values({
     id: crypto.randomUUID(),
     eventId: eventRow.id,
     zoomMeetingId: meetingId,
-    participantUserId,
+    participantUuid,
     participantEmail,
     joinedAt,
   });
@@ -269,14 +270,19 @@ export async function handleParticipantLeft(
 ): Promise<void> {
   const leftAt = new Date(participant.leave_time ?? participant.date_time);
   const participantEmail = participant.email?.toLowerCase() ?? "";
+  const participantUuid = participant.participant_uuid ?? "";
 
   const openSession = await db
-    .select({ id: zoomParticipantSession.id, joinedAt: zoomParticipantSession.joinedAt })
+    .select({
+      id: zoomParticipantSession.id,
+      joinedAt: zoomParticipantSession.joinedAt,
+      participantEmail: zoomParticipantSession.participantEmail,
+    })
     .from(zoomParticipantSession)
     .where(
       and(
         eq(zoomParticipantSession.eventId, eventRow.id),
-        eq(zoomParticipantSession.participantEmail, participantEmail),
+        eq(zoomParticipantSession.participantUuid, participantUuid),
         isNull(zoomParticipantSession.leftAt),
       ),
     )
@@ -292,12 +298,14 @@ export async function handleParticipantLeft(
       .where(eq(zoomParticipantSession.id, openSession.id));
   }
 
-  if (!participantEmail) return;
+  // Zoom omits email on participant_left — use the email stored at join time via participantUuid
+  const resolvedEmail = openSession?.participantEmail || participantEmail;
+  if (!resolvedEmail) return;
 
   await tryAutoMarkAttendance({
     eventId: eventRow.id,
     organizationId: eventRow.organizationId,
-    participantEmail,
+    participantEmail: resolvedEmail,
   });
 }
 
@@ -318,6 +326,7 @@ export async function handleMeetingEnded(
       id: zoomParticipantSession.id,
       joinedAt: zoomParticipantSession.joinedAt,
       participantEmail: zoomParticipantSession.participantEmail,
+      participantUuid: zoomParticipantSession.participantUuid,
     })
     .from(zoomParticipantSession)
     .where(

@@ -22,7 +22,7 @@ export const routes = {
   },
   authParent: () => "/auth",
   auth: {
-    signIn: () => "/auth/sign-in",
+    signIn: (callbackUrl?: string) => `/auth/sign-in${callbackUrl ? `?callbackUrl=${encodeURIComponent(callbackUrl)}` : ''}`,
     signUp: () => "/auth/sign-up",
     pendingEmailVerification: () => "/auth/pending-email-verification",
     resetPassword: () => "/auth/reset-password",
