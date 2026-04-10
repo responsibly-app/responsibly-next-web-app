@@ -648,6 +648,23 @@ export const eventRouter = {
 
       const now = new Date();
 
+      // Check for an existing QR scan before upserting
+      const [existing] = await db
+        .select({ qrCheckedInAt: eventAttendance.qrCheckedInAt, inPersonQr: eventAttendance.inPersonQr })
+        .from(eventAttendance)
+        .where(and(
+          eq(eventAttendance.eventId, input.eventId),
+          eq(eventAttendance.memberId, input.memberId),
+        ))
+        .limit(1);
+
+      const alreadyScanned = !!(existing?.inPersonQr || existing?.qrCheckedInAt);
+      const previousScanTime = existing?.qrCheckedInAt ?? null;
+
+      if (alreadyScanned) {
+        return { success: true, alreadyScanned: true, previousScanTime };
+      }
+
       await db
         .insert(eventAttendance)
         .values({
@@ -670,6 +687,6 @@ export const eventRouter = {
           },
         });
 
-      return { success: true };
+      return { success: true, alreadyScanned, previousScanTime };
     }),
 };
