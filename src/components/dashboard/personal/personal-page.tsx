@@ -11,6 +11,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Flame } from "lucide-react";
 import Link from "next/link";
 import { routes } from "@/routes";
+import { InviteGoalBar, useInviteGoal } from "@/components/dashboard/invites/invite-goal-bar";
+import { localDateStr } from "@/lib/utils/timezone";
 
 function greeting(hour: number): string {
   if (hour < 5) return "Up late";
@@ -51,6 +53,11 @@ function InviteStreakPreview() {
   const { data: session } = authClient.useSession();
   const timezone = session?.user?.timezone ?? "UTC";
   const { data: history = [] } = useGetInviteHistory(90);
+  const { goal } = useInviteGoal();
+
+  const today = localDateStr(timezone);
+  const todayCount = history.find((h) => h.date === today)?.count ?? 0;
+
   return (
     <Card>
       <CardHeader className="pb-3">
@@ -61,8 +68,11 @@ function InviteStreakPreview() {
       </CardHeader>
       <CardContent className="space-y-4">
         <InviteStreakGrid data={history} timezone={timezone} />
+        {goal !== null && (
+          <InviteGoalBar current={todayCount} goal={goal} />
+        )}
         <Link href={routes.dashboard.invites()} className="text-xs text-primary hover:underline block">
-          View full history →
+          {goal === null ? "View full history →" : "Manage goal & history →"}
         </Link>
       </CardContent>
     </Card>
@@ -93,18 +103,18 @@ export function PersonalPage() {
         )}
       </div>
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         {/* Left column: activity cards */}
-        <div className="space-y-4 md:col-span-2">
+        <div className="space-y-4 lg:col-span-2">
           <PointsSummaryCard />
-          <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_220px]">
+          <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1fr_220px]">
             <InviteStreakPreview />
             <InviteLogCard />
           </div>
         </div>
 
         {/* Right column: upcoming events */}
-        <div className="md:col-span-1">
+        <div className="lg:col-span-1">
           <UpcomingEventsCard />
         </div>
       </div>

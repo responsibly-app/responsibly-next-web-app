@@ -18,6 +18,7 @@ type UpdateUserParams = {
   image?: string;
   timezone?: string;
   timezoneMode?: "auto" | "custom";
+  agentCode?: string;
 };
 
 /** Link a social provider to an existing account */

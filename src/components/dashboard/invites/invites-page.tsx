@@ -1,12 +1,13 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Flame, CalendarIcon } from "lucide-react";
+import { Flame, CalendarIcon, Target, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   Dialog,
   DialogContent,
@@ -26,6 +27,7 @@ import {
 import { authClient } from "@/lib/auth/auth-client";
 import { useGetInviteHistory, useLogInvites } from "@/lib/auth/hooks";
 import { InviteStreakGrid } from "@/components/dashboard/personal/invite-streak-grid";
+import { InviteGoalBar, useInviteGoal } from "@/components/dashboard/invites/invite-goal-bar";
 import { localDateStr } from "@/lib/utils/timezone";
 
 function formatDate(dateStr: string): string {
@@ -42,7 +44,8 @@ export function InvitesPage() {
   const { mutate: logInvites, isPending: isSaving } = useLogInvites();
 
   // Today's log
-  const todayEntry = history.find((h) => h.date === today);
+  const todayCount = history.find((h) => h.date === today)?.count ?? 0;
+
   const [logDate, setLogDate] = useState(today);
   const [logCount, setLogCount] = useState<string>("");
   const [showCustomDate, setShowCustomDate] = useState(false);
@@ -94,6 +97,23 @@ export function InvitesPage() {
   const totalInvites = history.reduce((s, h) => s + h.count, 0);
   const activeDays = history.filter((h) => h.count > 0).length;
 
+  // Daily goal
+  const { goal, setGoal } = useInviteGoal();
+  const [goalInput, setGoalInput] = useState("");
+  const [goalPopoverOpen, setGoalPopoverOpen] = useState(false);
+
+  useEffect(() => {
+    if (goalPopoverOpen) setGoalInput(goal !== null ? String(goal) : "");
+  }, [goalPopoverOpen, goal]);
+
+  function handleSaveGoal() {
+    const n = parseInt(goalInput, 10);
+    if (!isNaN(n) && n > 0) {
+      setGoal(n);
+      setGoalPopoverOpen(false);
+    }
+  }
+
   return (
     <div className="space-y-6 pt-5">
       <h1 className="text-2xl font-semibold tracking-tight">Invites</h1>
@@ -126,17 +146,91 @@ export function InvitesPage() {
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-base">
-              <Flame className="size-4 text-orange-500" />
-              90-Day Streak
-            </CardTitle>
-            <CardDescription>Your invite activity over the last 90 days</CardDescription>
+            <div className="flex items-start justify-between gap-2">
+              <div>
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <Flame className="size-4 text-orange-500" />
+                  90-Day Streak
+                </CardTitle>
+                <CardDescription className="mt-1">
+                  Your invite activity over the last 90 days
+                </CardDescription>
+              </div>
+
+              {/* Goal setting popover */}
+              <Popover open={goalPopoverOpen} onOpenChange={setGoalPopoverOpen}>
+                <PopoverTrigger asChild>
+                  <button className="flex shrink-0 items-center gap-1 text-xs text-muted-foreground transition-colors hover:text-foreground mt-0.5">
+                    <Target className="size-3" />
+                    {goal !== null ? `Goal: ${goal}` : "Set daily goal"}
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent className="w-52 p-3" align="end">
+                  <div className="space-y-2.5">
+                    <Label className="text-xs font-medium">Daily invite goal</Label>
+                    <div className="flex gap-1.5">
+                      <Input
+                        type="number"
+                        min={1}
+                        max={999}
+                        placeholder="e.g. 5"
+                        value={goalInput}
+                        onChange={(e) => setGoalInput(e.target.value)}
+                        onKeyDown={(e) => e.key === "Enter" && handleSaveGoal()}
+                        className="h-8 text-sm"
+                        autoFocus
+                      />
+                      <Button
+                        size="sm"
+                        className="h-8 px-2.5"
+                        onClick={handleSaveGoal}
+                        disabled={!goalInput}
+                      >
+                        <Check className="size-3.5" />
+                      </Button>
+                    </div>
+                    {goal !== null && (
+                      <button
+                        onClick={() => {
+                          setGoal(null);
+                          setGoalInput("");
+                          setGoalPopoverOpen(false);
+                        }}
+                        className="text-[11px] text-muted-foreground transition-colors hover:text-destructive"
+                      >
+                        Clear goal
+                      </button>
+                    )}
+                  </div>
+                </PopoverContent>
+              </Popover>
+            </div>
           </CardHeader>
+
           <CardContent>
             {isPending ? (
               <Skeleton className="h-24 w-full" />
             ) : (
-              <InviteStreakGrid data={history} timezone={timezone} />
+              <div className="space-y-3">
+                {/* Streak grid + vertical goal bar side by side */}
+                <div className="flex items-stretch gap-3">
+                  <div className="flex-1 min-w-0">
+                    <InviteStreakGrid data={history} timezone={timezone} />
+                  </div>
+                  {goal !== null && (
+                    <InviteGoalBar
+                      current={todayCount}
+                      goal={goal}
+                      orientation="vertical"
+                    />
+                  )}
+                </div>
+
+                {/* Horizontal goal bar + message below the grid */}
+                {goal !== null && (
+                  <InviteGoalBar current={todayCount} goal={goal} />
+                )}
+              </div>
             )}
           </CardContent>
         </Card>

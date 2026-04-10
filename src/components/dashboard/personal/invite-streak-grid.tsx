@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useRef, useState, useEffect } from "react";
 
 type DayCell = {
   date: string;
@@ -28,17 +28,12 @@ function toLocalDateStr(d: Date, timezone: string): string {
   return new Intl.DateTimeFormat("en-CA", { timeZone: timezone }).format(d);
 }
 
-/**
- * Advance a YYYY-MM-DD string by `days` calendar days.
- * Uses UTC noon to avoid DST boundary issues.
- */
 function addCalendarDays(dateStr: string, days: number): string {
   const d = new Date(dateStr + "T12:00:00Z");
   d.setUTCDate(d.getUTCDate() + days);
   return d.toISOString().split("T")[0];
 }
 
-/** Day-of-week (0=Sun) for a YYYY-MM-DD string, computed via UTC noon. */
 function dayOfWeek(dateStr: string): number {
   return new Date(dateStr + "T12:00:00Z").getUTCDay();
 }
@@ -50,7 +45,6 @@ export function calculateStreak(
   const map = new Map(data.map((d) => [d.date, d.count]));
   let checkDate = toLocalDateStr(new Date(), timezone);
 
-  // If today has no invites, start from yesterday
   if (!map.get(checkDate)) {
     checkDate = addCalendarDays(checkDate, -1);
   }
@@ -66,6 +60,10 @@ export function calculateStreak(
   return streak;
 }
 
+const DAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const LABEL_W = 28; // px — wide enough for 3-letter labels at 9px font
+const GAP = 3;      // px
+
 type Props = {
   data: { date: string; count: number }[];
   timezone?: string;
@@ -77,8 +75,6 @@ export function InviteStreakGrid({ data, timezone = "UTC" }: Props) {
 
     const todayStr = toLocalDateStr(new Date(), timezone);
     const rangeStartStr = addCalendarDays(todayStr, -89);
-
-    // Go back to the Sunday before rangeStart
     const gridStartStr = addCalendarDays(rangeStartStr, -dayOfWeek(rangeStartStr));
 
     const weeks: DayCell[][] = [];
@@ -101,9 +97,31 @@ export function InviteStreakGrid({ data, timezone = "UTC" }: Props) {
     return { grid: weeks, streak: calculateStreak(data, timezone) };
   }, [data, timezone]);
 
-  const DAY_LABELS = ["S", "M", "T", "W", "T", "F", "S"];
-
   const todayStr = toLocalDateStr(new Date(), timezone);
+
+  // Responsive tile size derived from container width
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [tileSize, setTileSize] = useState(16);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const compute = () => {
+      const w = el.getBoundingClientRect().width;
+      const numWeeks = grid.length;
+      // total gap space: between label col and first week, plus between each week column
+      const totalGaps = numWeeks * GAP;
+      const available = w - LABEL_W - totalGaps;
+      const size = Math.max(9, Math.min(22, Math.floor(available / numWeeks)));
+      setTileSize(size);
+    };
+    compute();
+    const obs = new ResizeObserver(compute);
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [grid.length]);
+
+  const countFontSize = Math.max(6, Math.floor(tileSize * 0.5));
 
   return (
     <div className="space-y-3">
@@ -112,33 +130,49 @@ export function InviteStreakGrid({ data, timezone = "UTC" }: Props) {
         <span className="text-sm text-muted-foreground">day streak</span>
       </div>
 
-      <div className="w-full">
+      <div ref={containerRef} className="w-full">
         <div
-          className="grid gap-0.75"
-          style={{ gridTemplateColumns: `1.25rem repeat(${grid.length}, minmax(0, 18px))` }}
+          className="grid"
+          style={{
+            gridTemplateColumns: `${LABEL_W}px repeat(${grid.length}, ${tileSize}px)`,
+            gap: `${GAP}px`,
+          }}
         >
-          {/* Day-of-week labels column */}
-          <div className="flex flex-col gap-0.75">
+          {/* Day-of-week label column */}
+          <div className="flex flex-col" style={{ gap: `${GAP}px` }}>
             {DAY_LABELS.map((label, i) => (
-              <div key={i} className="aspect-square flex items-center justify-end pr-0.5">
-                <span className="text-[9px] text-muted-foreground leading-none">{i % 2 === 1 ? label : ""}</span>
+              <div
+                key={i}
+                style={{ height: `${tileSize}px` }}
+                className="flex items-center justify-end"
+              >
+                <span
+                  className="text-muted-foreground leading-none select-none font-medium"
+                  style={{ fontSize: "9px" }}
+                >
+                  {label}
+                </span>
               </div>
             ))}
           </div>
 
           {/* Week columns */}
           {grid.map((week, wi) => (
-            <div key={wi} className="flex flex-col gap-0.75">
+            <div key={wi} className="flex flex-col" style={{ gap: `${GAP}px` }}>
               {week.map((day, di) => (
                 <div
                   key={di}
                   title={day.isPadding ? "" : `${day.date}: ${day.count} invite${day.count !== 1 ? "s" : ""}`}
-                  className={`aspect-square w-full rounded-[3px] flex items-center justify-center ${
+                  style={{ width: `${tileSize}px`, height: `${tileSize}px` }}
+                  className={`rounded-[3px] flex items-center justify-center shrink-0 ${
                     day.isPadding ? "opacity-0" : getIntensityClass(day.count)
                   } ${!day.isPadding && day.date === todayStr ? "ring-2 ring-primary ring-offset-1 ring-offset-background" : ""}`}
                 >
-                  {!day.isPadding && (
-                    <span className={`text-[clamp(6px,0.6cqw,9px)] font-medium leading-none tabular-nums ${getTextClass(day.count)}`}>
+                  {!day.isPadding && day.count > 0 && (
+                    <span
+                      className={`font-medium leading-none tabular-nums ${getTextClass(day.count)}`}
+                      style={{ fontSize: `${countFontSize}px` }}
+                    >
                       {day.count}
                     </span>
                   )}
@@ -153,7 +187,7 @@ export function InviteStreakGrid({ data, timezone = "UTC" }: Props) {
       <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
         <span>Less</span>
         {[0, 2, 5, 9, 10].map((v) => (
-          <div key={v} className={`h-4 w-4 rounded-[3px] shrink-0 ${getIntensityClass(v)}`} />
+          <div key={v} className={`h-3.5 w-3.5 rounded-[3px] shrink-0 ${getIntensityClass(v)}`} />
         ))}
         <span>More</span>
       </div>

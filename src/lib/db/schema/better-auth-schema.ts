@@ -25,6 +25,7 @@ export const user = pgTable("user", {
   banExpires: timestamp("ban_expires"),
   timezone: text("timezone").default("UTC"),
   timezoneMode: text("timezone_mode").default("auto"),
+  agentCode: text("agent_code"),
 });
 
 export const session = pgTable(

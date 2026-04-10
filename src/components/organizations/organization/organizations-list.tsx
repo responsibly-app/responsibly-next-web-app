@@ -33,6 +33,8 @@ import { EditOrganizationDialog } from "./edit-organization-dialog";
 type OrgAction = { type: "leave" | "delete"; orgId: string; orgName: string } | null;
 type EditTarget = { id: string; name: string; slug: string } | null;
 
+const LEAVE_WORD = "leave";
+
 function roleBadgeVariant(role: OrgRole) {
   if (role === "owner") return "default" as const;
   if (role === "admin") return "secondary" as const;
@@ -43,6 +45,7 @@ export function OrganizationsList() {
   const [createOpen, setCreateOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<EditTarget>(null);
   const [pendingAction, setPendingAction] = useState<OrgAction>(null);
+  const [confirmInput, setConfirmInput] = useState("");
   const [search, setSearch] = useState("");
   const [ownerFilter, setOwnerFilter] = useState<"all" | "mine">("all");
 
@@ -77,6 +80,7 @@ export function OrganizationsList() {
     }
 
     setPendingAction(null);
+    setConfirmInput("");
   }
 
   return (
@@ -311,7 +315,7 @@ export function OrganizationsList() {
 
       <AlertDialog
         open={!!pendingAction}
-        onOpenChange={(open) => !open && setPendingAction(null)}
+        onOpenChange={(open) => { if (!open) { setPendingAction(null); setConfirmInput(""); } }}
       >
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -320,15 +324,43 @@ export function OrganizationsList() {
             </AlertDialogTitle>
             <AlertDialogDescription>
               {pendingAction?.type === "delete"
-                ? `Are you sure you want to permanently delete "${pendingAction.orgName}"? This action cannot be undone and will remove all members and data.`
-                : `Are you sure you want to leave "${pendingAction?.orgName}"? You will lose access to this organization.`}
+                ? `This will permanently delete "${pendingAction.orgName}" and remove all members and data. This cannot be undone.`
+                : `You will lose access to "${pendingAction?.orgName}". This cannot be undone.`}
             </AlertDialogDescription>
           </AlertDialogHeader>
+
+          <div className="space-y-1.5 py-1">
+            <p className="text-sm text-muted-foreground">
+              {pendingAction?.type === "delete"
+                ? <>Type <span className="font-medium text-foreground">{pendingAction.orgName}</span> to confirm</>
+                : <>Type <span className="font-medium text-foreground">leave</span> to confirm</>}
+            </p>
+            <Input
+              value={confirmInput}
+              onChange={(e) => setConfirmInput(e.target.value)}
+              onKeyDown={(e) => {
+                const expected = pendingAction?.type === "delete"
+                  ? pendingAction.orgName
+                  : LEAVE_WORD;
+                if (e.key === "Enter" && confirmInput === expected) handleConfirm();
+              }}
+              placeholder={pendingAction?.type === "delete" ? pendingAction.orgName : LEAVE_WORD}
+              autoFocus
+            />
+          </div>
+
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90 focus-visible:ring-destructive disabled:opacity-50"
               onClick={handleConfirm}
+              disabled={
+                confirmInput !== (
+                  pendingAction?.type === "delete"
+                    ? pendingAction.orgName
+                    : LEAVE_WORD
+                )
+              }
             >
               {pendingAction?.type === "delete" ? "Delete" : "Leave"}
             </AlertDialogAction>

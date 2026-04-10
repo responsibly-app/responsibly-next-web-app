@@ -41,6 +41,12 @@ export const auth = betterAuth({
         defaultValue: "auto",
         input: true,
       },
+      agentCode: {
+        type: "string",
+        required: false,
+        defaultValue: undefined,
+        input: true,
+      },
     },
     deleteUser: {
       enabled: true,

@@ -92,21 +92,21 @@ export function UpcomingEventsCard() {
                 (ev.eventType === "online" || ev.eventType === "hybrid") && ev.zoomJoinUrl;
 
               return (
-                <li key={ev.id} className="flex items-stretch gap-2">
+                <li key={ev.id} className="rounded-md border overflow-hidden transition-colors hover:bg-muted/50">
                   <Link
                     href={routes.dashboard.eventDetail(ev.id)}
-                    className="flex min-w-0 flex-1 flex-col gap-1.5 rounded-md border p-3 transition-colors hover:bg-muted/50"
+                    className="flex flex-col gap-1.5 p-3"
                   >
-                    <div className="flex items-start justify-between gap-2">
-                      <p className="text-sm font-medium leading-snug">{ev.title}</p>
+                    <div className="flex items-start justify-between gap-2 flex-wrap">
+                      <p className="text-sm font-medium leading-snug min-w-0 flex-1">{ev.title}</p>
                       <Badge variant="secondary" className="shrink-0 text-[10px]">
                         {ev.organizationName}
                       </Badge>
                     </div>
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <div className="flex items-center justify-between gap-2 flex-wrap">
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground min-w-0">
                         <TypeIcon className="size-3 shrink-0" />
-                        <span>{formatEventDate(ev.startAt, userTz)}</span>
+                        <span className="truncate">{formatEventDate(ev.startAt, userTz)}</span>
                       </div>
                       <Badge className={`shrink-0 text-[10px] border ${status.className}`}>
                         {status.label}
@@ -114,11 +114,8 @@ export function UpcomingEventsCard() {
                     </div>
                   </Link>
                   {hasZoom && (
-                    <div className="flex items-center">
-                      <JoinMeetingButton
-                        zoomJoinUrl={ev.zoomJoinUrl}
-                        compact
-                      />
+                    <div className="border-t px-3 py-2">
+                      <JoinMeetingButton zoomJoinUrl={ev.zoomJoinUrl} />
                     </div>
                   )}
                 </li>
