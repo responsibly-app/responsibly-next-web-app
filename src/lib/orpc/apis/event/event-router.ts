@@ -610,6 +610,19 @@ export const eventRouter = {
 
       const now = new Date();
 
+      // Check if the user already checked in via QR
+      const existing = await db
+        .select({ qrCheckedInAt: eventAttendance.qrCheckedInAt, inPersonQr: eventAttendance.inPersonQr })
+        .from(eventAttendance)
+        .where(and(
+          eq(eventAttendance.eventId, qr.eventId),
+          eq(eventAttendance.memberId, memberRow.id),
+        ))
+        .limit(1)
+        .then((r) => r[0]);
+
+      const alreadyCheckedIn = !!(existing?.inPersonQr || existing?.qrCheckedInAt);
+
       await db
         .insert(eventAttendance)
         .values({
@@ -626,12 +639,13 @@ export const eventRouter = {
           target: [eventAttendance.eventId, eventAttendance.memberId],
           set: {
             status: "present",
-            qrCheckedInAt: now,
             inPersonQr: true,
+            // Preserve the original check-in time
+            qrCheckedInAt: sql`COALESCE(event_attendance.qr_checked_in_at, EXCLUDED.qr_checked_in_at)`,
           },
         });
 
-      return { success: true, eventId: qr.eventId };
+      return { success: true, eventId: qr.eventId, alreadyCheckedIn };
     }),
 
   /** Admin/assistant scans a member's QR code to mark them present in-person */

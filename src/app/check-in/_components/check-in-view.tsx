@@ -18,6 +18,7 @@ export function CheckInView() {
 
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [errorMsg, setErrorMsg] = useState("");
+  const [alreadyCheckedIn, setAlreadyCheckedIn] = useState(false);
 
   useEffect(() => {
     if (!code || sessionPending) return;
@@ -32,7 +33,10 @@ export function CheckInView() {
     checkIn.mutate(
       { code },
       {
-        onSuccess: () => setStatus("success"),
+        onSuccess: (data) => {
+          setAlreadyCheckedIn(!!(data as { alreadyCheckedIn?: boolean })?.alreadyCheckedIn);
+          setStatus("success");
+        },
         onError: (err: { message?: string }) => {
           setStatus("error");
           setErrorMsg(err?.message ?? "Check-in failed. Please try again.");
@@ -73,9 +77,11 @@ export function CheckInView() {
           <div className="mx-auto mb-2 flex size-12 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/20">
             <CheckCircle2 className="size-6 text-green-600 dark:text-green-400" />
           </div>
-          <CardTitle>Checked In!</CardTitle>
+          <CardTitle>{alreadyCheckedIn ? "Already Checked In" : "Checked In!"}</CardTitle>
           <CardDescription>
-            You have been marked as present. See you at the event!
+            {alreadyCheckedIn
+              ? "You were already checked in to this event. Your original check-in time has been kept."
+              : "You have been marked as present. See you at the event!"}
           </CardDescription>
         </CardHeader>
         <CardContent>

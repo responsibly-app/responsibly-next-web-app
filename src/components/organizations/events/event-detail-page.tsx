@@ -208,14 +208,14 @@ export function EventDetailPage({ eventId }: Props) {
       </Link>
 
       {/* Header */}
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex flex-col gap-3">
         <div className="flex items-start gap-3 min-w-0">
           <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-muted">
             <CalendarDays className="size-5 text-muted-foreground" />
           </div>
           <div className="min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
-              <h1 className="text-2xl font-semibold tracking-tight">{event.title}</h1>
+              <h1 className="text-xl font-semibold tracking-tight sm:text-2xl">{event.title}</h1>
               <Badge variant="secondary" className="text-xs">
                 {event.organizationName}
               </Badge>
@@ -236,7 +236,7 @@ export function EventDetailPage({ eventId }: Props) {
           </div>
         </div>
 
-        <div className="flex shrink-0 items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           {isAdmin && !editing && (
             <Button variant="outline" size="sm" onClick={startEdit}>
               <Pencil className="mr-1.5 size-3.5" />
@@ -273,14 +273,14 @@ export function EventDetailPage({ eventId }: Props) {
             {/* Event Type */}
             <div className="grid gap-2">
               <Label>Event Type</Label>
-              <div className="flex gap-2">
+              <div className="grid grid-cols-3 gap-2">
                 {EVENT_TYPE_OPTIONS.map(({ value, label, icon: Icon }) => (
                   <button
                     key={value}
                     type="button"
                     onClick={() => handleEventTypeChange(value)}
                     className={cn(
-                      "flex flex-1 items-center justify-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-medium transition-colors",
+                      "flex items-center justify-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-medium transition-colors",
                       eventType === value
                         ? "border-primary bg-primary text-primary-foreground"
                         : "border-input bg-background text-muted-foreground hover:border-foreground/30 hover:text-foreground",
@@ -311,14 +311,14 @@ export function EventDetailPage({ eventId }: Props) {
             {(eventType === "online" || eventType === "hybrid") && (
               <div className="grid gap-2">
                 <Label>Zoom Meeting</Label>
-                <div className="flex gap-2">
+                <div className="grid grid-cols-3 gap-2">
                   {ZOOM_OPTION_OPTIONS.map(({ value, label, icon: Icon }) => (
                     <button
                       key={value}
                       type="button"
                       onClick={() => setZoomOption(value)}
                       className={cn(
-                        "flex flex-1 items-center justify-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-medium transition-colors",
+                        "flex items-center justify-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-medium transition-colors",
                         zoomOption === value
                           ? "border-primary bg-primary text-primary-foreground"
                           : "border-input bg-background text-muted-foreground hover:border-foreground/30 hover:text-foreground",
@@ -466,12 +466,12 @@ export function EventDetailPage({ eventId }: Props) {
             </div>
 
             {/* Actions */}
-            <div className="flex justify-end gap-2 pt-1">
-              <Button variant="outline" onClick={cancelEdit} disabled={updateEvent.isPending}>
+            <div className="flex flex-col gap-2 pt-1 sm:flex-row sm:justify-end">
+              <Button variant="outline" onClick={cancelEdit} disabled={updateEvent.isPending} className="w-full sm:w-auto">
                 <X className="mr-1.5 size-3.5" />
                 Cancel
               </Button>
-              <Button onClick={handleSave} disabled={!canSave}>
+              <Button onClick={handleSave} disabled={!canSave} className="w-full sm:w-auto">
                 {updateEvent.isPending ? (
                   <Spinner className="mr-1.5 size-3.5" data-icon="inline-start" />
                 ) : (
