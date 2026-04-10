@@ -1,21 +1,43 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { format } from "date-fns";
-import { CalendarDays, ChevronRight, ClipboardList } from "lucide-react";
+import { CalendarDays, ChevronRight, ClipboardList, Settings2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useListEvents } from "@/lib/auth/hooks";
+import { useListEvents, useGetMemberRole } from "@/lib/auth/hooks";
+import { getPermissions } from "@/lib/auth/hooks/oraganization/access-control";
+import { OrgRole } from "@/lib/auth/hooks/oraganization/permissions";
+import { AttendanceSettingsDialog } from "./attendance-settings-dialog";
 import { routes } from "@/routes";
 
 type Props = { orgId: string };
 
 export function OrgAttendancePage({ orgId }: Props) {
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const { data: events = [], isPending } = useListEvents(orgId);
+  const { data: memberRoleData } = useGetMemberRole(orgId);
+  const currentRole = memberRoleData?.role as OrgRole | undefined;
+  const { canManage } = getPermissions(currentRole);
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-semibold tracking-tight">Attendance</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-semibold tracking-tight">Attendance</h1>
+        {canManage && (
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-2"
+            onClick={() => setSettingsOpen(true)}
+          >
+            <Settings2 className="size-4" />
+            Attendance Settings
+          </Button>
+        )}
+      </div>
 
       <Card>
         <CardContent className="p-0">
@@ -71,6 +93,12 @@ export function OrgAttendancePage({ orgId }: Props) {
           )}
         </CardContent>
       </Card>
+
+      <AttendanceSettingsDialog
+        open={settingsOpen}
+        onOpenChange={setSettingsOpen}
+        orgId={orgId}
+      />
     </div>
   );
 }

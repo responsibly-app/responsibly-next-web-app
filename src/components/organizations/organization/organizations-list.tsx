@@ -1,20 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
-import { Building2, Plus, MoreHorizontal, LogOut, Pencil, Trash2, Search } from "lucide-react";
+import { Building2, CheckCheck, LogOut, Pencil, Plus, Search, Trash2 } from "lucide-react";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -25,25 +13,22 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   useActiveOrganization,
-  useSetActiveOrganization,
   useDeleteOrganization,
   useLeaveOrganization,
   useListMyOrganizations,
+  useSetActiveOrganization,
 } from "@/lib/auth/hooks";
 import { getPermissions } from "@/lib/auth/hooks/oraganization/access-control";
+import { OrgRole, ROLE_META } from "@/lib/auth/hooks/oraganization/permissions";
 import { CreateOrganizationDialog } from "./create-organization-dialog";
 import { EditOrganizationDialog } from "./edit-organization-dialog";
-import { OrgRole, ROLE_META } from "@/lib/auth/hooks/oraganization/permissions";
 
 type OrgAction = { type: "leave" | "delete"; orgId: string; orgName: string } | null;
 type EditTarget = { id: string; name: string; slug: string } | null;
@@ -95,11 +80,13 @@ export function OrganizationsList() {
   }
 
   return (
-    <>
+    <TooltipProvider delayDuration={300}>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Organizations</h1>
-          <p className="text-muted-foreground mt-1 text-sm">Manage and switch between your organizations.</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Manage and switch between your organizations.
+          </p>
         </div>
         <Button className="shrink-0" onClick={() => setCreateOpen(true)}>
           <Plus className="mr-2 size-4" />
@@ -109,7 +96,7 @@ export function OrganizationsList() {
 
       <div className="flex items-center gap-3">
         <div className="relative flex-1">
-          <Search className="text-muted-foreground absolute left-3 top-1/2 size-4 -translate-y-1/2" />
+          <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             placeholder="Search organizations..."
             value={search}
@@ -117,7 +104,7 @@ export function OrganizationsList() {
             className="pl-9"
           />
         </div>
-        <div className="flex items-center rounded-2xl border p-1 gap-1">
+        <div className="flex items-center gap-1 rounded-2xl border p-1">
           <Button
             variant={ownerFilter === "all" ? "secondary" : "ghost"}
             size="sm"
@@ -140,14 +127,16 @@ export function OrganizationsList() {
       {isPending ? (
         <div className="space-y-3">
           {Array.from({ length: 3 }).map((_, i) => (
-            <Skeleton key={i} className="h-14 w-full rounded-md" />
+            <Skeleton key={i} className="h-16 w-full rounded-xl" />
           ))}
         </div>
       ) : !organizations || organizations.length === 0 ? (
         <div className="flex flex-col items-center justify-center rounded-xl border border-dashed py-16 text-center">
-          <Building2 className="text-muted-foreground mb-4 size-10" />
+          <Building2 className="mb-4 size-10 text-muted-foreground" />
           <p className="font-medium">No organizations yet</p>
-          <p className="text-muted-foreground mt-1 text-sm">Create your first organization to get started.</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Create your first organization to get started.
+          </p>
           <Button className="mt-4" onClick={() => setCreateOpen(true)}>
             <Plus className="mr-2 size-4" />
             New Organization
@@ -155,125 +144,159 @@ export function OrganizationsList() {
         </div>
       ) : filtered.length === 0 ? (
         <div className="flex flex-col items-center justify-center rounded-xl border border-dashed py-12 text-center">
-          <p className="text-muted-foreground text-sm">
+          <p className="text-sm text-muted-foreground">
             {ownerFilter === "mine"
               ? "You don't own any organizations matching your search."
               : "No organizations match your search."}
           </p>
         </div>
       ) : (
-        <div className="rounded-xl border overflow-auto">
-          <Table>
-            <TableHeader className="sticky top-0 z-10 bg-background">
-              <TableRow>
-                <TableHead>Organization</TableHead>
-                <TableHead>Role</TableHead>
-                <TableHead className="w-12" />
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filtered.map((org) => {
-                const isActive = activeOrg?.id === org.id;
-                const role = org.role as OrgRole;
-                const { canEditOrg, canDeleteOrg, canLeave } = getPermissions(role);
+        <div className="overflow-hidden rounded-xl border">
+          <div className="divide-y">
+            {filtered.map((org) => {
+              const isActive = activeOrg?.id === org.id;
+              const role = org.role as OrgRole;
+              const { canEditOrg, canDeleteOrg, canLeave } = getPermissions(role);
 
-                return (
-                  <TableRow key={org.id}>
-                    <TableCell>
-                      <Link
-                        href={`/dashboard/organizations/${org.id}`}
-                        className="flex items-center gap-3 hover:opacity-80"
-                      >
-                        {org.logo ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img src={org.logo} alt={org.name} className="size-8 rounded-md object-cover" />
-                        ) : (
-                          <div className="bg-muted flex size-8 items-center justify-center rounded-md">
-                            <Building2 className="text-muted-foreground size-4" />
-                          </div>
+              return (
+                <div
+                  key={org.id}
+                  className="flex items-center justify-between gap-3 px-4 py-3 sm:px-5 sm:py-4"
+                >
+                  {/* Left: logo + name + badges */}
+                  <div className="flex min-w-0 items-center gap-3">
+                    {org.logo ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={org.logo}
+                        alt={org.name}
+                        className="size-9 shrink-0 rounded-md object-cover"
+                      />
+                    ) : (
+                      <div className="flex size-9 shrink-0 items-center justify-center rounded-md bg-muted">
+                        <Building2 className="size-4 text-muted-foreground" />
+                      </div>
+                    )}
+                    <div className="min-w-0 leading-tight">
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <p className="truncate text-sm font-medium">{org.name}</p>
+                        {isActive && (
+                          <Badge variant="secondary" className="text-xs">
+                            Active
+                          </Badge>
                         )}
-                        <div className="leading-tight">
-                          <div className="flex items-center gap-2">
-                            <p className="text-sm font-medium">{org.name}</p>
-                            {isActive && (
-                              <Badge variant="secondary" className="text-xs">Active</Badge>
-                            )}
-                          </div>
-                          <p className="text-muted-foreground text-xs">/{org.slug}</p>
-                        </div>
-                      </Link>
-                    </TableCell>
-                    <TableCell>
-                      {role && (
-                        <Badge variant={roleBadgeVariant(role)}>
-                          {ROLE_META[role]?.label ?? role}
-                        </Badge>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center justify-end gap-2">
-                        {!isActive && (
+                        {role && (
+                          <Badge variant={roleBadgeVariant(role)} className="text-xs">
+                            {ROLE_META[role]?.label ?? role}
+                          </Badge>
+                        )}
+                      </div>
+                      <p className="truncate text-xs text-muted-foreground">/{org.slug}</p>
+                    </div>
+                  </div>
+
+                  {/* Right: actions */}
+                  <div className="flex shrink-0 items-center gap-1">
+                    {!isActive && (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
                           <Button
                             variant="outline"
                             size="sm"
+                            className="hidden h-8 text-xs sm:inline-flex"
                             disabled={setActive.isPending}
                             onClick={() => setActive.mutate(org.id)}
                           >
                             Set Active
                           </Button>
-                        )}
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="size-8">
-                              <MoreHorizontal className="size-4" />
-                              <span className="sr-only">Organization actions</span>
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            {canEditOrg && (
-                              <DropdownMenuItem
-                                onClick={() =>
-                                  setEditTarget({ id: org.id, name: org.name, slug: org.slug })
-                                }
-                              >
-                                <Pencil className="mr-2 size-4" />
-                                Edit Organization
-                              </DropdownMenuItem>
-                            )}
-                            {canDeleteOrg && (
-                              <>
-                                {canEditOrg && <DropdownMenuSeparator />}
-                                <DropdownMenuItem
-                                  className="text-destructive focus:text-destructive"
-                                  onClick={() =>
-                                    setPendingAction({ type: "delete", orgId: org.id, orgName: org.name })
-                                  }
-                                >
-                                  <Trash2 className="mr-2 size-4" />
-                                  Delete Organization
-                                </DropdownMenuItem>
-                              </>
-                            )}
-                            {canLeave && (
-                              <DropdownMenuItem
-                                className="text-destructive focus:text-destructive"
-                                onClick={() =>
-                                  setPendingAction({ type: "leave", orgId: org.id, orgName: org.name })
-                                }
-                              >
-                                <LogOut className="mr-2 size-4" />
-                                Leave Organization
-                              </DropdownMenuItem>
-                            )}
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
+                        </TooltipTrigger>
+                        <TooltipContent>Set as active organization</TooltipContent>
+                      </Tooltip>
+                    )}
+                    {!isActive && (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            className="size-8 sm:hidden"
+                            disabled={setActive.isPending}
+                            onClick={() => setActive.mutate(org.id)}
+                          >
+                            <CheckCheck className="size-4" />
+                            <span className="sr-only">Set Active</span>
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>Set as active organization</TooltipContent>
+                      </Tooltip>
+                    )}
+                    {canEditOrg && (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="size-8"
+                            onClick={() =>
+                              setEditTarget({ id: org.id, name: org.name, slug: org.slug })
+                            }
+                          >
+                            <Pencil className="size-4" />
+                            <span className="sr-only">Edit</span>
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>Edit organization</TooltipContent>
+                      </Tooltip>
+                    )}
+                    {canDeleteOrg && (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="size-8 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                            onClick={() =>
+                              setPendingAction({
+                                type: "delete",
+                                orgId: org.id,
+                                orgName: org.name,
+                              })
+                            }
+                          >
+                            <Trash2 className="size-4" />
+                            <span className="sr-only">Delete</span>
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>Delete organization</TooltipContent>
+                      </Tooltip>
+                    )}
+                    {canLeave && (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="size-8 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                            onClick={() =>
+                              setPendingAction({
+                                type: "leave",
+                                orgId: org.id,
+                                orgName: org.name,
+                              })
+                            }
+                          >
+                            <LogOut className="size-4" />
+                            <span className="sr-only">Leave</span>
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>Leave organization</TooltipContent>
+                      </Tooltip>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
       )}
 
@@ -286,7 +309,10 @@ export function OrganizationsList() {
         />
       )}
 
-      <AlertDialog open={!!pendingAction} onOpenChange={(open) => !open && setPendingAction(null)}>
+      <AlertDialog
+        open={!!pendingAction}
+        onOpenChange={(open) => !open && setPendingAction(null)}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
@@ -309,6 +335,6 @@ export function OrganizationsList() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </>
+    </TooltipProvider>
   );
 }

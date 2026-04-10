@@ -159,16 +159,24 @@ export function EventAttendancePage({ eventId, organizationId }: Props) {
   const showZoom = eventType === "online" || eventType === "hybrid";
   const showQR = !eventType || eventType === "in_person" || eventType === "hybrid";
 
-  // Stats — members with no record count as absent
+  // Stats — count by attendance source so a hybrid member (Zoom + in-person)
+  // contributes to both inPerson and online counts independently.
   const stats = useMemo(() => {
     const markedIds = new Set(attendanceRecords.map((r) => r.memberId));
     let inPerson = 0, online = 0, absent = 0, excused = 0;
     for (const r of attendanceRecords) {
-      const s = getDisplayStatus(r as AttendanceRecord);
-      if (s === "in_person") inPerson++;
-      else if (s === "online") online++;
-      else if (s === "excused") excused++;
-      else absent++;
+      if (r.status === "excused") {
+        excused++;
+      } else if (r.status === "present") {
+        const rec = r as AttendanceRecord;
+        const hasInPerson = !!(rec.inPersonQr || rec.inPersonManual);
+        const hasOnline = !!(rec.onlineZoom || rec.onlineManual);
+        if (hasInPerson) inPerson++;
+        if (hasOnline) online++;
+        if (!hasInPerson && !hasOnline) absent++;
+      } else {
+        absent++;
+      }
     }
     absent += members.filter((m) => !markedIds.has(m.id)).length;
     return { inPerson, online, absent, excused };
@@ -196,7 +204,13 @@ export function EventAttendancePage({ eventId, organizationId }: Props) {
         )
           return false;
         if (statusFilter === "all") return true;
-        return getDisplayStatus(attendanceMap.get(m.id)) === statusFilter;
+        const record = attendanceMap.get(m.id);
+        if (statusFilter === "absent") return !record || record.status === "absent";
+        if (statusFilter === "excused") return record?.status === "excused";
+        if (record?.status !== "present") return false;
+        if (statusFilter === "in_person") return !!(record.inPersonQr || record.inPersonManual);
+        if (statusFilter === "online") return !!(record.onlineZoom || record.onlineManual);
+        return false;
       })
       .sort((a, b) => (a.user?.name ?? "").localeCompare(b.user?.name ?? ""));
   }, [members, search, statusFilter, attendanceMap]);
@@ -282,12 +296,12 @@ export function EventAttendancePage({ eventId, organizationId }: Props) {
       {canManage && showQR && (
         <Card>
           <CardHeader className="pb-0 pt-4">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <CardTitle className="flex items-center gap-2 text-sm font-medium">
                 <QrCode className="size-4 text-muted-foreground" />
                 QR Attendance
               </CardTitle>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <Button
                   size="sm"
                   variant="outline"
@@ -564,7 +578,7 @@ function MemberControls({
   function onInPersonClick() {
     if (qrLocked) return;
     if (inPersonActive) {
-      onlineActive ? m("present", { inPersonManual: false }) : m("absent");
+      (zoomLocked || onlineActive) ? m("present", { inPersonManual: false }) : m("absent");
     } else {
       m("present", { inPersonManual: true });
     }
@@ -573,7 +587,7 @@ function MemberControls({
   function onOnlineClick() {
     if (zoomLocked) return;
     if (onlineActive) {
-      inPersonActive ? m("present", { onlineManual: false }) : m("absent");
+      (qrLocked || inPersonActive) ? m("present", { onlineManual: false }) : m("absent");
     } else {
       m("present", { onlineManual: true });
     }
