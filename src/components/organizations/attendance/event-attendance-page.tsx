@@ -514,12 +514,23 @@ export function EventAttendancePage({ eventId, organizationId }: Props) {
                           mark={(input) => markAttendance.mutate(input)}
                         />
                       ) : (
-                        <Badge
-                          variant="outline"
-                          className={cn("border", BADGE_CLASSES[displayStatus])}
-                        >
-                          {BADGE_LABELS[displayStatus]}
-                        </Badge>
+                        <div className="flex flex-wrap gap-1">
+                          {record?.status === "present" && (record.inPersonQr || record.inPersonManual) && (
+                            <Badge variant="outline" className={cn("border", BADGE_CLASSES.in_person)}>
+                              {BADGE_LABELS.in_person}
+                            </Badge>
+                          )}
+                          {record?.status === "present" && (record.onlineZoom || record.onlineManual) && (
+                            <Badge variant="outline" className={cn("border", BADGE_CLASSES.online)}>
+                              {BADGE_LABELS.online}
+                            </Badge>
+                          )}
+                          {(displayStatus === "absent" || displayStatus === "excused") && (
+                            <Badge variant="outline" className={cn("border", BADGE_CLASSES[displayStatus])}>
+                              {BADGE_LABELS[displayStatus]}
+                            </Badge>
+                          )}
+                        </div>
                       )}
                     </div>
                   </div>
