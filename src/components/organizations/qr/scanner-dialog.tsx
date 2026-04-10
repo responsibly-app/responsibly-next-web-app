@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Camera } from "lucide-react";
 import { toast } from "sonner";
+import { motion, AnimatePresence } from "framer-motion";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Spinner } from "@/components/ui/spinner";
 import { useScanMemberQR } from "@/lib/auth/hooks";
@@ -12,6 +13,12 @@ type Member = {
   userId: string;
   user: { name: string };
 };
+
+type ScanResult =
+  | { type: "success"; name: string }
+  | { type: "already"; name: string }
+  | { type: "error"; message: string }
+  | null;
 
 interface Props {
   open: boolean;
@@ -31,6 +38,8 @@ export function ScannerDialog({ open, onClose, eventId, organizationId, members 
   const eventIdRef = useRef(eventId);
   const organizationIdRef = useRef(organizationId);
   const lastScannedRef = useRef<string | null>(null);
+  // Tracks memberIds already processed this session — prevents duplicate API calls
+  const scannedMemberIdsRef = useRef<Set<string>>(new Set());
 
   useEffect(() => { membersRef.current = members; }, [members]);
   useEffect(() => { eventIdRef.current = eventId; }, [eventId]);
@@ -38,7 +47,7 @@ export function ScannerDialog({ open, onClose, eventId, organizationId, members 
 
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
-  const [scannedName, setScannedName] = useState<string | null>(null);
+  const [scanResult, setScanResult] = useState<ScanResult>(null);
 
   const scanMemberQR = useScanMemberQR();
   const scanMemberQRRef = useRef(scanMemberQR);
@@ -50,8 +59,9 @@ export function ScannerDialog({ open, onClose, eventId, organizationId, members 
 
     setCameraError(null);
     setReady(false);
-    setScannedName(null);
+    setScanResult(null);
     lastScannedRef.current = null;
+    scannedMemberIdsRef.current = new Set();
 
     if (typeof window === "undefined" || !("BarcodeDetector" in window)) {
       setCameraError("QR scanning is not supported in this browser. Use Chrome or Edge.");
@@ -95,14 +105,27 @@ export function ScannerDialog({ open, onClose, eventId, organizationId, members 
               }
 
               if (!found) {
-                toast.error("This user is not a member of this organization.");
-                setTimeout(() => { lastScannedRef.current = null; }, 2000);
+                setScanResult({ type: "error", message: "Not a member of this organization" });
+                setTimeout(() => {
+                  lastScannedRef.current = null;
+                  setScanResult(null);
+                }, 2500);
                 return;
               }
 
               const memberId = found.id;
 
-              setScannedName(found.user.name);
+              // Already scanned this session — skip duplicate API call
+              if (scannedMemberIdsRef.current.has(memberId)) {
+                setScanResult({ type: "already", name: found.user.name });
+                setTimeout(() => {
+                  lastScannedRef.current = null;
+                  setScanResult(null);
+                }, 2500);
+                return;
+              }
+
+              setScanResult({ type: "success", name: found.user.name });
               scanMemberQRRef.current.mutate(
                 {
                   eventId: eventIdRef.current,
@@ -111,18 +134,20 @@ export function ScannerDialog({ open, onClose, eventId, organizationId, members 
                 },
                 {
                   onSuccess: () => {
-                    toast.success(`${found.user.name} marked present via QR.`);
+                    scannedMemberIdsRef.current.add(memberId);
+                    toast.success(`${found!.user.name} marked present via QR.`);
                     setTimeout(() => {
                       lastScannedRef.current = null;
-                      setScannedName(null);
+                      setScanResult(null);
                     }, 3000);
                   },
                   onError: (err: { message?: string }) => {
+                    setScanResult({ type: "error", message: err?.message ?? "Failed to mark attendance." });
                     toast.error(err?.message ?? "Failed to mark attendance.");
                     setTimeout(() => {
                       lastScannedRef.current = null;
-                      setScannedName(null);
-                    }, 2000);
+                      setScanResult(null);
+                    }, 2500);
                   },
                 },
               );
@@ -167,9 +192,74 @@ export function ScannerDialog({ open, onClose, eventId, organizationId, members 
                 style={{ width: 280, height: 280 }}
               >
                 <video ref={videoRef} muted playsInline className="size-full object-cover" />
+                {/* QR frame guide */}
                 <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
                   <div className="size-40 rounded-lg border-2 border-white/60" />
                 </div>
+                {/* Scan result overlay */}
+                <AnimatePresence>
+                  {scanResult && (
+                    <motion.div
+                      key={scanResult.type}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.2 }}
+                      className={`absolute inset-0 flex flex-col items-center justify-center gap-4 ${
+                        scanResult.type === "error" ? "bg-red-500/85" : "bg-emerald-500/85"
+                      }`}
+                    >
+                      <motion.div
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        exit={{ scale: 0 }}
+                        transition={{ type: "spring", stiffness: 320, damping: 22, delay: 0.05 }}
+                      >
+                        {scanResult.type === "error" ? (
+                          <svg
+                            viewBox="0 0 24 24"
+                            className="size-24 text-white drop-shadow-lg"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth={1.75}
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <circle cx="12" cy="12" r="10" />
+                            <line x1="15" y1="9" x2="9" y2="15" />
+                            <line x1="9" y1="9" x2="15" y2="15" />
+                          </svg>
+                        ) : (
+                          <svg
+                            viewBox="0 0 24 24"
+                            className="size-24 text-white drop-shadow-lg"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth={1.75}
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <circle cx="12" cy="12" r="10" />
+                            <polyline points="8.5 12 11 14.5 15.5 9.5" />
+                          </svg>
+                        )}
+                      </motion.div>
+                      <motion.p
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ delay: 0.18, duration: 0.2 }}
+                        className="max-w-55 text-center text-sm font-semibold leading-snug text-white drop-shadow"
+                      >
+                        {scanResult.type === "error"
+                          ? scanResult.message
+                          : scanResult.type === "already"
+                          ? `${scanResult.name} — already checked in`
+                          : `${scanResult.name} — marked present`}
+                      </motion.p>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
                 {!ready && (
                   <div className="absolute inset-0 flex items-center justify-center bg-black/50">
                     <Spinner className="size-6 text-white" />
@@ -179,11 +269,6 @@ export function ScannerDialog({ open, onClose, eventId, organizationId, members 
               <p className="text-center text-xs text-muted-foreground">
                 Point the camera at a member&apos;s QR code to mark them present.
               </p>
-              {scannedName && (
-                <p className="text-xs font-medium text-emerald-600 dark:text-emerald-400">
-                  ✓ {scannedName} — recording attendance…
-                </p>
-              )}
             </>
           )}
         </div>

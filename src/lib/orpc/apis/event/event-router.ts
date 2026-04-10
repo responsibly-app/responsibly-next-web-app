@@ -664,8 +664,9 @@ export const eventRouter = {
           target: [eventAttendance.eventId, eventAttendance.memberId],
           set: {
             status: "present",
-            qrCheckedInAt: now,
             inPersonQr: true,
+            // Preserve the original scan time — COALESCE keeps it if already set
+            qrCheckedInAt: sql`COALESCE(event_attendance.qr_checked_in_at, EXCLUDED.qr_checked_in_at)`,
           },
         });
 

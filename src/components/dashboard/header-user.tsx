@@ -19,7 +19,7 @@ import { LogOutIcon, QrCode, SettingsIcon } from "lucide-react";
 import Link from "next/link";
 import { getInitials } from "@/lib/utils/user";
 import { routes } from "@/routes";
-import { UserQRDialog } from "./user-qr-dialog";
+import { UserQRDialog } from "../organizations/qr/user-qr-dialog";
 
 export interface NavUserType {
   id: string;

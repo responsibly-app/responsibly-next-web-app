@@ -38,8 +38,8 @@ import { OrgRole } from "@/lib/auth/hooks/oraganization/permissions";
 import { routes } from "@/routes";
 import { cn } from "@/lib/utils";
 import { EventQRCode } from "@/components/organizations/events/event-qr-code";
-import { MemberQRDialog } from "./member-qr-dialog";
-import { ScannerDialog } from "./scanner-dialog";
+import { MemberQRDialog } from "../qr/member-qr-dialog";
+import { ScannerDialog } from "../qr/scanner-dialog";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
