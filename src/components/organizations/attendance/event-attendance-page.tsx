@@ -297,23 +297,23 @@ export function EventAttendancePage({ eventId, organizationId }: Props) {
         <Card>
           <CardHeader className="pb-0 pt-4">
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-              <CardTitle className="flex items-center gap-2 text-sm font-medium">
-                <QrCode className="size-4 text-muted-foreground" />
+              <CardTitle className="flex items-center gap-2 text-lg font-medium">
+                <QrCode className="size-10 text-muted-foreground" />
                 QR Attendance
               </CardTitle>
               <div className="flex flex-wrap items-center gap-2">
                 <Button
-                  size="sm"
-                  variant="outline"
-                  className="h-7 gap-1.5 text-xs"
+                  variant="default"
+                  className="gap-1.5"
                   onClick={() => setScannerOpen(true)}
                 >
-                  <Camera className="size-3.5" />
-                  Scan Member
+                  <Camera className="size-4" />
+                  Scan Member QR
                 </Button>
-                <button
+                <Button
+                  variant="outline"
                   onClick={() => setQrPanelOpen((v) => !v)}
-                  className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                  className="flex items-center gap-1"
                 >
                   {qrPanelOpen ? (
                     <ChevronUp className="size-4" />
@@ -321,7 +321,7 @@ export function EventAttendancePage({ eventId, organizationId }: Props) {
                     <ChevronDown className="size-4" />
                   )}
                   {qrPanelOpen ? "Hide" : "Show"} Event QR
-                </button>
+                </Button>
               </div>
             </div>
           </CardHeader>
