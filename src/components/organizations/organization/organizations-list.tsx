@@ -320,7 +320,7 @@ export function OrganizationsList() {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
-              {pendingAction?.type === "delete" ? "Delete Organization" : "Leave Organization"}
+              {pendingAction?.type === "delete" ? "Delete Organization?" : "Leave Organization?"}
             </AlertDialogTitle>
             <AlertDialogDescription>
               {pendingAction?.type === "delete"
@@ -352,7 +352,8 @@ export function OrganizationsList() {
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90 focus-visible:ring-destructive disabled:opacity-50"
+              variant="destructive"
+              className="focus-visible:ring-destructive disabled:opacity-50"
               onClick={handleConfirm}
               disabled={
                 confirmInput !== (
@@ -362,7 +363,7 @@ export function OrganizationsList() {
                 )
               }
             >
-              {pendingAction?.type === "delete" ? "Delete" : "Leave"}
+              {pendingAction?.type === "delete" ? "Yes, delete" : "Yes, leave"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

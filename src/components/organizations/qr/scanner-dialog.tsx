@@ -322,9 +322,9 @@ export function ScannerDialog({ open, onClose, eventId, organizationId, members 
                         transition={{ type: "spring", stiffness: 300, damping: 22, delay: 0.05 }}
                         className="flex flex-col items-center gap-2"
                       >
-                        <Avatar className="size-16 ring-2 ring-white/30">
+                        <Avatar className="size-30 ring-2 ring-white/30">
                           <AvatarImage src={pendingMember.user.image ?? undefined} />
-                          <AvatarFallback className="text-lg font-semibold">
+                          <AvatarFallback className="text-xl font-semibold">
                             {pendingMember.user.name
                               .split(" ")
                               .map((w) => w[0])
@@ -336,7 +336,7 @@ export function ScannerDialog({ open, onClose, eventId, organizationId, members 
                         <p className="text-center text-sm font-semibold leading-tight text-white drop-shadow">
                           {pendingMember.user.name}
                         </p>
-                        <p className="text-xs text-white/60">Confirm this identity?</p>
+                        <p className="text-xs text-white/60">Confirm identity?</p>
                       </motion.div>
                       <motion.div
                         initial={{ opacity: 0, y: 6 }}
@@ -346,16 +346,16 @@ export function ScannerDialog({ open, onClose, eventId, organizationId, members 
                         className="flex gap-2"
                       >
                         <Button
-                          size="sm"
+                          size="default"
                           variant="outline"
-                          className="h-8 border-white/30 bg-white/10 px-3 text-xs text-white hover:bg-white/20"
+                          className="border-white/30 bg-white/10 px-3 text-default text-white hover:bg-white/20"
                           onClick={handleCancelConfirm}
                         >
                           Cancel
                         </Button>
                         <Button
-                          size="sm"
-                          className="h-8 bg-emerald-500 px-3 text-xs text-white hover:bg-emerald-600"
+                          size="default"
+                          className="bg-emerald-500 px-3 text-default text-white hover:bg-emerald-600"
                           onClick={handleConfirm}
                         >
                           Confirm Presence
