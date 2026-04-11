@@ -9,6 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { useScanMemberQR } from "@/lib/auth/hooks";
+import { proxiedAvatarUrl } from "@/lib/utils/image";
 
 type Member = {
   id: string;
@@ -323,7 +324,7 @@ export function ScannerDialog({ open, onClose, eventId, organizationId, members 
                         className="flex flex-col items-center gap-2"
                       >
                         <Avatar className="size-30 ring-2 ring-white/30">
-                          <AvatarImage src={pendingMember.user.image ?? undefined} />
+                          <AvatarImage src={proxiedAvatarUrl(pendingMember.user.image)} />
                           <AvatarFallback className="text-xl font-semibold">
                             {pendingMember.user.name
                               .split(" ")

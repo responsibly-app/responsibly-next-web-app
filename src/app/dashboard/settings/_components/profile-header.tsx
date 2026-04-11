@@ -66,7 +66,7 @@ export function ProfileHeader() {
   const uploadAvatar = useUploadAvatar();
   const deleteAvatar = useDeleteAvatar();
 
-  const displayAvatar = previewUrl ?? (user?.image ? proxiedAvatarUrl(user.image) : undefined);
+  const displayAvatar = previewUrl ?? proxiedAvatarUrl(user?.image);
   const initials = getInitials(user?.name || user?.email || "User");
   const memberSince = user?.createdAt ? format(new Date(user.createdAt), "MMMM yyyy") : null;
 
