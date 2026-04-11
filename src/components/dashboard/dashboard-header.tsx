@@ -13,6 +13,7 @@ import { HeaderUserDropdown } from "./header-user";
 import { NavUserType } from "./nav-user";
 // import { CommandMenu } from "./command-menu";
 import { authClient } from "@/lib/auth/auth-client";
+import { routes } from "@/routes";
 
 export function DasboardHeader() {
   const {
@@ -48,7 +49,7 @@ export function DasboardHeader() {
         <div className="ml-auto flex items-center gap-2">
           <Button variant="ghost" asChild size="sm" className="hidden sm:flex">
             <Link
-              href=""
+              href={routes.landing.root()}
               rel="noopener noreferrer"
               target="_blank"
               className="dark:text-foreground"

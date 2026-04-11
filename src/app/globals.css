@@ -92,7 +92,7 @@
   --popover-foreground: oklch(0.985 0 0);
   /* --primary: oklch(0.424 0.199 265.638); */
   --primary: oklch(0.5598 0.1882 266.4);
-    --primary-foreground: oklch(0.97 0.014 254.604);
+  --primary-foreground: oklch(0.97 0.014 254.604);
   --secondary: oklch(0.274 0.006 286.033);
   --secondary-foreground: oklch(0.985 0 0);
   --muted: oklch(0.269 0 0);
@@ -122,17 +122,32 @@
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground;
   }
+
   html {
     @apply font-sans;
+    scroll-behavior: smooth;
   }
 }
 
 @keyframes pulse {
   50% {
     opacity: 0.5;
+  }
+}
+
+@keyframes float {
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-12px);
   }
 }
 

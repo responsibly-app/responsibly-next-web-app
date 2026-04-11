@@ -26,6 +26,7 @@ import { SubmitEvent, useState } from "react";
 import { z } from "zod";
 
 import { authClassNames, AuthContainer } from "./auth-layout";
+import { AuthTermsFooter } from "./auth-terms-footer";
 import { MagicLinkButton } from "./magic-link-button";
 import { GoogleLoginButton } from "./google-login-button";
 
@@ -111,7 +112,6 @@ export function SignUpForm() {
           );
         },
         onError: (err: any) => {
-          const code = err?.code as string | undefined;
           const message = err?.message as string | undefined;
 
           setFormError(message ?? "Unable to sign up. Please try again.");
@@ -259,6 +259,8 @@ export function SignUpForm() {
                   Already have an account?{" "}
                   <Link href={routes.auth.signIn()}>Sign in</Link>
                 </FieldDescription>
+
+                <AuthTermsFooter action="creating an account" />
               </Field>
             </FieldGroup>
           </form>

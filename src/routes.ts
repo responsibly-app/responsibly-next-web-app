@@ -31,4 +31,9 @@ export const routes = {
     deleteAccount: () => "/auth/delete-account", // used only if sendDeleteAccountVerification is provided in auth.ts
   },
   checkIn: (code?: string) => `/check-in${code ? `?code=${encodeURIComponent(code)}` : ''}`,
+  landing: {
+    root: () => "/",
+    privacy: () => "/privacy",
+    terms: () => "/terms",
+  }
 };

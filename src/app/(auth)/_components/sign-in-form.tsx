@@ -20,6 +20,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { z } from "zod";
 import { authClassNames, AuthContainer } from "./auth-layout";
+import { AuthTermsFooter } from "./auth-terms-footer";
 import { MagicLinkButton } from "./magic-link-button";
 import { GoogleLoginButton } from "./google-login-button";
 
@@ -173,6 +174,8 @@ export function LoginForm() {
                   Don&apos;t have an account?{" "}
                   <Link href={routes.auth.signUp()}>Sign up</Link>
                 </FieldDescription>
+
+                <AuthTermsFooter action="signing in" />
               </Field>
             </FieldGroup>
           </form>
