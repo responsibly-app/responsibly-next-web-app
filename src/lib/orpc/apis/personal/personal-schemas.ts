@@ -59,3 +59,16 @@ export const PointsLeaderboardEntrySchema = z.object({
 });
 
 export const GetPointsLeaderboardOutputSchema = z.array(PointsLeaderboardEntrySchema);
+
+// ---- Member data (admin/org-member views) ----
+
+export const GetMemberInviteHistoryInputSchema = z.object({
+  organizationId: z.string(),
+  targetUserId: z.string(),
+  days: z.number().int().min(1).max(365).optional().default(90),
+});
+
+export const GetMemberPointsInputSchema = z.object({
+  organizationId: z.string(),
+  targetUserId: z.string(),
+});

@@ -9,6 +9,15 @@ export function useGetInviteHistory(days = 90) {
   );
 }
 
+export function useGetMemberInviteHistory(organizationId: string, targetUserId: string, days = 90) {
+  return useQuery(
+    orpcTQUtils.personal.invites.getMemberHistory.queryOptions({
+      input: { organizationId, targetUserId, days },
+      enabled: !!organizationId && !!targetUserId,
+    }),
+  );
+}
+
 export function useLogInvites() {
   const queryClient = useQueryClient();
   return useMutation({

@@ -11,7 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Flame } from "lucide-react";
 import Link from "next/link";
 import { routes } from "@/routes";
-import { InviteGoalBar, useInviteGoal } from "@/components/dashboard/invites/invite-goal-bar";
+import { InviteGoalBar, GoalPopoverButton, useInviteGoal } from "@/components/dashboard/invites/invite-goal-bar";
 import { localDateStr } from "@/lib/utils/timezone";
 
 function greeting(hour: number): string {
@@ -53,7 +53,7 @@ function InviteStreakPreview() {
   const { data: session } = authClient.useSession();
   const timezone = session?.user?.timezone ?? "UTC";
   const { data: history = [] } = useGetInviteHistory(90);
-  const { goal } = useInviteGoal();
+  const { goal, setGoal } = useInviteGoal();
 
   const today = localDateStr(timezone);
   const todayCount = history.find((h) => h.date === today)?.count ?? 0;
@@ -61,10 +61,13 @@ function InviteStreakPreview() {
   return (
     <Card>
       <CardHeader className="pb-3">
-        <CardTitle className="flex items-center gap-2 text-base">
-          <Flame className="size-4 text-orange-500" />
-          Invite Streak
-        </CardTitle>
+        <div className="flex items-center justify-between gap-2">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Flame className="size-4 text-orange-500" />
+            Invite Streak
+          </CardTitle>
+          <GoalPopoverButton goal={goal} setGoal={setGoal} />
+        </div>
       </CardHeader>
       <CardContent className="space-y-4">
         <InviteStreakGrid data={history} timezone={timezone} />

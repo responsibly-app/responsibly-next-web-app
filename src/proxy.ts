@@ -16,8 +16,9 @@ export default async function proxy(req: NextRequest) {
   const isOnSignin = pathname.startsWith(routes.auth.signIn());
   const isOnGoodbye = pathname.startsWith(routes.auth.goodbye());
   const isOnDeleteAccount = pathname.startsWith(routes.auth.deleteAccount());
+  const isOnCheckIn = pathname.startsWith(routes.checkIn());
 
-  const isOnAuthRequiredPages = isOnDashboard || isOnDeleteAccount || isOnAdmin;
+  const isOnAuthRequiredPages = isOnDashboard || isOnDeleteAccount || isOnAdmin || isOnCheckIn;
   const isOnAuthRestrictedPages = isOnSignin || isOnGoodbye;
 
   // Root path: redirect to dashboard if logged in, otherwise to sign-in

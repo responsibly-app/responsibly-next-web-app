@@ -7,6 +7,7 @@ import { authed } from "@/lib/orpc/base";
 import {
   AddPointItemInputSchema,
   DeletePointItemInputSchema,
+  GetMemberPointsInputSchema,
   GetPointsLeaderboardInputSchema,
   GetPointsLeaderboardOutputSchema,
   ListPointItemsOutputSchema,
@@ -78,6 +79,25 @@ export const pointsRouter = {
         .delete(pointItem)
         .where(and(eq(pointItem.id, input.id), eq(pointItem.userId, userId)));
       return { success: true };
+    }),
+
+  getMemberPoints: authed
+    .route({
+      method: "GET",
+      path: "/personal/points/member-points",
+      summary: "Get all point items for a specific org member (org members only)",
+      tags: ["Personal"],
+    })
+    .input(GetMemberPointsInputSchema)
+    .output(ListPointItemsOutputSchema)
+    .handler(async ({ input, context }) => {
+      await requireOrgMember(input.organizationId, context.session.user.id);
+
+      return db
+        .select()
+        .from(pointItem)
+        .where(eq(pointItem.userId, input.targetUserId))
+        .orderBy(desc(pointItem.date), desc(pointItem.createdAt));
     }),
 
   getOrgLeaderboard: authed

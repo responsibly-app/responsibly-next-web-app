@@ -34,6 +34,15 @@ export function useDeletePointItem() {
   });
 }
 
+export function useGetMemberPoints(organizationId: string, targetUserId: string) {
+  return useQuery(
+    orpcTQUtils.personal.points.getMemberPoints.queryOptions({
+      input: { organizationId, targetUserId },
+      enabled: !!organizationId && !!targetUserId,
+    }),
+  );
+}
+
 export function useGetPointsLeaderboard(
   organizationId: string,
   startDate?: string,

@@ -25,7 +25,7 @@ export function CheckInView() {
     if (!code || sessionPending) return;
     if (!session) {
       // Redirect to sign-in, return here after
-      router.push(routes.auth.signIn(`/check-in?code=${encodeURIComponent(code)}`));
+      router.push(routes.auth.signIn(routes.checkIn(code)));
       return;
     }
     if (status !== "idle") return;

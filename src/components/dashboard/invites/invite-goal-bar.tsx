@@ -1,8 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Target } from "lucide-react";
+import { Target, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 // ── Hook ─────────────────────────────────────────────────────────────────────
 
@@ -50,6 +54,74 @@ export function goalMotivationText(current: number, goal: number): { text: strin
   if (left <= Math.ceil(goal * 0.15)) return { text: `${left} more — almost there!`, good: false };
   if (current / goal >= 0.5) return { text: `${left} more to go — keep it up!`, good: false };
   return { text: `${left} more to go — you got this!`, good: false };
+}
+
+// ── GoalPopoverButton ─────────────────────────────────────────────────────────
+
+interface GoalPopoverButtonProps {
+  goal: number | null;
+  setGoal: (value: number | null) => void;
+}
+
+export function GoalPopoverButton({ goal, setGoal }: GoalPopoverButtonProps) {
+  const [open, setOpen] = useState(false);
+  const [input, setInput] = useState("");
+
+  useEffect(() => {
+    if (open) setInput(goal !== null ? String(goal) : "");
+  }, [open, goal]);
+
+  function handleSave() {
+    const n = parseInt(input, 10);
+    if (!isNaN(n) && n > 0) {
+      setGoal(n);
+      setOpen(false);
+    }
+  }
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button variant="outline" size="sm" className="flex shrink-0 items-center gap-1.5 text-xs">
+          <Target className="size-3.5" />
+          {goal !== null ? `Goal: ${goal}` : "Set daily goal"}
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-52 p-3" align="end">
+        <div className="space-y-2.5">
+          <Label className="text-xs font-medium">Daily invite goal</Label>
+          <div className="flex gap-1.5">
+            <Input
+              type="number"
+              min={1}
+              max={999}
+              placeholder="e.g. 5"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleSave()}
+              className="h-8 text-sm"
+              autoFocus
+            />
+            <Button size="sm" className="h-8 px-2.5" onClick={handleSave} disabled={!input}>
+              <Check className="size-3.5" />
+            </Button>
+          </div>
+          {goal !== null && (
+            <button
+              onClick={() => {
+                setGoal(null);
+                setInput("");
+                setOpen(false);
+              }}
+              className="text-[11px] text-muted-foreground transition-colors hover:text-destructive"
+            >
+              Clear goal
+            </button>
+          )}
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
