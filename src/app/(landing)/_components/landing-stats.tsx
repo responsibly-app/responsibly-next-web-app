@@ -1,6 +1,6 @@
 const stats = [
-    { value: "240+", label: "Agencies onboarded", sub: "across North America & Europe" },
-    { value: "18k+", label: "Advisors motivated", sub: "earning XP every day" },
+    { value: "10+", label: "Agencies onboarded", sub: "across North America & Europe" },
+    { value: "1k+", label: "Advisors motivated", sub: "earning XP every day" },
     { value: "94%", label: "Goal consistency rate", sub: "vs. 61% industry average" },
     { value: "3.2×", label: "Performance lift", sub: "average in first 90 days" },
 ];

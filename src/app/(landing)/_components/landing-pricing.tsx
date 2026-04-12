@@ -19,7 +19,7 @@ const plans = [
     },
     {
         name: "Agency",
-        price: "$49",
+        price: "$", // 49
         period: "/month",
         badge: "Most popular",
         description: "For growing agencies serious about advisor performance and retention.",
