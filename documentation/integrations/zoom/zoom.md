@@ -1,4 +1,6 @@
 Docs: `https://developers.zoom.us/docs/build-flow/app-listing/links/`
+Marketplace: `https://marketplace.zoom.us/`
+
 ---
 ### App Name:
 -> Responsibly
