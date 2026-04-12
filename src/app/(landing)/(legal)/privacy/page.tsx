@@ -108,8 +108,8 @@ export default function PrivacyPage() {
                     </ul>
                     <p className="text-sm leading-7">
                         To exercise any of these rights, contact us at{" "}
-                        <a href="mailto:hello@responsibly.app" className="text-primary underline underline-offset-2 hover:brightness-110">
-                            hello@responsibly.app
+                        <a href={`mailto:${contactEmail}`} className="text-primary underline underline-offset-2 hover:brightness-110">
+                            {contactEmail}
                         </a>. We will respond within 30 days.
                     </p>
                 </section>

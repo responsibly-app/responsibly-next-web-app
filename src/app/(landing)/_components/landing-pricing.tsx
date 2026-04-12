@@ -1,4 +1,5 @@
 import { Check } from "lucide-react";
+import { contactEmail, startRoute } from "../config";
 
 const plans = [
     {
@@ -82,11 +83,10 @@ export function LandingPricing() {
                     {plans.map((plan) => (
                         <div
                             key={plan.name}
-                            className={`relative flex flex-col overflow-hidden rounded-2xl border transition duration-300 hover:-translate-y-1 ${
-                                plan.featured
+                            className={`relative flex flex-col overflow-hidden rounded-2xl border transition duration-300 hover:-translate-y-1 ${plan.featured
                                     ? "border-primary/40 bg-primary shadow-2xl shadow-primary/20"
                                     : "border-border/60 bg-card/40 hover:border-border hover:shadow-xl hover:shadow-slate-950/5"
-                            }`}
+                                }`}
                         >
                             <div className="flex flex-col flex-1 p-8">
                                 {/* Badge */}
@@ -121,11 +121,10 @@ export function LandingPricing() {
                                     {plan.features.map((feature) => (
                                         <li key={feature} className="flex items-start gap-3">
                                             <span
-                                                className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full ${
-                                                    plan.featured
+                                                className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full ${plan.featured
                                                         ? "bg-white/20 text-white"
                                                         : "bg-primary/15 text-primary"
-                                                }`}
+                                                    }`}
                                             >
                                                 <Check className="h-3 w-3" />
                                             </span>
@@ -138,12 +137,11 @@ export function LandingPricing() {
 
                                 {/* CTA */}
                                 <a
-                                    href={plan.name === "Enterprise" ? "mailto:hello@responsibly.app" : "/auth"}
-                                    className={`mt-8 inline-flex w-full items-center justify-center rounded-full px-5 py-3 text-sm font-semibold transition ${
-                                        plan.featured
+                                    href={plan.name === "Enterprise" ? `mailto:${contactEmail}` : startRoute}
+                                    className={`mt-8 inline-flex w-full items-center justify-center rounded-full px-5 py-3 text-sm font-semibold transition ${plan.featured
                                             ? "bg-white text-primary hover:bg-white/90"
                                             : "bg-primary text-primary-foreground hover:brightness-110 shadow-md shadow-primary/20"
-                                    }`}
+                                        }`}
                                 >
                                     {plan.cta}
                                 </a>

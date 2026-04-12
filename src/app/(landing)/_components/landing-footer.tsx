@@ -14,7 +14,7 @@ const footerLinks = [
     {
         heading: "Company",
         links: [
-            { label: "Contact", href: "mailto:hello@responsibly.app" },
+            { label: "Contact", href: `mailto:${contactEmail}` },
         ],
     },
     {
