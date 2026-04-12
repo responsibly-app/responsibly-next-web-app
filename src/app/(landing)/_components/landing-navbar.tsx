@@ -47,8 +47,8 @@ export function LandingNavbar() {
             <div className="px-4 pt-4 transition-all duration-300">
                 <div
                     className={`mx-auto flex max-w-7xl items-center justify-between px-5 py-3.5 rounded-full border transition-all duration-500 ${scrolled
-                            ? "bg-background/50 backdrop-blur-2xl border-border/50 shadow-md"
-                            : "bg-background/30 backdrop-blur-xl border-white/10 shadow-sm shadow-slate-900/5"
+                            ? "bg-background/50 backdrop-blur-lg border-border/70 shadow-md"
+                            : "bg-background/30 backdrop-blur-lg border-white/10 shadow-sm shadow-slate-900/5"
                         }`}
                 >
                     {/* Logo */}
