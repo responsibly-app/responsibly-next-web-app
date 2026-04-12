@@ -11,6 +11,8 @@ export function AuthTermsFooter({ action }: AuthTermsFooterProps) {
       By {action}, you agree to our{" "}
       <Link
         href={routes.landing.terms()}
+        target="_blank"
+        rel="noopener noreferrer"
         className="underline underline-offset-4 hover:text-foreground transition-colors"
       >
         Terms of Service
@@ -18,6 +20,8 @@ export function AuthTermsFooter({ action }: AuthTermsFooterProps) {
       and{" "}
       <Link
         href={routes.landing.privacy()}
+        target="_blank"
+        rel="noopener noreferrer"
         className="underline underline-offset-4 hover:text-foreground transition-colors"
       >
         Privacy Policy

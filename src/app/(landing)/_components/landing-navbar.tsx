@@ -4,7 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Menu, X } from "lucide-react";
 import { LandingThemeSwitch } from "./landing-theme-toggle";
-import { appName, signInRoute, startRoute } from "../config";
+import { Logo } from "./logo";
+import { signInRoute, startRoute } from "../config";
 
 const navLinks = [
     { href: "#how-it-works", label: "How it works" },
@@ -46,24 +47,12 @@ export function LandingNavbar() {
             <div className="px-4 pt-4 transition-all duration-300">
                 <div
                     className={`mx-auto flex max-w-7xl items-center justify-between px-5 py-3.5 rounded-full border transition-all duration-500 ${scrolled
-                            ? "bg-background/85 backdrop-blur-2xl border-border/50 shadow-md"
+                            ? "bg-background/50 backdrop-blur-2xl border-border/50 shadow-md"
                             : "bg-background/30 backdrop-blur-xl border-white/10 shadow-sm shadow-slate-900/5"
                         }`}
                 >
                     {/* Logo */}
-                    <Link href="/" className="flex items-center gap-2.5 group">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                            src="/logo.png"
-                            alt={appName}
-                            width={32}
-                            height={32}
-                            className="rounded-lg"
-                        />
-                        <span className="text-base font-bold tracking-tight text-foreground">
-                            {appName}
-                        </span>
-                    </Link>
+                    <Logo />
 
                     {/* Desktop nav */}
                     <nav className="hidden md:flex items-center gap-1">

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Zap } from "lucide-react";
+import { Logo } from "./logo";
 import { appName, contactEmail } from "../config";
 
 const footerLinks = [
@@ -33,25 +33,7 @@ export function LandingFooter() {
                 <div className="grid gap-12 sm:grid-cols-2 lg:grid-cols-4">
                     {/* Brand */}
                     <div className="space-y-4">
-                        <div className="flex items-center gap-2.5">
-                            {/* <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary shadow-md shadow-primary/30">
-                                <Zap className="h-4 w-4 text-primary-foreground" />
-                            </div>
-                            <span className="text-base font-bold tracking-tight text-foreground">{appName}</span> */}
-                            <Link href="/" className="flex items-center gap-2.5 group">
-                                {/* eslint-disable-next-line @next/next/no-img-element */}
-                                <img
-                                    src="/logo.png"
-                                    alt={appName}
-                                    width={32}
-                                    height={32}
-                                    className="rounded-lg"
-                                />
-                                <span className="text-base font-bold tracking-tight text-foreground">
-                                    {appName}
-                                </span>
-                            </Link>
-                        </div>
+                        <Logo />
                         <p className="max-w-xs text-sm leading-7 text-muted-foreground">
                             Gamified accountability for financial agencies. Keep every advisor motivated, consistent, and performing at their best.
                         </p>
