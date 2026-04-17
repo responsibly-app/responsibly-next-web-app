@@ -23,8 +23,8 @@ export const config: { [env: string]: configItem } = {
     },
     prod: {
         app_name: appName,
-        backend_base_url: "https://responsibly.vercel.app",
-        landing_page_url: "https://responsibly.vercel.app",
+        backend_base_url: "https://responsibly.work",
+        landing_page_url: "https://responsibly.work",
     },
     local: {
         app_name: appName,
