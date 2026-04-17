@@ -24,27 +24,27 @@ help: `Describe the specific features and functionality of your app and your com
 `https://developers.zoom.us/docs/build-flow/app-listing/add-your-app/`
 ### Direct Landing URL:
 help: `Provide a URL link to add the app from the app's landing page.`
--> https://responsibly.vercel.app/dashboard/integrations/zoom
+-> https://responsibly.work/dashboard/integrations/zoom
 
 ---
 ### Privacy Policy URL:
 `https://developers.zoom.us/docs/build-flow/app-listing/links/#privacy-policy-url`
--> https://responsibly.vercel.app/privacy
+-> https://responsibly.work/privacy
 
 ---
 ### Terms of Use URL
 `https://developers.zoom.us/docs/build-flow/app-listing/links/#terms-of-use-url`
--> https://responsibly.vercel.app/terms
+-> https://responsibly.work/terms
 
 ---
 ### Support URL:
 `https://developers.zoom.us/docs/build-flow/app-listing/links/#support-url`
--> https://responsibly.vercel.app/support
+-> https://responsibly.work/support
 
 ---
 ### Documentation URL:
 `https://developers.zoom.us/docs/build-flow/app-listing/links/#documentation-url`
--> https://responsibly.vercel.app/integrations/zoom
+-> https://responsibly.work/integrations/zoom
 
 ---
 ### Marketplace Category:

@@ -19,6 +19,9 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Responsibly App",
   description: "Agency management platform",
+  other: {
+    "zoom-domain-verification": "ZOOM_verify_54713b3abcf945288a36151a83d98bc2",
+  },
 };
 
 export default function RootLayout({
