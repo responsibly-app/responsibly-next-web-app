@@ -201,6 +201,7 @@ export class ZoomClient {
 /**
  * Creates a ZoomClient for the current request by fetching the decrypted
  * Zoom access token through Better Auth (handles encryptOAuthTokens).
+ * Auto-refreshes when accessTokenExpiresAt (stored in DB) shows expiry within 60s.
  * Returns null if Zoom is not connected.
  */
 export async function getZoomClient(
@@ -212,6 +213,21 @@ export async function getZoomClient(
   });
 
   if (!tokenData?.accessToken) return null;
+
+  const isExpiredOrExpiringSoon =
+    tokenData.accessTokenExpiresAt != null &&
+    tokenData.accessTokenExpiresAt.getTime() <= Date.now() + 60_000;
+
+  if (isExpiredOrExpiringSoon) {
+    const refreshed = await auth.api.refreshToken({
+      headers,
+      body: { providerId: "zoom" },
+    });
+    if (refreshed?.accessToken) {
+      return new ZoomClient(refreshed.accessToken);
+    }
+  }
+
   return new ZoomClient(tokenData.accessToken);
 }
 
