@@ -1,40 +1,27 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import QRCode from "qrcode";
-import { QrCode, ChevronDown, ChevronUp, Download } from "lucide-react";
+import { StyledQRCode, type StyledQRCodeHandle } from "@/components/ui/styled-qr-code";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Button } from "@/components/ui/button";
 import { useListMyOrganizations } from "@/lib/auth/hooks";
 import { type OrgWithRole } from "@/lib/orpc/apis/organization/organization-schemas";
 import { cn } from "@/lib/utils";
+import { ChevronDown, ChevronUp, Download, QrCode } from "lucide-react";
+import { useRef, useState } from "react";
 
 function OrgQR({ memberId, orgName }: { memberId: string; orgName: string }) {
-  const [qrUrl, setQrUrl] = useState<string | null>(null);
-
-  useEffect(() => {
-    QRCode.toDataURL(`member:${memberId}`, { width: 200, margin: 2 })
-      .then(setQrUrl)
-      .catch(() => setQrUrl(null));
-  }, [memberId]);
-
-  function handleDownload() {
-    if (!qrUrl) return;
-    const a = document.createElement("a");
-    a.href = qrUrl;
-    a.download = `my-qr-${orgName.toLowerCase().replace(/\s+/g, "-")}.png`;
-    a.click();
-  }
+  const qrRef = useRef<StyledQRCodeHandle | null>(null);
 
   return (
     <div className="flex flex-col items-center gap-2">
-      {qrUrl ? (
-        <img src={qrUrl} alt={`QR for ${orgName}`} className="rounded-lg border" width={160} height={160} />
-      ) : (
-        <Skeleton className="size-40 rounded-lg" />
-      )}
-      <Button size="sm" variant="outline" className="h-7 text-xs gap-1.5" onClick={handleDownload} disabled={!qrUrl}>
+      <StyledQRCode ref={qrRef} data={`member:${memberId}`} size={160} />
+      <Button
+        size="sm"
+        variant="outline"
+        className="h-7 text-xs gap-1.5"
+        onClick={() => qrRef.current?.download(`my-qr-${orgName.toLowerCase().replace(/\s+/g, "-")}`)}
+      >
         <Download className="size-3" />
         Download
       </Button>
@@ -46,7 +33,6 @@ export function MyQRCard() {
   const { data: orgs = [], isPending } = useListMyOrganizations();
   const [expanded, setExpanded] = useState(false);
 
-  // Only show when there's at least one org
   if (!isPending && orgs.length === 0) return null;
 
   return (
@@ -76,7 +62,7 @@ export function MyQRCard() {
         <CardContent>
           {isPending ? (
             <div className="flex gap-6">
-              <Skeleton className="size-40 rounded-lg" />
+              <Skeleton className="size-40 rounded-xl" />
             </div>
           ) : (
             <div className={cn("flex flex-wrap gap-6", orgs.length === 1 && "justify-center")}>

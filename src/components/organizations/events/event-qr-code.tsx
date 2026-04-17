@@ -1,15 +1,15 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import QRCode from "qrcode";
-import { QrCode, RefreshCw, Clock, Download } from "lucide-react";
-import { toast } from "sonner";
-import { format } from "date-fns";
+import { StyledQRCode, type StyledQRCodeHandle } from "@/components/ui/styled-qr-code";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Spinner } from "@/components/ui/spinner";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useGetEventQRCode, useGenerateQRCode } from "@/lib/auth/hooks";
+import { Spinner } from "@/components/ui/spinner";
+import { useGenerateQRCode, useGetEventQRCode } from "@/lib/auth/hooks";
+import { format } from "date-fns";
+import { Clock, Download, QrCode, RefreshCw } from "lucide-react";
+import { useRef } from "react";
+import { toast } from "sonner";
 
 interface Props {
   eventId: string;
@@ -19,21 +19,10 @@ interface Props {
 export function EventQRCode({ eventId, organizationId }: Props) {
   const { data: qrData, isPending } = useGetEventQRCode(eventId);
   const generateQR = useGenerateQRCode();
-  const [qrImageUrl, setQrImageUrl] = useState<string | null>(null);
+  const qrRef = useRef<StyledQRCodeHandle | null>(null);
 
   const baseUrl =
     typeof window !== "undefined" ? window.location.origin : process.env.NEXT_PUBLIC_APP_URL ?? "";
-
-  useEffect(() => {
-    if (!qrData?.code) {
-      setQrImageUrl(null);
-      return;
-    }
-    const checkInUrl = `${baseUrl}/check-in?code=${qrData.code}`;
-    QRCode.toDataURL(checkInUrl, { width: 256, margin: 2 })
-      .then(setQrImageUrl)
-      .catch(() => setQrImageUrl(null));
-  }, [qrData?.code, baseUrl]);
 
   function handleGenerate() {
     generateQR.mutate(
@@ -44,14 +33,6 @@ export function EventQRCode({ eventId, organizationId }: Props) {
           toast.error(err?.message ?? "Failed to generate QR code"),
       },
     );
-  }
-
-  function handleDownload() {
-    if (!qrImageUrl) return;
-    const a = document.createElement("a");
-    a.href = qrImageUrl;
-    a.download = `event-qr-${eventId}.png`;
-    a.click();
   }
 
   const isExpired = qrData?.expiresAt && new Date(qrData.expiresAt) < new Date();
@@ -87,7 +68,7 @@ export function EventQRCode({ eventId, organizationId }: Props) {
 
       <CardContent>
         {isPending ? (
-          <Skeleton className="h-48 w-48 rounded-lg" />
+          <Skeleton className="h-48 w-48 rounded-xl" />
         ) : !qrData || isExpired ? (
           <div className="flex flex-col items-center gap-3 rounded-lg border border-dashed py-8 text-center">
             <QrCode className="text-muted-foreground size-10" />
@@ -100,17 +81,11 @@ export function EventQRCode({ eventId, organizationId }: Props) {
           </div>
         ) : (
           <div className="flex flex-col items-center gap-3">
-            {qrImageUrl ? (
-              <img
-                src={qrImageUrl}
-                alt="Event check-in QR code"
-                className="rounded-lg border"
-                width={200}
-                height={200}
-              />
-            ) : (
-              <Skeleton className="h-48 w-48 rounded-lg" />
-            )}
+            <StyledQRCode
+              ref={qrRef}
+              data={`${baseUrl}/check-in?code=${qrData.code}`}
+              size={200}
+            />
 
             <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
               <Clock className="size-3.5" />
@@ -121,7 +96,11 @@ export function EventQRCode({ eventId, organizationId }: Props) {
               )}
             </div>
 
-            <Button size="sm" variant="outline" onClick={handleDownload} disabled={!qrImageUrl}>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => qrRef.current?.download(`event-qr-${eventId}`)}
+            >
               <Download className="mr-1.5 size-3.5" />
               Download PNG
             </Button>
