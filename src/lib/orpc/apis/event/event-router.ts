@@ -182,8 +182,8 @@ export const eventRouter = {
           timezone: input.timezone,
           agenda: input.description,
           settings: {
-            join_before_host: true,
-            waiting_room: false,
+            join_before_host: false,
+            waiting_room: true,
             // approval_type 0 = registration required, auto-approve.
             // Zoom will require participants to register (email collected),
             // so the webhook carries a registrant_id for reliable identity matching.

@@ -1,7 +1,9 @@
-import { organizationClient } from "better-auth/client/plugins";
+import { inferOrgAdditionalFields, organizationClient } from "better-auth/client/plugins";
 import { accessControl } from "../hooks/oraganization/permissions";
+import { auth } from "../auth";
 
 export const organizationClientPlugin = organizationClient({
     ...accessControl,
-    teams: { enabled: true }
+    teams: { enabled: true },
+    schema: inferOrgAdditionalFields<typeof auth>()
 })
