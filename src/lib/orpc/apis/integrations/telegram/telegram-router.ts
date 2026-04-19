@@ -32,11 +32,14 @@ export const telegramRouter = {
 
       if (!row) return { connected: false };
 
+      const telegram = createTelegramClient();
+      const telegramPhotoUrl = await telegram.getProfilePhotoUrl(parseInt(row.telegramId));
+
       return {
         connected: true,
         telegramUsername: row.telegramUsername,
         telegramFirstName: row.telegramFirstName,
-        telegramPhotoUrl: row.telegramPhotoUrl,
+        telegramPhotoUrl,
       };
     }),
 
@@ -152,10 +155,7 @@ export const telegramRouter = {
 
             await telegram.sendMessage(from.id, "Verifying your account…");
 
-            const [telegramPhotoUrl, [userRow]] = await Promise.all([
-              telegram.getProfilePhotoUrl(from.id),
-              db.select({ email: user.email }).from(user).where(eq(user.id, verification.userId)).limit(1),
-            ]);
+            const [userRow] = await db.select({ email: user.email }).from(user).where(eq(user.id, verification.userId)).limit(1);
 
             await db
               .insert(userTelegram)
@@ -166,7 +166,6 @@ export const telegramRouter = {
                 telegramUsername: from.username ?? null,
                 telegramFirstName: from.first_name,
                 telegramLastName: from.last_name ?? null,
-                telegramPhotoUrl,
               })
               .onConflictDoUpdate({
                 target: userTelegram.userId,
@@ -175,7 +174,6 @@ export const telegramRouter = {
                   telegramUsername: from.username ?? null,
                   telegramFirstName: from.first_name,
                   telegramLastName: from.last_name ?? null,
-                  telegramPhotoUrl,
                 },
               });
 

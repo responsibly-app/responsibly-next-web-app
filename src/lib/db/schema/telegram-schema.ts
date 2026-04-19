@@ -11,7 +11,6 @@ export const userTelegram = pgTable("user_telegram", {
   telegramUsername: text("telegram_username"),
   telegramFirstName: text("telegram_first_name"),
   telegramLastName: text("telegram_last_name"),
-  telegramPhotoUrl: text("telegram_photo_url"),
   connectedAt: timestamp("connected_at").defaultNow().notNull(),
 });
 

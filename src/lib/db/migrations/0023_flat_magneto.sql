@@ -1,0 +1,1 @@
+ALTER TABLE "user_telegram" DROP COLUMN "telegram_photo_url";
