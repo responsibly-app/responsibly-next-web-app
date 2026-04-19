@@ -55,12 +55,12 @@ const nextConfig: NextConfig = {
             key: "Content-Security-Policy",
             value: [
               "default-src 'self'",
-              
+
               // Inline/eval control
               "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
 
               // External scripts (CDNs)
-              "script-src-elem 'self' https://static.cloudflareinsights.com https://cdn.jsdelivr.net",
+              "script-src-elem 'self' 'unsafe-inline' https://static.cloudflareinsights.com https://cdn.jsdelivr.net",
 
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: https:",
