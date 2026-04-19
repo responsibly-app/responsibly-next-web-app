@@ -3,6 +3,7 @@
 import { cn } from "@/lib/utils";
 import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
 import QRCodeStyling from "qr-code-styling";
+import { useTheme } from "next-themes";
 
 export interface StyledQRCodeHandle {
   download: (filename: string) => Promise<void>;
@@ -18,6 +19,8 @@ export const StyledQRCode = forwardRef<StyledQRCodeHandle, StyledQRCodeProps>(
   ({ data, size = 300, className }, ref) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const qrRef = useRef<QRCodeStyling | null>(null);
+    const { resolvedTheme } = useTheme();
+    const isDark = resolvedTheme === "dark";
 
     useEffect(() => {
       const qr = new QRCodeStyling({
@@ -45,7 +48,7 @@ export const StyledQRCode = forwardRef<StyledQRCodeHandle, StyledQRCodeProps>(
           color: "#09090b",
         },
         backgroundOptions: {
-          color: "#ffffff",
+          color: "white",
         },
         qrOptions: {
           errorCorrectionLevel: "M",
@@ -68,7 +71,7 @@ export const StyledQRCode = forwardRef<StyledQRCodeHandle, StyledQRCodeProps>(
       <div
         ref={containerRef}
         style={{ width: size, height: size }}
-        className={cn("overflow-hidden rounded-xl shadow-sm", className)}
+        className={cn("overflow-hidden rounded-3xl shadow-sm", className)}
       />
     );
   },
