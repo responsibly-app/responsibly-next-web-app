@@ -202,7 +202,9 @@ export function AppSidebarV2({ isPinned, onTogglePin }: AppSidebarV2Props) {
             isExpanded ? "opacity-100 max-w-40" : "opacity-0 max-w-0",
           )}
         >
-          {appName}
+          <Link href="/">
+            {appName}
+          </Link>
         </span>
         <button
           onClick={onTogglePin}
@@ -305,14 +307,18 @@ export function MobileNav() {
 
         {/* Sheet header with logo */}
         <div className="flex items-center gap-2.5 px-4 py-2 border-b shrink-0">
-          <Image
-            src="/logo.png"
-            alt="Responsibly"
-            width={28}
-            height={28}
-            className="size-7 rounded-md object-contain"
-          />
-          <SheetTitle className="text-sm font-semibold">Responsibly</SheetTitle>
+          <Link href="/" className="flex items-center gap-2">
+            <Image
+              src="/logo.png"
+              alt={appName}
+              width={28}
+              height={28}
+              className="size-7 rounded-md object-contain"
+            />
+          </Link>
+          <SheetTitle className="text-sm font-semibold">
+            <Link href="/">{appName}</Link>
+          </SheetTitle>
         </div>
 
         {/* Nav content — closes sheet on link click */}
