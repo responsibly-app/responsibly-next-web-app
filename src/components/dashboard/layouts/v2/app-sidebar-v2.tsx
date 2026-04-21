@@ -79,7 +79,7 @@ const OrgSwitcherButton = React.forwardRef<HTMLButtonElement, OrgSwitcherButtonP
       <button
         ref={ref}
         {...props}
-        className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-foreground hover:bg-sidebar-primary/10 transition-colors mb-1 border-border border"
+        className="flex w-full items-center gap-2 rounded-xl px-2 py-2 text-foreground hover:bg-sidebar-primary/10 transition-colors mb-1 border-border border"
       >
         <span className="flex size-5 shrink-0 items-center justify-center">
           <Building2 className="size-4" />
@@ -136,7 +136,7 @@ function NavContent({ onNavigate }: { onNavigate?: () => void }) {
                 href={item.url}
                 onClick={onNavigate}
                 className={cn(
-                  "flex items-center gap-2 rounded-lg px-2 py-2 text-sm transition-colors mb-1",
+                  "flex items-center gap-2 rounded-xl px-2 py-2 text-sm transition-colors mb-1",
                   isActive
                     ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
                     : "text-sidebar-foreground hover:bg-sidebar-accent/60",
@@ -250,7 +250,7 @@ export function AppSidebarV2({ isPinned, onTogglePin }: AppSidebarV2Props) {
                   key={item.title}
                   href={item.url}
                   className={cn(
-                    "flex items-center gap-2 rounded-lg px-2 py-2 text-sm transition-colors mb-1",
+                    "flex items-center gap-2 rounded-xl px-2 py-2 text-sm transition-colors mb-1",
                     isActive
                       ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
                       : "text-sidebar-foreground hover:bg-sidebar-accent/60",
@@ -286,7 +286,7 @@ export function MobileNav() {
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
         <button
-          className="flex md:hidden size-8 items-center justify-center rounded-md hover:bg-accent transition-colors"
+          className="flex md:hidden size-8 items-center justify-center rounded-xl hover:bg-accent transition-colors"
           aria-label="Open menu"
         >
           <Menu className="size-5" />
