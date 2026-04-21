@@ -121,8 +121,9 @@ export const telegramRouter = {
     .output(z.object({ ok: z.boolean() }))
     .handler(async ({ input, context }) => {
       const secret = process.env.TELEGRAM_WEBHOOK_SECRET;
+      const header = context.headers.get("x-telegram-bot-api-secret-token");
+      console.log("[telegram/webhook] secret set:", !!secret, "| header present:", !!header, "| match:", header === secret);
       if (secret) {
-        const header = context.headers.get("x-telegram-bot-api-secret-token");
         if (header !== secret) throw new ORPCError("UNAUTHORIZED");
       }
 
