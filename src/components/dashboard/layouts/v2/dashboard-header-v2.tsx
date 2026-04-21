@@ -5,6 +5,7 @@ import { BreadcrumbDemo } from "../../header-breadcrumbs";
 import { HeaderUserDropdown } from "../../header-user";
 import { NavUserType } from "../../nav-user";
 import { authClient } from "@/lib/auth/auth-client";
+import { EnvBadge } from "@/components/ui-custom/env-badge";
 
 export function DashboardHeaderV2() {
   const { data: session, isPending } = authClient.useSession();
@@ -21,6 +22,7 @@ export function DashboardHeaderV2() {
       <MobileNav />
       <BreadcrumbDemo />
       <div className="ml-auto flex items-center gap-2">
+        <EnvBadge />
         <HeaderUserDropdown user={user} isPending={isPending} />
       </div>
     </header>
