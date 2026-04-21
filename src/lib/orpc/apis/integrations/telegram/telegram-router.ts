@@ -85,9 +85,24 @@ export const telegramRouter = {
     })
     .output(z.object({ success: z.boolean() }))
     .handler(async ({ context }) => {
+      const [row] = await db
+        .select()
+        .from(userTelegram)
+        .where(eq(userTelegram.userId, context.session.user.id))
+        .limit(1);
+
       await db
         .delete(userTelegram)
         .where(eq(userTelegram.userId, context.session.user.id));
+
+      if (row) {
+        try {
+          const telegram = createTelegramClient();
+          await telegram.sendMessage(parseInt(row.telegramId), "✅ Your Telegram account has been successfully disconnected from Responsibly.");
+        } catch {
+          // Best-effort — don't fail the unlink if the message can't be sent
+        }
+      }
 
       return { success: true };
     }),
