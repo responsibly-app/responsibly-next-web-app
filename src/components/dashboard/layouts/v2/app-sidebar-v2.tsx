@@ -179,7 +179,7 @@ export function AppSidebarV2({ isPinned, onTogglePin }: AppSidebarV2Props) {
       style={{ width: isExpanded ? SIDEBAR_PINNED_W : SIDEBAR_ICON_W }}
       className={cn(
         "absolute inset-y-0 left-0 z-50 flex flex-col",
-        "border-r bg-sidebar transition-[width] duration-300 ease-in-out overflow-hidden",
+        "border-r bg-sidebar/70 backdrop-blur-md transition-[width] duration-300 ease-in-out overflow-hidden",
         isHovered && !isPinned && "shadow-xl",
       )}
       onMouseEnter={() => !isPinned && setIsHovered(true)}
