@@ -9,6 +9,7 @@ import {
 } from "@/lib/db/schema/event-schema";
 import { organizationSettings } from "@/lib/db/schema/org-settings-schema";
 import { authed } from "@/lib/orpc/base";
+import { toZoomTimezone } from "@/lib/utils/timezone";
 import { ROLE_LEVELS, type OrgRole } from "@/lib/auth/hooks/oraganization/permissions";
 import { getZoomClientForUser } from "@/lib/sdks/zoom-client";
 import {
@@ -33,6 +34,25 @@ import {
   CheckInWithQRInputSchema,
   ScanMemberQRInputSchema,
 } from "./event-schemas";
+
+/** Convert a UTC ISO string to local wall-clock time in the given IANA timezone, formatted as
+ * yyyy-MM-ddTHH:mm:ss (no Z). Zoom interprets start_time as UTC when it ends with Z, so we
+ * must strip the offset and pass local time alongside the timezone field. */
+function toZoomLocalTime(isoUtc: string, tz: string): string {
+  const date = new Date(isoUtc);
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: tz,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+  }).formatToParts(date);
+  const get = (type: string) => parts.find((p) => p.type === type)?.value ?? "00";
+  return `${get("year")}-${get("month")}-${get("day")}T${get("hour")}:${get("minute")}:${get("second")}`;
+}
 
 async function requireOrgMember(organizationId: string, userId: string) {
   const row = await db
@@ -184,13 +204,13 @@ export const eventRouter = {
         const meeting = await zoom.createMeeting({
           topic: input.title,
           type: 2,
-          start_time: input.startAt,
+          start_time: toZoomLocalTime(input.startAt, input.timezone ?? "UTC"),
           duration: input.endAt
             ? Math.round(
                 (new Date(input.endAt).getTime() - new Date(input.startAt).getTime()) / 60000,
               )
             : 60,
-          timezone: input.timezone,
+          timezone: toZoomTimezone(input.timezone ?? "UTC"),
           agenda: input.description,
           settings: {
             join_before_host: false,
@@ -293,21 +313,41 @@ export const eventRouter = {
         const meeting = await zoom.createMeeting({
           topic: input.title ?? currentEvent?.title ?? "Meeting",
           type: 2,
-          start_time: startAt,
+          start_time: toZoomLocalTime(startAt, input.timezone ?? currentEvent?.timezone ?? "UTC"),
           duration: endAt
             ? Math.round(
                 (new Date(endAt).getTime() - new Date(startAt).getTime()) / 60000,
               )
             : 60,
-          timezone: input.timezone ?? currentEvent?.timezone ?? "UTC",
+          timezone: toZoomTimezone(input.timezone ?? currentEvent?.timezone ?? "UTC"),
           settings: { join_before_host: true, waiting_room: false, approval_type: 0 },
         });
         updateValues.zoomMeetingId = String(meeting.id);
         updateValues.zoomJoinUrl = meeting.join_url;
-        updateValues.zoomStartUrl =
-          (meeting as unknown as { start_url?: string }).start_url ?? null;
+        updateValues.zoomStartUrl = (meeting as unknown as { start_url?: string }).start_url ?? null;
       } else if (input.zoomOption === "link" && input.zoomMeetingId) {
         updateValues.zoomMeetingId = input.zoomMeetingId;
+        // Sync title/time changes to Zoom if the meeting belongs to the org owner
+        const ownerUserIdForLink = await getOrgOwnerUserId(input.organizationId);
+        const zoomForLink = ownerUserIdForLink ? await getZoomClientForUser(ownerUserIdForLink) : null;
+        if (zoomForLink && (input.title !== undefined || input.startAt !== undefined || input.endAt !== undefined || input.timezone !== undefined)) {
+          const currentEventForLink = await db
+            .select({ title: event.title, startAt: event.startAt, endAt: event.endAt, timezone: event.timezone })
+            .from(event)
+            .where(eq(event.id, input.eventId))
+            .limit(1)
+            .then((r) => r[0]);
+          const startAt = input.startAt ?? currentEventForLink?.startAt?.toISOString() ?? "";
+          const endAt = input.endAt ?? currentEventForLink?.endAt?.toISOString();
+          await zoomForLink.updateMeeting(input.zoomMeetingId, {
+            topic: input.title ?? currentEventForLink?.title ?? "Meeting",
+            start_time: toZoomLocalTime(startAt, input.timezone ?? currentEventForLink?.timezone ?? "UTC"),
+            duration: endAt
+              ? Math.round((new Date(endAt).getTime() - new Date(startAt).getTime()) / 60000)
+              : 60,
+            timezone: toZoomTimezone(input.timezone ?? currentEventForLink?.timezone ?? "UTC"),
+          }).catch(() => { /* ignore if meeting not owned by this account */ });
+        }
       }
 
       const [row] = await db

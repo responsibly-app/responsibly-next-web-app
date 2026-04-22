@@ -58,7 +58,7 @@ export const TIMEZONE_OPTIONS: TimezoneOption[] = [
   { value: "America/Lima", label: "Peru — Lima", region: "Americas" },
   { value: "America/Santiago", label: "Chile — Santiago", region: "Americas" },
   { value: "America/Sao_Paulo", label: "Brazil — São Paulo", region: "Americas" },
-  { value: "America/Buenos_Aires", label: "Argentina — Buenos Aires", region: "Americas" },
+  { value: "America/Argentina/Buenos_Aires", label: "Argentina — Buenos Aires", region: "Americas" },
   { value: "America/Caracas", label: "Venezuela — Caracas", region: "Americas" },
 
   // Europe
@@ -238,4 +238,22 @@ export function buildDateTimeInTimezone(date: Date, time: string, timezone: stri
   // Adding it converts our neutral UTC guess to the real UTC equivalent
   const offsetMs = asUTC.getTime() - tzAsUTCMs;
   return new Date(asUTC.getTime() + offsetMs).toISOString();
+}
+
+// Zoom uses its own timezone identifiers that diverge from IANA in a few cases.
+const IANA_TO_ZOOM: Record<string, string> = {
+  "America/Argentina/Buenos_Aires": "America/Argentina/Buenos_Aires",
+  "America/Buenos_Aires": "America/Argentina/Buenos_Aires", // legacy stored values
+  "America/Toronto": "America/Montreal",
+  "Asia/Ho_Chi_Minh": "Asia/Saigon",
+  "Asia/Istanbul": "Europe/Istanbul",
+  "Australia/Melbourne": "Australia/Sydney",
+};
+
+export function toZoomTimezone(iana: string): string {
+  return IANA_TO_ZOOM[iana] ?? iana;
+}
+
+export function formatInTz(isoString: string, tz: string | undefined, opts: Intl.DateTimeFormatOptions) {
+  return new Intl.DateTimeFormat("en-US", { ...opts, timeZone: tz ?? undefined }).format(new Date(isoString));
 }
