@@ -10,7 +10,7 @@ import {
 import { organizationSettings } from "@/lib/db/schema/org-settings-schema";
 import { authed } from "@/lib/orpc/base";
 import { ROLE_LEVELS, type OrgRole } from "@/lib/auth/hooks/oraganization/permissions";
-import { getZoomClient } from "@/lib/sdks/zoom-client";
+import { getZoomClientForUser } from "@/lib/sdks/zoom-client";
 import {
   ListEventsInputSchema,
   ListEventsOutputSchema,
@@ -50,6 +50,16 @@ async function requireAtLeastRole(organizationId: string, userId: string, minRol
   const userLevel = ROLE_LEVELS[role as OrgRole] ?? Infinity;
   const requiredLevel = ROLE_LEVELS[minRole];
   if (userLevel > requiredLevel) throw new ORPCError("FORBIDDEN");
+}
+
+async function getOrgOwnerUserId(organizationId: string): Promise<string | null> {
+  const row = await db
+    .select({ userId: member.userId })
+    .from(member)
+    .where(and(eq(member.organizationId, organizationId), eq(member.role, "owner")))
+    .limit(1)
+    .then((rows) => rows[0]);
+  return row?.userId ?? null;
 }
 
 /** Default attendance methods based on event type */
@@ -164,10 +174,11 @@ export const eventRouter = {
       let zoomStartUrl: string | null = null;
 
       if (input.zoomOption === "create") {
-        const zoom = await getZoomClient(context.headers);
+        const ownerUserId = await getOrgOwnerUserId(input.organizationId);
+        const zoom = ownerUserId ? await getZoomClientForUser(ownerUserId) : null;
         if (!zoom) {
           throw new ORPCError("PRECONDITION_FAILED", {
-            message: "Zoom account not connected. Connect Zoom in Integrations first.",
+            message: "The organization owner has not connected a Zoom account. Ask the owner to connect Zoom in Integrations.",
           });
         }
         const meeting = await zoom.createMeeting({
@@ -194,7 +205,8 @@ export const eventRouter = {
         zoomJoinUrl = meeting.join_url;
         zoomStartUrl = (meeting as unknown as { start_url?: string }).start_url ?? null;
       } else if (input.zoomOption === "link" && input.zoomMeetingId) {
-        const zoom = await getZoomClient(context.headers);
+        const ownerUserId = await getOrgOwnerUserId(input.organizationId);
+        const zoom = ownerUserId ? await getZoomClientForUser(ownerUserId) : null;
         if (zoom) {
           try {
             const meeting = await zoom.getMeeting(input.zoomMeetingId);
@@ -263,10 +275,11 @@ export const eventRouter = {
         updateValues.zoomJoinUrl = null;
         updateValues.zoomStartUrl = null;
       } else if (input.zoomOption === "create") {
-        const zoom = await getZoomClient(context.headers);
+        const ownerUserId = await getOrgOwnerUserId(input.organizationId);
+        const zoom = ownerUserId ? await getZoomClientForUser(ownerUserId) : null;
         if (!zoom)
           throw new ORPCError("PRECONDITION_FAILED", {
-            message: "Zoom account not connected",
+            message: "The organization owner has not connected a Zoom account. Ask the owner to connect Zoom in Integrations.",
           });
         const currentEvent = await db
           .select({ title: event.title, startAt: event.startAt, endAt: event.endAt, timezone: event.timezone })

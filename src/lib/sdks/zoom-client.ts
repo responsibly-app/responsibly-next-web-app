@@ -232,6 +232,22 @@ export async function getZoomClient(
 }
 
 /**
+ * Creates a ZoomClient for a specific user by userId, without requiring their
+ * session headers. Better Auth resolves and decrypts the token server-side and
+ * auto-refreshes if expired. Returns null if the user has no Zoom account connected.
+ */
+export async function getZoomClientForUser(
+  userId: string
+): Promise<ZoomClient | null> {
+  const tokenData = await auth.api.getAccessToken({
+    body: { providerId: "zoom", userId },
+  });
+
+  if (!tokenData?.accessToken) return null;
+  return new ZoomClient(tokenData.accessToken);
+}
+
+/**
  * Check whether a user has Zoom connected.
  */
 export async function isZoomConnected(userId: string): Promise<boolean> {
