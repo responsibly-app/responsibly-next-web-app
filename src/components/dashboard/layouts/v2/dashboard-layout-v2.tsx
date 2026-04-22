@@ -37,10 +37,10 @@ export default function DashboardLayoutV2({
         <AppSidebarV2 isPinned={isPinned} onTogglePin={handleTogglePin} />
       </div>
 
-      <div className="flex flex-1 flex-col min-w-0 overflow-hidden">
+      <div className="flex flex-1 flex-col min-w-0 overflow-y-auto">
         <DashboardHeaderV2 />
 
-        <main className="flex flex-1 flex-col gap-4 overflow-auto p-4 pt-0">
+        <main className="flex flex-1 flex-col gap-4 p-4 pt-0">
           {children}
         </main>
       </div>
