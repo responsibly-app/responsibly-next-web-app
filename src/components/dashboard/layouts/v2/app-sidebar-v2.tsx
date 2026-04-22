@@ -25,11 +25,11 @@ import { routes } from "@/routes";
 import { OrgSwitcherDialog } from "../../org-switcher";
 import { useActiveOrganization } from "@/lib/auth/hooks/oraganization";
 import {
-  Sheet,
-  SheetContent,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
+  Drawer,
+  DrawerContent,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@/components/ui/drawer";
 import { appName } from "@/config";
 
 export const SIDEBAR_ICON_W = 55;
@@ -112,45 +112,47 @@ function NavContent({ onNavigate }: { onNavigate?: () => void }) {
   const { data: activeOrg } = useActiveOrganization();
 
   return (
-    <div className="flex flex-1 flex-col overflow-y-auto py-2">
-      {/* Org switcher */}
-      <div className="px-2 mb-2">
+    <div className="flex flex-1 flex-col overflow-hidden">
+      {/* Org switcher — pinned */}
+      <div className="px-2 py-2 shrink-0 border-b">
         <OrgSwitcherDialog open={orgDialogOpen} onOpenChange={setOrgDialogOpen}>
           <OrgSwitcherButton orgName={activeOrg?.name} />
         </OrgSwitcherDialog>
       </div>
 
-      {/* Nav groups */}
-      {navGroups.map((group, i) => (
-        <div key={i} className="px-2 mb-1">
-          {group.label && (
-            <p className="mb-0.5 px-2 text-xs font-medium text-sidebar-foreground/50">
-              {group.label}
-            </p>
-          )}
-          {group.items.map((item) => {
-            const isActive = pathname === item.url;
-            return (
-              <Link
-                key={item.title}
-                href={item.url}
-                onClick={onNavigate}
-                className={cn(
-                  "flex items-center gap-2 rounded-xl px-2 py-2 text-sm transition-colors mb-1",
-                  isActive
-                    ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
-                    : "text-sidebar-foreground hover:bg-sidebar-accent/60",
-                )}
-              >
-                <span className="flex size-5 shrink-0 items-center justify-center">
-                  <item.icon className="size-4" />
-                </span>
-                <span>{item.title}</span>
-              </Link>
-            );
-          })}
-        </div>
-      ))}
+      {/* Nav groups — scrollable */}
+      <div className="flex-1 overflow-y-auto py-2">
+        {navGroups.map((group, i) => (
+          <div key={i} className="px-2 mb-1">
+            {group.label && (
+              <p className="mb-0.5 px-2 text-xs font-medium text-sidebar-foreground/50">
+                {group.label}
+              </p>
+            )}
+            {group.items.map((item) => {
+              const isActive = pathname === item.url;
+              return (
+                <Link
+                  key={item.title}
+                  href={item.url}
+                  onClick={onNavigate}
+                  className={cn(
+                    "flex items-center gap-2 rounded-xl px-2 py-2 text-sm transition-colors mb-1",
+                    isActive
+                      ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+                      : "text-sidebar-foreground hover:bg-sidebar-accent/60",
+                  )}
+                >
+                  <span className="flex size-5 shrink-0 items-center justify-center">
+                    <item.icon className="size-4" />
+                  </span>
+                  <span>{item.title}</span>
+                </Link>
+              );
+            })}
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
@@ -285,27 +287,23 @@ export function MobileNav() {
   const [open, setOpen] = React.useState(false);
 
   return (
-    <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger asChild>
+    <Drawer open={open} onOpenChange={setOpen}>
+      <DrawerTrigger asChild>
         <button
           className="flex md:hidden size-8 items-center justify-center rounded-xl hover:bg-accent transition-colors"
           aria-label="Open menu"
         >
           <Menu className="size-5" />
         </button>
-      </SheetTrigger>
+      </DrawerTrigger>
 
-      <SheetContent
-        side="bottom"
-        showCloseButton={false}
-        className="rounded-t-2xl max-h-[82svh] flex flex-col bg-sidebar px-0 pb-safe"
-      >
+      <DrawerContent className="rounded-t-2xl max-h-[82svh] flex flex-col bg-sidebar px-0 pb-safe border-t-0 before:hidden! after:hidden!">
         {/* Drag handle */}
-        <div className="flex justify-center pt-3 pb-1 shrink-0">
+        {/* <div className="flex justify-center pt-3 pb-1 shrink-0">
           <div className="w-10 h-1 rounded-full bg-sidebar-foreground/20" />
-        </div>
+        </div> */}
 
-        {/* Sheet header with logo */}
+        {/* Header with logo */}
         <div className="flex items-center gap-2.5 px-4 py-2 border-b shrink-0">
           <Link href="/" className="flex items-center gap-2">
             <Image
@@ -316,14 +314,14 @@ export function MobileNav() {
               className="size-7 rounded-md object-contain"
             />
           </Link>
-          <SheetTitle className="text-sm font-semibold">
+          <DrawerTitle className="text-sm font-semibold">
             <Link href="/">{appName}</Link>
-          </SheetTitle>
+          </DrawerTitle>
         </div>
 
-        {/* Nav content — closes sheet on link click */}
+        {/* Nav content — closes drawer on link click */}
         <NavContent onNavigate={() => setOpen(false)} />
-      </SheetContent>
-    </Sheet>
+      </DrawerContent>
+    </Drawer>
   );
 }
