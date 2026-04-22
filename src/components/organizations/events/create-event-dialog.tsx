@@ -20,6 +20,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Spinner } from "@/components/ui/spinner";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { authClient } from "@/lib/auth/auth-client";
 import { useCreateEvent } from "@/lib/auth/hooks";
@@ -121,7 +122,14 @@ export function CreateEventDialog({ open, onOpenChange, organizationId }: Props)
         zoomMeetingId: zoomOption === "link" ? linkedZoomId : undefined,
         attendanceMethods,
       },
-      { onSuccess: () => onOpenChange(false) },
+      {
+        onSuccess: () => onOpenChange(false),
+        onError: (err: unknown) => {
+          const message =
+            err instanceof Error ? err.message : "Failed to create event";
+          toast.error(message);
+        },
+      },
     );
   }
 

@@ -207,8 +207,8 @@ export const eventRouter = {
           start_time: toZoomLocalTime(input.startAt, input.timezone ?? "UTC"),
           duration: input.endAt
             ? Math.round(
-                (new Date(input.endAt).getTime() - new Date(input.startAt).getTime()) / 60000,
-              )
+              (new Date(input.endAt).getTime() - new Date(input.startAt).getTime()) / 60000,
+            )
             : 60,
           timezone: toZoomTimezone(input.timezone ?? "UTC"),
           agenda: input.description,
@@ -219,6 +219,7 @@ export const eventRouter = {
             // Zoom will require participants to register (email collected),
             // so the webhook carries a registrant_id for reliable identity matching.
             approval_type: 0,
+            meeting_authentication: true,
           },
         });
         zoomMeetingId = String(meeting.id);
@@ -316,8 +317,8 @@ export const eventRouter = {
           start_time: toZoomLocalTime(startAt, input.timezone ?? currentEvent?.timezone ?? "UTC"),
           duration: endAt
             ? Math.round(
-                (new Date(endAt).getTime() - new Date(startAt).getTime()) / 60000,
-              )
+              (new Date(endAt).getTime() - new Date(startAt).getTime()) / 60000,
+            )
             : 60,
           timezone: toZoomTimezone(input.timezone ?? currentEvent?.timezone ?? "UTC"),
           settings: { join_before_host: true, waiting_room: false, approval_type: 0 },

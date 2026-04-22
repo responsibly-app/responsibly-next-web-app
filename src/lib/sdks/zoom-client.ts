@@ -81,6 +81,7 @@ export interface CreateMeetingParams {
      */
     approval_type?: 0 | 1 | 2;
     registration_type?: number;
+    meeting_authentication?: boolean;
   };
 }
 
