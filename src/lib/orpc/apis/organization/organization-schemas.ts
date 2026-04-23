@@ -36,3 +36,13 @@ export const RoleMetaSchema = z.object({
 });
 
 export const GetRolesOutputSchema = z.array(RoleMetaSchema);
+
+export const UpdateMemberLevelInputSchema = z.object({
+  memberId: z.string(),
+  organizationId: z.string(),
+  level: z.string(),
+});
+
+export const UpdateMemberLevelOutputSchema = z.object({
+  success: z.boolean(),
+});

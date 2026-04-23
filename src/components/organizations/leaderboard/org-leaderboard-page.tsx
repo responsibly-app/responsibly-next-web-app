@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
-import { Trophy } from "lucide-react";
+import { Search, Trophy } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,13 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -19,6 +26,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useGetPointsLeaderboard } from "@/lib/auth/hooks";
+import { WFG_LEVEL_META, WFG_LEVELS, type WFGLevel } from "@/lib/auth/hooks/oraganization/levels";
 import { routes } from "@/routes";
 
 type Props = { orgId: string };
@@ -115,17 +123,61 @@ export function OrgLeaderboardPage({ orgId }: Props) {
   const [preset, setPreset] = useState<Preset>("month");
   const [customStart, setCustomStart] = useState("");
   const [customEnd, setCustomEnd] = useState("");
+  const [search, setSearch] = useState("");
+  const [levelFilter, setLevelFilter] = useState<WFGLevel | "all">("all");
 
   const { startDate, endDate } = useMemo(() => {
     if (preset === "custom") return { startDate: customStart || undefined, endDate: customEnd || undefined };
     return dateRangeForPreset(preset);
   }, [preset, customStart, customEnd]);
 
-  const { data: entries = [], isPending } = useGetPointsLeaderboard(orgId, startDate, endDate);
+  const { data: rawEntries = [], isPending } = useGetPointsLeaderboard(orgId, startDate, endDate);
+
+  const entries = useMemo(() => {
+    let result = rawEntries;
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      result = result.filter(
+        (e) =>
+          e.memberName?.toLowerCase().includes(q) ||
+          e.memberEmail?.toLowerCase().includes(q),
+      );
+    }
+    if (levelFilter !== "all") {
+      result = result.filter((e) => e.memberLevel === levelFilter);
+    }
+    return result;
+  }, [rawEntries, search, levelFilter]);
 
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-semibold tracking-tight">Leaderboard</h1>
+
+      {/* Search + level filter */}
+      <div className="flex flex-wrap gap-2">
+        <div className="relative flex-1 min-w-48">
+          <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            placeholder="Search by name or email…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-9"
+          />
+        </div>
+        <Select value={levelFilter} onValueChange={(v) => setLevelFilter(v as WFGLevel | "all")}>
+          <SelectTrigger className="w-44">
+            <SelectValue placeholder="All levels" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All levels</SelectItem>
+            {(Object.keys(WFG_LEVELS) as WFGLevel[]).map((lvl) => (
+              <SelectItem key={lvl} value={lvl}>
+                {WFG_LEVEL_META[lvl].abbreviation} — {WFG_LEVEL_META[lvl].label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
 
       {/* Time filter */}
       <Card>
@@ -183,10 +235,14 @@ export function OrgLeaderboardPage({ orgId }: Props) {
           ) : entries.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 text-center">
               <Trophy className="mb-3 size-8 text-muted-foreground" />
-              <p className="text-sm text-muted-foreground">No data yet</p>
-              <p className="mt-1 text-xs text-muted-foreground">
-                Members need to log activity to appear here.
+              <p className="text-sm text-muted-foreground">
+                {search.trim() || levelFilter !== "all" ? "No members match your filters" : "No data yet"}
               </p>
+              {!search.trim() && levelFilter === "all" && (
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Members need to log activity to appear here.
+                </p>
+              )}
             </div>
           ) : (
             <div className="overflow-auto">
@@ -195,6 +251,7 @@ export function OrgLeaderboardPage({ orgId }: Props) {
                   <TableRow>
                     <TableHead className="w-16">Rank</TableHead>
                     <TableHead>Member</TableHead>
+                    <TableHead>Level</TableHead>
                     <TableHead className="text-right">Points</TableHead>
                     <TableHead className="text-right">AMAs</TableHead>
                     <TableHead className="text-right">Invites</TableHead>
@@ -222,6 +279,15 @@ export function OrgLeaderboardPage({ orgId }: Props) {
                             <p className="text-xs text-muted-foreground">{entry.memberEmail}</p>
                           </div>
                         </Link>
+                      </TableCell>
+                      <TableCell>
+                        {entry.memberLevel ? (
+                          <Badge variant="outline" className="font-mono text-xs">
+                            {WFG_LEVEL_META[entry.memberLevel as WFGLevel]?.abbreviation ?? entry.memberLevel.toUpperCase()}
+                          </Badge>
+                        ) : (
+                          <span className="text-muted-foreground text-xs">—</span>
+                        )}
                       </TableCell>
                       <TableCell className="text-right">
                         <span className="font-bold tabular-nums text-primary">

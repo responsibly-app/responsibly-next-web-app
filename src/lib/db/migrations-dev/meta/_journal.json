@@ -15,6 +15,34 @@
       "when": 1776972736798,
       "tag": "0001_sparkling_banshee",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1776978911151,
+      "tag": "0002_flat_speed_demon",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1776979281866,
+      "tag": "0003_smooth_lady_mastermind",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1776979379386,
+      "tag": "0004_cool_black_tarantula",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1776980584662,
+      "tag": "0005_sticky_silver_surfer",
+      "breakpoints": true
     }
   ]
 }

@@ -1,0 +1,1 @@
+ALTER TABLE "member" ADD COLUMN "level" text DEFAULT 'TA';

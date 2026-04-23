@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { authClient } from "@/lib/auth/auth-client";
 import { orpcTQUtils, orpc } from "@/lib/orpc/orpc-client";
 import { OrgRole, canAssignRole } from "./permissions";
+import type { WFGLevel } from "./levels";
 
 export type ListMembersQuery = {
     organizationId: string;
@@ -124,6 +125,23 @@ export function useUpdateMemberRole() {
         },
         onError: (err: { message?: string }) => {
             toast.error(err?.message ?? "Failed to update role.");
+        },
+    });
+}
+
+/** Update a member's WFG level */
+export function useUpdateMemberLevel() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: async ({ memberId, level, organizationId }: { memberId: string; level: WFGLevel; organizationId: string }) => {
+            const result = await orpc.organization.updateMemberLevel({ memberId, level, organizationId });
+            return result;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["organization"] });
+        },
+        onError: (err: { message?: string }) => {
+            toast.error(err?.message ?? "Failed to update level.");
         },
     });
 }
