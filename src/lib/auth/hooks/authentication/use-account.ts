@@ -6,7 +6,7 @@ import { authClient } from "@/lib/auth/auth-client";
 import { routes } from "@/routes";
 import { toast } from "sonner";
 
-type SocialProvider = "google" | "github" | "zoom";
+type SocialProvider = "google" | "github" | "zoom" | "calendly";
 
 type LinkSocialParams = {
   provider: SocialProvider;
@@ -31,6 +31,25 @@ export function useLinkSocial({ provider, callbackURL = routes.dashboard.integra
         throw result.error;
       }
 
+      return result;
+    },
+  });
+}
+
+type GenericOAuthProvider = "calendly";
+
+type LinkGenericOAuthParams = {
+  provider: GenericOAuthProvider;
+  callbackURL?: string;
+};
+
+/** Link a genericOAuth provider (non-built-in social) to an existing account */
+export function useLinkGenericOAuth({ provider, callbackURL = routes.dashboard.integrations() }: LinkGenericOAuthParams) {
+  return useMutation({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    mutationFn: async () => {
+      const result = await (authClient as any).oauth2.link({ providerId: provider, callbackURL });
+      if (result?.error) throw result.error;
       return result;
     },
   });

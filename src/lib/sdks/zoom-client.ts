@@ -240,12 +240,16 @@ export async function getZoomClient(
 export async function getZoomClientForUser(
   userId: string
 ): Promise<ZoomClient | null> {
-  const tokenData = await auth.api.getAccessToken({
-    body: { providerId: "zoom", userId },
-  });
+  try {
+    const tokenData = await auth.api.getAccessToken({
+      body: { providerId: "zoom", userId },
+    });
 
-  if (!tokenData?.accessToken) return null;
-  return new ZoomClient(tokenData.accessToken);
+    if (!tokenData?.accessToken) return null;
+    return new ZoomClient(tokenData.accessToken);
+  } catch {
+    return null;
+  }
 }
 
 /**

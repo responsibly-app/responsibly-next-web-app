@@ -1,6 +1,7 @@
 import { sessionRouter } from "./apis/session/session-router";
 import { storageRouter } from "./apis/storage/storage-router";
 import { zoomRouter } from "./apis/integrations/zoom/zoom-router";
+import { calendlyRouter } from "./apis/integrations/calendly/calendly-router";
 import { organizationRouter } from "./apis/organization/organization-router";
 import { orgSettingsRouter } from "./apis/organization/org-settings-router";
 import { eventRouter } from "./apis/event/event-router";
@@ -15,6 +16,7 @@ export const appRouter = {
   event: eventRouter,
   integrations: {
     zoom: zoomRouter,
+    calendly: calendlyRouter,
     telegram: telegramRouter,
   },
   personal: {
