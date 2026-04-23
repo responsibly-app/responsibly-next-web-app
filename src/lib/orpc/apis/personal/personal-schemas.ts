@@ -52,13 +52,39 @@ export const GetPointsLeaderboardInputSchema = z.object({
 
 export const PointsLeaderboardEntrySchema = z.object({
   memberId: z.string(),
+  userId: z.string(),
   memberName: z.string().nullable(),
   memberEmail: z.string().nullable(),
   memberImage: z.string().nullable(),
   totalPoints: z.number(),
+  totalAmas: z.number(),
+  totalInvites: z.number(),
 });
 
 export const GetPointsLeaderboardOutputSchema = z.array(PointsLeaderboardEntrySchema);
+
+// ---- AMAs ----
+
+export const AddAmaItemInputSchema = z.object({
+  recruitName: z.string().min(1),
+  agentCode: z.string().optional(),
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Must be YYYY-MM-DD"),
+});
+
+export const AmaItemSchema = z.object({
+  id: z.string(),
+  userId: z.string(),
+  recruitName: z.string(),
+  agentCode: z.string().nullable(),
+  date: z.string(),
+  createdAt: z.date(),
+});
+
+export const ListAmaItemsOutputSchema = z.array(AmaItemSchema);
+
+export const DeleteAmaItemInputSchema = z.object({
+  id: z.string(),
+});
 
 // ---- Member data (admin/org-member views) ----
 
@@ -69,6 +95,11 @@ export const GetMemberInviteHistoryInputSchema = z.object({
 });
 
 export const GetMemberPointsInputSchema = z.object({
+  organizationId: z.string(),
+  targetUserId: z.string(),
+});
+
+export const GetMemberAmasInputSchema = z.object({
   organizationId: z.string(),
   targetUserId: z.string(),
 });

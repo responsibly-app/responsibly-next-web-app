@@ -12,6 +12,7 @@ export const routes = {
     personal: () => "/dashboard/personal",
     invites: () => "/dashboard/invites",
     points: () => "/dashboard/points",
+    amas: () => "/dashboard/amas",
     eventDetail: (eventId: string) => `/dashboard/events/${eventId}`,
     eventAttendance: (eventId: string) => `/dashboard/events/${eventId}/attendance`,
     acceptInvitation: (invitationId: string) => `/dashboard/accept-invitation?id=${invitationId}`,

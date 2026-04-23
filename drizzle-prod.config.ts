@@ -2,11 +2,11 @@ import * as dotenv from "dotenv";
 import "dotenv/config";
 import { defineConfig } from "drizzle-kit";
 
-dotenv.config({ path: ".env.local" });
+dotenv.config({ path: ".env.production" });
 
 export default defineConfig({
   schema: "./src/lib/db/schema",
-  out: "./src/lib/db/migrations",
+  out: "./src/lib/db/migrations-prod",
   dialect: "postgresql",
   dbCredentials: {
     url: process.env.DATABASE_URL!,

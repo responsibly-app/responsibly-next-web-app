@@ -12,6 +12,7 @@ import {
   Plug,
   Settings,
   TrendingUp,
+  UserPlus,
   Users,
   Trophy,
   Building2,
@@ -44,6 +45,7 @@ const navGroups = [
     items: [
       { title: "Invites", url: routes.dashboard.invites(), icon: Flame },
       { title: "Points", url: routes.dashboard.points(), icon: TrendingUp },
+      { title: "AMAs", url: routes.dashboard.amas(), icon: UserPlus },
     ],
   },
   {

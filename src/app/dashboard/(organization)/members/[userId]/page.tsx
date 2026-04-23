@@ -2,7 +2,7 @@
 
 import { use, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Mail, ShieldCheck, TrendingUp, Flame } from "lucide-react";
+import { ArrowLeft, Mail, ShieldCheck, TrendingUp, Flame, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/chart";
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
 import { OrgPageShell } from "@/components/organizations/organization/org-page-shell";
-import { useListMembers, useGetMemberInviteHistory, useGetMemberPoints } from "@/lib/auth/hooks";
+import { useListMembers, useGetMemberInviteHistory, useGetMemberPoints, useGetMemberAmas } from "@/lib/auth/hooks";
 import { OrgRole, ROLE_META } from "@/lib/auth/hooks/oraganization/permissions";
 import { authClient } from "@/lib/auth/auth-client";
 import { routes } from "@/routes";
@@ -129,6 +129,70 @@ function MemberPointsTab({ orgId, userId }: { orgId: string; userId: string }) {
   );
 }
 
+const amasChartConfig = {
+  amas: { label: "AMAs", color: "var(--color-primary)" },
+} satisfies ChartConfig;
+
+function MemberAmasTab({ orgId, userId }: { orgId: string; userId: string }) {
+  const { data: items = [], isPending } = useGetMemberAmas(orgId, userId);
+
+  const { totalAll, totalMonth, chartData } = useMemo(() => {
+    const totalAll = items.length;
+    const thisMonth = currentMonthStr();
+    const totalMonth = items.filter((i) => i.date.startsWith(thisMonth)).length;
+
+    const map = new Map<string, number>();
+    items.forEach((item) => {
+      const month = item.date.substring(0, 7);
+      map.set(month, (map.get(month) ?? 0) + 1);
+    });
+
+    const now = new Date();
+    const chartData = Array.from({ length: 6 }, (_, idx) => {
+      const d = new Date(now.getFullYear(), now.getMonth() - (5 - idx), 1);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+      return { month: MONTH_NAMES[d.getMonth()], amas: map.get(key) ?? 0 };
+    });
+
+    return { totalAll, totalMonth, chartData };
+  }, [items]);
+
+  if (isPending) return <Skeleton className="h-48 w-full" />;
+
+  return (
+    <Card>
+      <CardHeader className="pb-3">
+        <CardTitle className="flex items-center gap-2 text-base">
+          <MessageSquare className="size-4 text-purple-500" />
+          AMAs
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="flex gap-6">
+          <div>
+            <p className="text-2xl font-bold tabular-nums">{totalAll.toLocaleString()}</p>
+            <p className="text-xs text-muted-foreground">All time</p>
+          </div>
+          <div>
+            <p className="text-2xl font-bold tabular-nums">{totalMonth.toLocaleString()}</p>
+            <p className="text-xs text-muted-foreground">This month</p>
+          </div>
+        </div>
+
+        <ChartContainer config={amasChartConfig} className="h-36 w-full">
+          <BarChart data={chartData} margin={{ top: 4, right: 0, left: -20, bottom: 0 }}>
+            <CartesianGrid vertical={false} strokeDasharray="3 3" className="stroke-border" />
+            <XAxis dataKey="month" tickLine={false} axisLine={false} tick={{ fontSize: 11 }} />
+            <YAxis tickLine={false} axisLine={false} tick={{ fontSize: 11 }} allowDecimals={false} />
+            <ChartTooltip content={<ChartTooltipContent />} />
+            <Bar dataKey="amas" fill="var(--color-primary)" radius={[4, 4, 0, 0]} minPointSize={3} />
+          </BarChart>
+        </ChartContainer>
+      </CardContent>
+    </Card>
+  );
+}
+
 function MemberProfileContent({ orgId, userId }: { orgId: string; userId: string }) {
   const router = useRouter();
   const { data: session } = authClient.useSession();
@@ -226,12 +290,16 @@ function MemberProfileContent({ orgId, userId }: { orgId: string; userId: string
         <TabsList>
           <TabsTrigger value="invites">Invites</TabsTrigger>
           <TabsTrigger value="points">Points</TabsTrigger>
+          <TabsTrigger value="amas">AMAs</TabsTrigger>
         </TabsList>
         <TabsContent value="invites" className="mt-4">
           <MemberInvitesTab orgId={orgId} userId={userId} />
         </TabsContent>
         <TabsContent value="points" className="mt-4">
           <MemberPointsTab orgId={orgId} userId={userId} />
+        </TabsContent>
+        <TabsContent value="amas" className="mt-4">
+          <MemberAmasTab orgId={orgId} userId={userId} />
         </TabsContent>
       </Tabs>
     </div>

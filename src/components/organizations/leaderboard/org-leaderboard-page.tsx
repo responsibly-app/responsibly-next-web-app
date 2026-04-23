@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import Link from "next/link";
 import { Trophy } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -18,10 +19,11 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useGetPointsLeaderboard } from "@/lib/auth/hooks";
+import { routes } from "@/routes";
 
 type Props = { orgId: string };
 
-type Preset = "month" | "3months" | "all" | "custom";
+type Preset = "month" | "lastmonth" | "3months" | "all" | "custom";
 
 function initials(name: string) {
   return name
@@ -53,6 +55,11 @@ function dateRangeForPreset(preset: Preset): { startDate?: string; endDate?: str
     const start = new Date(now.getFullYear(), now.getMonth(), 1);
     return { startDate: fmt(start) };
   }
+  if (preset === "lastmonth") {
+    const start = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const end = new Date(now.getFullYear(), now.getMonth(), 0);
+    return { startDate: fmt(start), endDate: fmt(end) };
+  }
   if (preset === "3months") {
     const start = new Date(now.getFullYear(), now.getMonth() - 2, 1);
     return { startDate: fmt(start) };
@@ -62,10 +69,47 @@ function dateRangeForPreset(preset: Preset): { startDate?: string; endDate?: str
 
 const PRESET_LABELS: Record<Preset, string> = {
   month: "This Month",
+  lastmonth: "Last Month",
   "3months": "Last 3 Months",
   all: "All Time",
   custom: "Custom",
 };
+
+function subtitleForPreset(
+  preset: Preset,
+  customStart: string,
+  customEnd: string,
+): string {
+  const now = new Date();
+  const fmt = (d: Date) =>
+    d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+
+  if (preset === "month") {
+    const start = new Date(now.getFullYear(), now.getMonth(), 1);
+    return `${fmt(start)} – ${fmt(now)}`;
+  }
+  if (preset === "lastmonth") {
+    const start = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const end = new Date(now.getFullYear(), now.getMonth(), 0);
+    return `${fmt(start)} – ${fmt(end)}`;
+  }
+  if (preset === "3months") {
+    const start = new Date(now.getFullYear(), now.getMonth() - 2, 1);
+    return `${fmt(start)} – ${fmt(now)}`;
+  }
+  if (preset === "all") {
+    return "All recorded activity";
+  }
+  if (preset === "custom") {
+    if (customStart && customEnd) {
+      return `${fmt(new Date(customStart + "T00:00:00"))} – ${fmt(new Date(customEnd + "T00:00:00"))}`;
+    }
+    if (customStart) return `From ${fmt(new Date(customStart + "T00:00:00"))}`;
+    if (customEnd) return `Until ${fmt(new Date(customEnd + "T00:00:00"))}`;
+    return "Select a date range";
+  }
+  return "";
+}
 
 export function OrgLeaderboardPage({ orgId }: Props) {
   const [preset, setPreset] = useState<Preset>("month");
@@ -87,7 +131,7 @@ export function OrgLeaderboardPage({ orgId }: Props) {
       <Card>
         <CardContent className="pt-4 pb-4">
           <div className="flex flex-wrap gap-2">
-            {(["month", "3months", "all", "custom"] as Preset[]).map((p) => (
+            {(["month", "lastmonth", "3months", "all", "custom"] as Preset[]).map((p) => (
               <Button
                 key={p}
                 variant={preset === p ? "default" : "outline"}
@@ -98,6 +142,9 @@ export function OrgLeaderboardPage({ orgId }: Props) {
               </Button>
             ))}
           </div>
+          <p className="mt-2 text-xs text-muted-foreground">
+            {subtitleForPreset(preset, customStart, customEnd)}
+          </p>
 
           {preset === "custom" && (
             <div className="mt-4 flex flex-wrap gap-4">
@@ -136,9 +183,9 @@ export function OrgLeaderboardPage({ orgId }: Props) {
           ) : entries.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 text-center">
               <Trophy className="mb-3 size-8 text-muted-foreground" />
-              <p className="text-sm text-muted-foreground">No points data yet</p>
+              <p className="text-sm text-muted-foreground">No data yet</p>
               <p className="mt-1 text-xs text-muted-foreground">
-                Members need to log points to appear here.
+                Members need to log activity to appear here.
               </p>
             </div>
           ) : (
@@ -149,6 +196,8 @@ export function OrgLeaderboardPage({ orgId }: Props) {
                     <TableHead className="w-16">Rank</TableHead>
                     <TableHead>Member</TableHead>
                     <TableHead className="text-right">Points</TableHead>
+                    <TableHead className="text-right">AMAs</TableHead>
+                    <TableHead className="text-right">Invites</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -158,7 +207,10 @@ export function OrgLeaderboardPage({ orgId }: Props) {
                         <RankBadge rank={index + 1} />
                       </TableCell>
                       <TableCell>
-                        <div className="flex items-center gap-3">
+                        <Link
+                          href={routes.dashboard.memberProfile(entry.userId)}
+                          className="flex items-center gap-3 hover:opacity-80 transition-opacity"
+                        >
                           <Avatar className="size-8">
                             <AvatarImage src={entry.memberImage ?? undefined} />
                             <AvatarFallback className="text-xs">
@@ -169,11 +221,21 @@ export function OrgLeaderboardPage({ orgId }: Props) {
                             <p className="text-sm font-medium">{entry.memberName ?? "Unknown"}</p>
                             <p className="text-xs text-muted-foreground">{entry.memberEmail}</p>
                           </div>
-                        </div>
+                        </Link>
                       </TableCell>
                       <TableCell className="text-right">
                         <span className="font-bold tabular-nums text-primary">
                           {entry.totalPoints.toLocaleString()}
+                        </span>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <span className="tabular-nums text-sm font-medium">
+                          {entry.totalAmas.toLocaleString()}
+                        </span>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <span className="tabular-nums text-sm font-medium">
+                          {entry.totalInvites.toLocaleString()}
                         </span>
                       </TableCell>
                     </TableRow>
