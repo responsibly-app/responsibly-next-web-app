@@ -2,6 +2,13 @@
 
 import { useState } from "react";
 import { MoreHorizontal, UserRound, Search, ExternalLink } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import Link from "next/link";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
@@ -14,7 +21,6 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
@@ -28,8 +34,10 @@ import {
 import { useListMembers, useRemoveMember, useGetMemberRole } from "@/lib/auth/hooks";
 import { authClient } from "@/lib/auth/auth-client";
 import { UpdateMemberRoleDialog } from "./update-member-role-dialog";
+import { UpdateMemberLevelDialog } from "./update-member-level-dialog";
 import { getPermissions } from "@/lib/auth/hooks/oraganization/access-control";
 import { OrgRole, ROLE_META } from "@/lib/auth/hooks/oraganization/permissions";
+import { WFG_LEVEL_META, WFG_LEVELS, type WFGLevel } from "@/lib/auth/hooks/oraganization/levels";
 import { routes } from "@/routes";
 
 type MemberRow = {
@@ -37,11 +45,13 @@ type MemberRow = {
   userId: string;
   organizationId: string;
   role: OrgRole;
+  level?: string | null;
   createdAt: Date | string;
   user: { id: string; name: string; email: string; image?: string | null };
 };
 
 type RoleTarget = { memberId: string; memberName: string; currentRole: OrgRole } | null;
+type LevelTarget = { memberId: string; memberName: string; currentLevel: WFGLevel } | null;
 
 function roleBadgeVariant(role: OrgRole) {
   if (role === "owner") return "default" as const;
@@ -55,7 +65,10 @@ function initials(name: string) {
 
 export function OrgMembersList({ orgId }: { orgId: string }) {
   const [roleTarget, setRoleTarget] = useState<RoleTarget>(null);
+  const [levelTarget, setLevelTarget] = useState<LevelTarget>(null);
   const [search, setSearch] = useState("");
+  const [roleFilter, setRoleFilter] = useState<OrgRole | "all">("all");
+  const [levelFilter, setLevelFilter] = useState<WFGLevel | "all">("all");
 
   const { data: session } = authClient.useSession();
   const { data: membersRaw, isPending } = useListMembers({ organizationId: orgId });
@@ -64,7 +77,7 @@ export function OrgMembersList({ orgId }: { orgId: string }) {
 
   const currentUserId = session?.user?.id;
   const currentRole = memberRoleData?.role as OrgRole | undefined;
-  const { canManage, canRemoveMember, canUpdateMemberRole } = getPermissions(currentRole);
+  const { canRemoveMember, canUpdateMemberRole } = getPermissions(currentRole);
 
   const allMembers: MemberRow[] = membersRaw
     ? Array.isArray(membersRaw)
@@ -72,15 +85,28 @@ export function OrgMembersList({ orgId }: { orgId: string }) {
       : ((membersRaw as { members?: MemberRow[] }).members ?? [])
     : [];
 
-  const members = search.trim()
-    ? allMembers.filter((m) => {
-        const q = search.toLowerCase();
-        return (
-          m.user?.name?.toLowerCase().includes(q) ||
-          m.user?.email?.toLowerCase().includes(q)
-        );
-      })
-    : allMembers;
+  const levelCounts = allMembers.reduce<Partial<Record<WFGLevel, number>>>((acc, m) => {
+    if (m.level && m.level in WFG_LEVEL_META) {
+      const lvl = m.level as WFGLevel;
+      acc[lvl] = (acc[lvl] ?? 0) + 1;
+    }
+    return acc;
+  }, {});
+
+  const levelCountEntries = (Object.keys(WFG_LEVELS) as WFGLevel[]).filter(
+    (lvl) => (levelCounts[lvl] ?? 0) > 0,
+  );
+
+  const members = allMembers.filter((m) => {
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      if (!m.user?.name?.toLowerCase().includes(q) && !m.user?.email?.toLowerCase().includes(q))
+        return false;
+    }
+    if (roleFilter !== "all" && m.role !== roleFilter) return false;
+    if (levelFilter !== "all" && m.level !== levelFilter) return false;
+    return true;
+  });
 
   function handleRemove(memberId: string, email: string) {
     removeMember.mutate(
@@ -95,14 +121,57 @@ export function OrgMembersList({ orgId }: { orgId: string }) {
 
   return (
     <>
-      <div className="relative my-2">
-        <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-        <Input
-          placeholder="Search by name or email…"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="pl-9"
-        />
+      {!isPending && levelCountEntries.length > 0 && (
+        <div className="flex flex-wrap gap-2 mb-3">
+          {levelCountEntries.map((lvl) => {
+            const active = levelFilter === lvl;
+            return (
+              <button
+                key={lvl}
+                onClick={() => setLevelFilter(active ? "all" : lvl)}
+                className={`flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs transition-colors hover:bg-muted ${active ? "bg-primary text-primary-foreground border-primary hover:bg-primary/90" : ""}`}
+              >
+                <span className="font-mono font-semibold">{WFG_LEVEL_META[lvl].abbreviation}</span>
+                <span className={active ? "opacity-80" : "text-muted-foreground"}>{levelCounts[lvl]}</span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+      <div className="my-2 flex flex-wrap gap-2">
+        <div className="relative flex-1 min-w-48">
+          <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            placeholder="Search by name or email…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-9"
+          />
+        </div>
+        <Select value={roleFilter} onValueChange={(v) => setRoleFilter(v as OrgRole | "all")}>
+          <SelectTrigger className="w-44">
+            <SelectValue placeholder="All roles" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All roles</SelectItem>
+            {(["owner", "admin", "assistant", "priviledgedMember", "member"] as OrgRole[]).map((r) => (
+              <SelectItem key={r} value={r}>{ROLE_META[r].label}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select value={levelFilter} onValueChange={(v) => setLevelFilter(v as WFGLevel | "all")}>
+          <SelectTrigger className="w-44">
+            <SelectValue placeholder="All levels" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All levels</SelectItem>
+            {(Object.keys(WFG_LEVELS) as WFGLevel[]).map((lvl) => (
+              <SelectItem key={lvl} value={lvl}>
+                {WFG_LEVEL_META[lvl].abbreviation} — {WFG_LEVEL_META[lvl].label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       <Card>
@@ -117,7 +186,9 @@ export function OrgMembersList({ orgId }: { orgId: string }) {
             <div className="flex flex-col items-center justify-center py-12 text-center">
               <UserRound className="text-muted-foreground mb-3 size-8" />
               <p className="text-muted-foreground text-sm">
-                {search.trim() ? "No members match your search" : "No members yet"}
+                {search.trim() || roleFilter !== "all" || levelFilter !== "all"
+                  ? "No members match your filters"
+                  : "No members yet"}
               </p>
             </div>
           ) : (
@@ -127,7 +198,8 @@ export function OrgMembersList({ orgId }: { orgId: string }) {
                 <TableRow>
                   <TableHead>Member</TableHead>
                   <TableHead>Role</TableHead>
-                  {canManage && <TableHead className="w-12" />}
+                  <TableHead>Level</TableHead>
+                  {canRemoveMember && <TableHead className="w-12" />}
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -160,11 +232,52 @@ export function OrgMembersList({ orgId }: { orgId: string }) {
                         </div>
                       </TableCell>
                       <TableCell>
-                        <Badge variant={roleBadgeVariant(member.role)}>
-                          {ROLE_META[member.role]?.label ?? member.role}
-                        </Badge>
+                        {canUpdateMemberRole && !isSelf && !memberIsOwner ? (
+                          <Badge
+                            variant={roleBadgeVariant(member.role)}
+                            className="cursor-pointer hover:opacity-75 transition-opacity"
+                            onClick={() =>
+                              setRoleTarget({
+                                memberId: member.id,
+                                memberName: member.user?.name ?? member.user?.email ?? member.id,
+                                currentRole: member.role,
+                              })
+                            }
+                          >
+                            {ROLE_META[member.role]?.label ?? member.role}
+                          </Badge>
+                        ) : (
+                          <Badge variant={roleBadgeVariant(member.role)}>
+                            {ROLE_META[member.role]?.label ?? member.role}
+                          </Badge>
+                        )}
                       </TableCell>
-                      {canManage && (
+                      <TableCell>
+                        {member.level ? (
+                          canUpdateMemberRole && !isSelf && !memberIsOwner ? (
+                            <Badge
+                              variant="outline"
+                              className="font-mono text-xs cursor-pointer hover:opacity-75 transition-opacity"
+                              onClick={() =>
+                                setLevelTarget({
+                                  memberId: member.id,
+                                  memberName: member.user?.name ?? member.user?.email ?? member.id,
+                                  currentLevel: (member.level as WFGLevel) ?? "ta",
+                                })
+                              }
+                            >
+                              {WFG_LEVEL_META[member.level as WFGLevel]?.abbreviation ?? member.level.toUpperCase()}
+                            </Badge>
+                          ) : (
+                            <Badge variant="outline" className="font-mono text-xs">
+                              {WFG_LEVEL_META[member.level as WFGLevel]?.abbreviation ?? member.level.toUpperCase()}
+                            </Badge>
+                          )
+                        ) : (
+                          <span className="text-muted-foreground text-xs">—</span>
+                        )}
+                      </TableCell>
+                      {canRemoveMember && (
                         <TableCell>
                           {!isSelf && !memberIsOwner && (
                             <DropdownMenu>
@@ -175,30 +288,12 @@ export function OrgMembersList({ orgId }: { orgId: string }) {
                                 </Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
-                                {canUpdateMemberRole && (
-                                  <>
-                                    <DropdownMenuItem
-                                      onClick={() =>
-                                        setRoleTarget({
-                                          memberId: member.id,
-                                          memberName: member.user?.name ?? member.user?.email ?? member.id,
-                                          currentRole: member.role,
-                                        })
-                                      }
-                                    >
-                                      Update Role
-                                    </DropdownMenuItem>
-                                    <DropdownMenuSeparator />
-                                  </>
-                                )}
-                                {canRemoveMember && (
-                                  <DropdownMenuItem
-                                    className="text-destructive focus:text-destructive"
-                                    onClick={() => handleRemove(member.id, member.user?.email ?? member.id)}
-                                  >
-                                    Remove
-                                  </DropdownMenuItem>
-                                )}
+                                <DropdownMenuItem
+                                  className="text-destructive focus:text-destructive"
+                                  onClick={() => handleRemove(member.id, member.user?.email ?? member.id)}
+                                >
+                                  Remove
+                                </DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>
                           )}
@@ -221,6 +316,15 @@ export function OrgMembersList({ orgId }: { orgId: string }) {
         memberId={roleTarget?.memberId ?? ""}
         memberName={roleTarget?.memberName ?? ""}
         currentRole={(roleTarget?.currentRole ?? "member") as OrgRole}
+      />
+
+      <UpdateMemberLevelDialog
+        open={!!levelTarget}
+        onOpenChange={(open) => !open && setLevelTarget(null)}
+        organizationId={orgId}
+        memberId={levelTarget?.memberId ?? ""}
+        memberName={levelTarget?.memberName ?? ""}
+        currentLevel={levelTarget?.currentLevel ?? "ta"}
       />
     </>
   );

@@ -164,6 +164,7 @@ export const pointsRouter = {
           memberName: user.name,
           memberEmail: user.email,
           memberImage: user.image,
+          memberLevel: member.level,
           totalPoints: sql<number>`cast(coalesce(${pointsSq.pointsTotal}, 0) as int)`,
           totalAmas: sql<number>`cast(coalesce(${amasSq.amasTotal}, 0) as int)`,
           totalInvites: sql<number>`cast(coalesce(${invitesSq.invitesTotal}, 0) as int)`,

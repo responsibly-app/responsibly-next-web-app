@@ -56,6 +56,7 @@ export const PointsLeaderboardEntrySchema = z.object({
   memberName: z.string().nullable(),
   memberEmail: z.string().nullable(),
   memberImage: z.string().nullable(),
+  memberLevel: z.string().nullable(),
   totalPoints: z.number(),
   totalAmas: z.number(),
   totalInvites: z.number(),

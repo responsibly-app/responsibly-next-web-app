@@ -13,16 +13,16 @@ const baseURL = ENVConfig.backend_base_url;
 export const organizationPlugin = organization({
     ...accessControl,
     teams: { enabled: true, defaultTeam: { enabled: false } },
-    // schema: {
-    //     member: {
-    //         additionalFields: {
-    //             level: {
-    //                 type: "string",
-    //                 defaultValue: "TA",
-    //             }
-    //         }
-    //     }
-    // },
+    schema: {
+        member: {
+            additionalFields: {
+                level: {
+                    type: "string",
+                    defaultValue: "ta",
+                }
+            }
+        }
+    },
     async sendInvitationEmail(data) {
         const inviteLink = `${baseURL}${routes.dashboard.acceptInvitation(data.id)}`;
         await sendOrganizationInvitation({
