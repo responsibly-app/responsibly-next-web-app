@@ -74,7 +74,7 @@ export function UpcomingEventsCard() {
         {isPending ? (
           <div className="space-y-3">
             {Array.from({ length: 4 }).map((_, i) => (
-              <Skeleton key={i} className="h-14 w-full rounded-md" />
+              <Skeleton key={i} className="h-14 w-full rounded-xl" />
             ))}
           </div>
         ) : events.length === 0 ? (
@@ -92,7 +92,7 @@ export function UpcomingEventsCard() {
                 (ev.eventType === "online" || ev.eventType === "hybrid") && ev.zoomJoinUrl;
 
               return (
-                <li key={ev.id} className="rounded-md border overflow-hidden transition-colors hover:bg-muted/50">
+                <li key={ev.id} className="rounded-xl border overflow-hidden transition-colors hover:bg-muted/50">
                   <Link
                     href={routes.dashboard.eventDetail(ev.id)}
                     className="flex flex-col gap-1.5 p-3"
