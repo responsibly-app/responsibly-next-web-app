@@ -6,13 +6,13 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { orpcTQUtils } from "@/lib/orpc/orpc-client";
 import { useLinkSocial, useUnlinkSocial } from "@/lib/auth/hooks";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { format } from "date-fns";
 import { Calendar, Clock, ExternalLink, Link2, Link2Off, Users } from "lucide-react";
 import { toast } from "sonner";
 import zoomIcon from "@/images/icons/zoom.svg";
 import { IntegrationDetailLayout } from "../_components/integration-detail-layout";
 import { IntegrationNotConnected } from "../_components/integration-not-connected";
 import { ConnectedAccountCard } from "../_components/connected-account-card";
+import { formatInTz } from "@/lib/utils/timezone";
 
 const ACCENT = "#2D8CFF";
 
@@ -120,13 +120,16 @@ export default function ZoomIntegrationPage() {
                           {meeting.start_time && (
                             <span className="flex items-center gap-1">
                               <Calendar className="h-3 w-3" />
-                              {format(new Date(meeting.start_time), "MMM d, yyyy")}
+                              {formatInTz(meeting.start_time, meeting.timezone, { month: "short", day: "numeric", year: "numeric" })}
                             </span>
                           )}
                           {meeting.start_time && (
                             <span className="flex items-center gap-1">
                               <Clock className="h-3 w-3" />
-                              {format(new Date(meeting.start_time), "h:mm a")}
+                              {formatInTz(meeting.start_time, meeting.timezone, { hour: "numeric", minute: "2-digit", hour12: true })}
+                              {meeting.timezone && (
+                                <span className="text-muted-foreground/70">{meeting.timezone}</span>
+                              )}
                             </span>
                           )}
                           {meeting.duration! > 0 && (

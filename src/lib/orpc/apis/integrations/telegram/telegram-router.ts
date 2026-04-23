@@ -13,6 +13,7 @@ import {
   TelegramUpdateSchema,
 } from "./telegram-schemas";
 import { debugLog } from "@/debug";
+import { withVercelBypass } from "@/lib/utils/vercel";
 
 export const telegramRouter = {
   status: authed
@@ -84,9 +85,24 @@ export const telegramRouter = {
     })
     .output(z.object({ success: z.boolean() }))
     .handler(async ({ context }) => {
+      const [row] = await db
+        .select()
+        .from(userTelegram)
+        .where(eq(userTelegram.userId, context.session.user.id))
+        .limit(1);
+
       await db
         .delete(userTelegram)
         .where(eq(userTelegram.userId, context.session.user.id));
+
+      if (row) {
+        try {
+          const telegram = createTelegramClient();
+          await telegram.sendMessage(parseInt(row.telegramId), "✅ Your Telegram account has been successfully disconnected from Responsibly.");
+        } catch {
+          // Best-effort — don't fail the unlink if the message can't be sent
+        }
+      }
 
       return { success: true };
     }),
@@ -103,7 +119,7 @@ export const telegramRouter = {
     .handler(async ({ input }) => {
       const telegram = createTelegramClient();
       const base = input.baseUrl ?? ENVConfig.backend_base_url;
-      const webhookUrl = `${base}/api/v1/rest/telegram/webhook`;
+      const webhookUrl = withVercelBypass(`${base}/api/v1/rest/telegram/webhook`);
       const secret = process.env.TELEGRAM_WEBHOOK_SECRET;
 
       const result = await telegram.setWebhook(webhookUrl, secret);

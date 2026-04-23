@@ -3,6 +3,7 @@ import { eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { user } from "@/lib/db/schema/better-auth-schema";
 import { getZoomClient, type ZoomClient } from "@/lib/sdks/zoom-client";
+import { getCalendlyClient, type CalendlyClient } from "@/lib/sdks/calendly-client";
 import type { Context, Session } from "./context";
 
 export const pub = os.$context<Context>();
@@ -38,4 +39,14 @@ export const zoomAuthed = authed.use(async ({ context, next }) => {
     });
   }
   return next({ context: { ...context, zoom: zoom as ZoomClient } });
+});
+
+export const calendlyAuthed = authed.use(async ({ context, next }) => {
+  const calendly = await getCalendlyClient(context.headers);
+  if (!calendly) {
+    throw new ORPCError("PRECONDITION_FAILED", {
+      message: "Calendly account not connected",
+    });
+  }
+  return next({ context: { ...context, calendly: calendly as CalendlyClient } });
 });

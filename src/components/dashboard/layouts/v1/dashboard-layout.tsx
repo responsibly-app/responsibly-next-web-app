@@ -1,19 +1,23 @@
 "use client";
 
-import { AppSidebar } from "@/components/dashboard/app-sidebar";
+import Cookies from "js-cookie";
+import { AppSidebar } from "@/components/dashboard/layouts/v1/app-sidebar";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { DasboardHeader } from "./dashboard-header";
 
+function getDefaultOpen(): boolean {
+  const value = Cookies.get("sidebar_state");
+  return value !== undefined ? value === "true" : true;
+}
+
 export default function DashboardLayout({
   children,
-  defaultOpen,
 }: {
   children: React.ReactNode;
-  defaultOpen?: boolean;
 }) {
   return (
     <SidebarProvider
-      defaultOpen={defaultOpen}
+      defaultOpen={getDefaultOpen()}
       style={
         {
           "--sidebar-width": "calc(var(--spacing) * 60)",

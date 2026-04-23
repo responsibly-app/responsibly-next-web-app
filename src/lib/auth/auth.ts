@@ -120,7 +120,7 @@ export const auth = betterAuth({
     storeAccountCookie: false, // Store account data after OAuth flow in a cookie (useful for database-less flows)
     accountLinking: {
       enabled: true,
-      trustedProviders: ["google", "zoom", "email-password"], // or async (request) => ["google", "github"]
+      trustedProviders: ["google", "zoom", "calendly", "email-password"], // or async (request) => ["google", "github"]
       allowDifferentEmails: true
     }
   },

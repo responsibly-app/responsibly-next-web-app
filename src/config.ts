@@ -13,13 +13,13 @@ export const ENVIRONMENT = process.env.NEXT_PUBLIC_ENV || "local";
 // -------------------------------------------------------------------------------------
 export const appName = "Responsibly";
 // -------------------------------------------------------------------------------------
-export const DEBUG_MODE = ENVIRONMENT === "local" || ENVIRONMENT === "local_https";
+export const DEBUG_MODE = ["local", "local_https", "dev"].includes(ENVIRONMENT);
 // -------------------------------------------------------------------------------------
 export const config: { [env: string]: configItem } = {
-    test: {
+    dev: {
         app_name: appName,
-        backend_base_url: "https://responsibly.vercel.app",
-        landing_page_url: "https://responsibly.vercel.app",
+        backend_base_url: "https://dev.responsibly.work",
+        landing_page_url: "https://dev.responsibly.work",
     },
     prod: {
         app_name: appName,
