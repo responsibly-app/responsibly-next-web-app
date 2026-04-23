@@ -8,6 +8,7 @@ import { eventRouter } from "./apis/event/event-router";
 import { telegramRouter } from "./apis/integrations/telegram/telegram-router";
 import { invitesRouter } from "./apis/personal/invites-router";
 import { pointsRouter } from "./apis/personal/points-router";
+import { amasRouter } from "./apis/personal/amas-router";
 
 export const appRouter = {
   session: sessionRouter,
@@ -22,6 +23,7 @@ export const appRouter = {
   personal: {
     invites: invitesRouter,
     points: pointsRouter,
+    amas: amasRouter,
   },
 };
 

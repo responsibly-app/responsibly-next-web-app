@@ -169,6 +169,13 @@
       "when": 1776565621631,
       "tag": "0023_flat_magneto",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1776974415207,
+      "tag": "0024_sweet_switch",
+      "breakpoints": true
     }
   ]
 }

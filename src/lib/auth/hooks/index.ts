@@ -11,3 +11,4 @@ export * from "./authentication/use-admin";
 export * from "./oraganization";
 export * from "./personal/use-invites";
 export * from "./personal/use-points";
+export * from "./personal/use-amas";

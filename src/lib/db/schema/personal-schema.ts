@@ -27,3 +27,14 @@ export const pointItem = pgTable("point_item", {
   date: date("date").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
+
+export const amaItem = pgTable("ama_item", {
+  id: text("id").primaryKey(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+  recruitName: text("recruit_name").notNull(),
+  agentCode: text("agent_code"),
+  date: date("date").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
