@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { Trash2, UserPlus } from "lucide-react";
-import { Bar, BarChart, XAxis, YAxis, CartesianGrid } from "recharts";
+import { Bar, BarChart, XAxis, YAxis, CartesianGrid, LabelList } from "recharts";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -32,6 +32,7 @@ import {
 } from "@/components/ui/table";
 import { useListAmas, useDeleteAmaItem } from "@/lib/auth/hooks";
 import { AddAmaDialog } from "./add-ama-dialog";
+import { useAmaGoal, AmaGoalPopoverButton, AmaGoalBar } from "./ama-goal-bar";
 
 const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
@@ -67,12 +68,14 @@ function MonthlyChart({ items }: { items: { date: string }[] }) {
 
   return (
     <ChartContainer config={chartConfig} className="h-48 w-full">
-      <BarChart data={data} margin={{ top: 4, right: 0, left: -20, bottom: 0 }}>
+      <BarChart data={data} margin={{ top: 20, right: 0, left: -20, bottom: 0 }}>
         <CartesianGrid vertical={false} strokeDasharray="3 3" className="stroke-border" />
         <XAxis dataKey="month" tickLine={false} axisLine={false} tick={{ fontSize: 12 }} />
         <YAxis tickLine={false} axisLine={false} tick={{ fontSize: 12 }} allowDecimals={false} />
         <ChartTooltip content={<ChartTooltipContent />} />
-        <Bar dataKey="recruits" fill="var(--color-primary)" radius={[4, 4, 0, 0]} minPointSize={3} />
+        <Bar dataKey="recruits" fill="var(--color-primary)" radius={[4, 4, 0, 0]} minPointSize={3}>
+          <LabelList dataKey="recruits" position="top" style={{ fontSize: 11 }} formatter={(v: number) => (v === 0 ? "" : v)} />
+        </Bar>
       </BarChart>
     </ChartContainer>
   );
@@ -82,6 +85,7 @@ export function AmasPage() {
   const { data: items = [], isPending } = useListAmas();
   const { mutate: deleteItem, isPending: isDeleting } = useDeleteAmaItem();
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+  const { goal, setGoal } = useAmaGoal();
 
   const { totalAll, totalMonth } = useMemo(() => {
     const thisMonth = currentMonthStr();
@@ -95,7 +99,10 @@ export function AmasPage() {
     <div className="space-y-6 pt-5">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold tracking-tight">AMAs</h1>
-        <AddAmaDialog />
+        <div className="flex items-center gap-2">
+          <AmaGoalPopoverButton goal={goal} setGoal={setGoal} />
+          <AddAmaDialog />
+        </div>
       </div>
 
       {/* Summary cards */}
@@ -113,6 +120,15 @@ export function AmasPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Monthly goal bar */}
+      {goal !== null && (
+        <Card>
+          <CardContent className="pt-5">
+            <AmaGoalBar current={totalMonth} goal={goal} />
+          </CardContent>
+        </Card>
+      )}
 
       {/* Monthly chart */}
       <Card>

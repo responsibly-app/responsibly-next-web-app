@@ -2,7 +2,8 @@
 
 import { authClient } from "@/lib/auth/auth-client";
 import { InviteLogCard } from "./invite-log-card";
-import { PointsSummaryCard } from "./points-summary-card";
+import { DashboardPointsCard } from "./dashboard-points-card";
+import { DashboardAmasCard } from "./dashboard-amas-card";
 import { UpcomingEventsCard } from "./upcoming-events";
 import { InviteStreakGrid } from "./invite-streak-grid";
 import { useGetInviteHistory } from "@/lib/auth/hooks";
@@ -109,7 +110,10 @@ export function PersonalPage() {
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         {/* Left column: activity cards */}
         <div className="space-y-4 lg:col-span-2">
-          <PointsSummaryCard />
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <DashboardPointsCard />
+            <DashboardAmasCard />
+          </div>
           <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1fr_220px]">
             <InviteStreakPreview />
             <InviteLogCard />
