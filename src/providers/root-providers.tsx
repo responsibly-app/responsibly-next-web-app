@@ -7,7 +7,8 @@ import { useAutoSyncTimezone } from "@/lib/auth/hooks";
 import NextTopLoader from "nextjs-toploader";
 import { Suspense } from "react";
 import { TanstackProvider } from "./tanstack-provider";
-import { Toaster } from "@/components/ui/sonner"
+import { Toaster } from "@/components/ui/sonner";
+import { FireworksProvider } from "@/contexts/fireworks-context";
 
 function TimezoneSyncProvider() {
   useAutoSyncTimezone();
@@ -39,7 +40,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
           <NextTopLoader color="var(--primary)" showSpinner={false} />
           <Toaster />
           <TimezoneSyncProvider />
-          <Suspense fallback={<SuspendFallback />}>{children}</Suspense>
+          <FireworksProvider>
+            <Suspense fallback={<SuspendFallback />}>{children}</Suspense>
+          </FireworksProvider>
         </ThemeProvider>
       </TooltipProvider>
     </TanstackProvider>

@@ -13,6 +13,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAddPointItem } from "@/lib/auth/hooks";
+import { useFireworks } from "@/contexts/fireworks-context";
 
 function todayStr(): string {
   return new Date().toISOString().split("T")[0];
@@ -25,6 +26,7 @@ export function AddPointDialog() {
   const [date, setDate] = useState(todayStr());
 
   const { mutate: addPoint, isPending } = useAddPointItem();
+  const { triggerFireworks } = useFireworks();
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -39,6 +41,7 @@ export function AddPointDialog() {
           setAmount("");
           setDate(todayStr());
           setOpen(false);
+          triggerFireworks();
         },
       },
     );

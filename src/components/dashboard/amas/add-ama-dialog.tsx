@@ -20,6 +20,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { useAddAmaItem } from "@/lib/auth/hooks";
+import { useFireworks } from "@/contexts/fireworks-context";
 
 function toDateStr(d: Date): string {
   return format(d, "yyyy-MM-dd");
@@ -33,6 +34,7 @@ export function AddAmaDialog() {
   const [calOpen, setCalOpen] = useState(false);
 
   const { mutate: addAma, isPending } = useAddAmaItem();
+  const { triggerFireworks } = useFireworks();
 
   function handleSubmit(e: React.SyntheticEvent) {
     e.preventDefault();
@@ -46,6 +48,7 @@ export function AddAmaDialog() {
           setAgentCode("");
           setDate(new Date());
           setOpen(false);
+          triggerFireworks();
         },
       },
     );

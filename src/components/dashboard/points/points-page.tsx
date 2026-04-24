@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import { Trash2, TrendingUp } from "lucide-react";
-import { Bar, BarChart, XAxis, YAxis, CartesianGrid } from "recharts";
+import { Bar, BarChart, XAxis, YAxis, CartesianGrid, LabelList } from "recharts";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/table";
 import { useListPoints, useDeletePointItem } from "@/lib/auth/hooks";
 import { AddPointDialog } from "./add-point-dialog";
+import { usePointsGoal, PointsGoalPopoverButton, PointsGoalBar } from "./points-goal-bar";
 
 const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
@@ -57,12 +58,14 @@ function MonthlyChart({ items }: { items: { date: string; amount: number }[] }) 
 
   return (
     <ChartContainer config={chartConfig} className="h-48 w-full">
-      <BarChart data={data} margin={{ top: 4, right: 0, left: -20, bottom: 0 }}>
+      <BarChart data={data} margin={{ top: 20, right: 0, left: -20, bottom: 0 }}>
         <CartesianGrid vertical={false} strokeDasharray="3 3" className="stroke-border" />
         <XAxis dataKey="month" tickLine={false} axisLine={false} tick={{ fontSize: 12 }} />
         <YAxis tickLine={false} axisLine={false} tick={{ fontSize: 12 }} allowDecimals={false} />
         <ChartTooltip content={<ChartTooltipContent />} />
-        <Bar dataKey="points" fill="var(--color-primary)" radius={[4, 4, 0, 0]} minPointSize={3} />
+        <Bar dataKey="points" fill="hsl(142 71% 45%)" radius={[4, 4, 0, 0]} minPointSize={3}>
+          <LabelList dataKey="points" position="top" style={{ fontSize: 11 }} formatter={(v: number) => (v === 0 ? "" : v)} />
+        </Bar>
       </BarChart>
     </ChartContainer>
   );
@@ -71,6 +74,7 @@ function MonthlyChart({ items }: { items: { date: string; amount: number }[] }) 
 export function PointsPage() {
   const { data: items = [], isPending } = useListPoints();
   const { mutate: deleteItem, isPending: isDeleting } = useDeletePointItem();
+  const { goal, setGoal } = usePointsGoal();
 
   const { totalAll, totalMonth } = useMemo(() => {
     const thisMonth = currentMonthStr();
@@ -84,7 +88,10 @@ export function PointsPage() {
     <div className="space-y-6 pt-5">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold tracking-tight">Points</h1>
-        <AddPointDialog />
+        <div className="flex items-center gap-2">
+          <PointsGoalPopoverButton goal={goal} setGoal={setGoal} />
+          <AddPointDialog />
+        </div>
       </div>
 
       {/* Summary cards */}
@@ -102,6 +109,15 @@ export function PointsPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Monthly goal bar */}
+      {goal !== null && (
+        <Card>
+          <CardContent className="pt-5">
+            <PointsGoalBar current={totalMonth} goal={goal} />
+          </CardContent>
+        </Card>
+      )}
 
       {/* Monthly chart */}
       <Card>

@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/table";
 import { authClient } from "@/lib/auth/auth-client";
 import { useGetInviteHistory, useLogInvites } from "@/lib/auth/hooks";
+import { useFireworks } from "@/contexts/fireworks-context";
 import { InviteStreakGrid } from "@/components/dashboard/personal/invite-streak-grid";
 import { InviteGoalBar, GoalPopoverButton, useInviteGoal } from "@/components/dashboard/invites/invite-goal-bar";
 import { localDateStr } from "@/lib/utils/timezone";
@@ -41,6 +42,7 @@ export function InvitesPage() {
 
   const { data: history = [], isPending } = useGetInviteHistory(90);
   const { mutate: logInvites, isPending: isSaving } = useLogInvites();
+  const { triggerFireworks } = useFireworks();
 
   // Today's log
   const todayCount = history.find((h) => h.date === today)?.count ?? 0;
@@ -64,7 +66,7 @@ export function InvitesPage() {
   function handleSaveLog() {
     const parsed = parseInt(logCount, 10);
     if (isNaN(parsed) || parsed < 0) return;
-    logInvites({ date: logDate, count: parsed });
+    logInvites({ date: logDate, count: parsed }, { onSuccess: () => triggerFireworks() });
   }
 
   function handleToggleCustomDate() {

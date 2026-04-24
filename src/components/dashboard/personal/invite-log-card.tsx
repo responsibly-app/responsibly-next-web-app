@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { authClient } from "@/lib/auth/auth-client";
 import { useGetInviteHistory, useLogInvites } from "@/lib/auth/hooks";
+import { useFireworks } from "@/contexts/fireworks-context";
 import { localDateStr } from "@/lib/utils/timezone";
 
 export function InviteLogCard() {
@@ -17,6 +18,7 @@ export function InviteLogCard() {
 
   const { data: history = [], isPending } = useGetInviteHistory(90);
   const { mutate: logInvites, isPending: isSaving } = useLogInvites();
+  const { triggerFireworks } = useFireworks();
 
   const todayEntry = history.find((h) => h.date === today);
   const [count, setCount] = useState<string>("");
@@ -30,7 +32,7 @@ export function InviteLogCard() {
   function handleSave() {
     const parsed = parseInt(count, 10);
     if (isNaN(parsed) || parsed < 0) return;
-    logInvites({ date: today, count: parsed });
+    logInvites({ date: today, count: parsed }, { onSuccess: () => triggerFireworks() });
   }
 
   if (isPending) {
