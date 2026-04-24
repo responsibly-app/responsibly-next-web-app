@@ -34,7 +34,7 @@ import {
 } from "@/components/ui/drawer";
 import { appName } from "@/config";
 
-export const SIDEBAR_ICON_W = 55;
+export const SIDEBAR_ICON_W = 54;
 export const SIDEBAR_PINNED_W = 240;
 
 const navGroups = [

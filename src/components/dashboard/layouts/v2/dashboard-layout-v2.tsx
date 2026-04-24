@@ -2,11 +2,8 @@
 
 import * as React from "react";
 import Cookies from "js-cookie";
-import { AppSidebarV2 } from "./app-sidebar-v2";
+import { AppSidebarV2, SIDEBAR_ICON_W, SIDEBAR_PINNED_W } from "./app-sidebar-v2";
 import { DashboardHeaderV2 } from "./dashboard-header-v2";
-
-const SIDEBAR_ICON_W = 55;
-const SIDEBAR_PINNED_W = 240;
 
 function getDefaultPinned(): boolean {
   const v2 = Cookies.get("sidebar_v2_pinned");
