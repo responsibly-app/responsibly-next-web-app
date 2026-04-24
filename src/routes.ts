@@ -9,6 +9,7 @@ export const routes = {
     organizations: () => "/dashboard/organizations",
     attendance: () => "/dashboard/attendance",
     leaderboard: () => "/dashboard/leaderboard",
+    baseshop: () => "/dashboard/baseshop",
     personal: () => "/dashboard/personal",
     invites: () => "/dashboard/invites",
     points: () => "/dashboard/points",

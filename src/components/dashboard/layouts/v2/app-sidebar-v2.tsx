@@ -20,6 +20,7 @@ import {
   PanelLeftClose,
   ChevronsUpDown,
   Menu,
+  BarChart3,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { routes } from "@/routes";
@@ -52,6 +53,7 @@ const navGroups = [
     label: "Organization",
     items: [
       { title: "Leaderboard", url: routes.dashboard.leaderboard(), icon: Trophy },
+      { title: "Baseshop", url: routes.dashboard.baseshop(), icon: BarChart3 },
       { title: "Members", url: routes.dashboard.members(), icon: Users },
       { title: "Events", url: routes.dashboard.events(), icon: CalendarDays },
       { title: "Attendance", url: routes.dashboard.attendance(), icon: ClipboardList },

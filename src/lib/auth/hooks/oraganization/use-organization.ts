@@ -124,3 +124,13 @@ export function useListMyOrganizations() {
     queryKey: ["organization", ...orpcTQUtils.organization.listMine.queryKey()],
   });
 }
+
+
+export function useGetOrgTimeSeries(orgId: string, startDate: string, endDate?: string) {
+  return useQuery(
+    orpcTQUtils.organization.getOrgTimeSeries.queryOptions({
+      input: { organizationId: orgId, startDate, endDate },
+      enabled: !!orgId && !!startDate,
+    }),
+  );
+}
