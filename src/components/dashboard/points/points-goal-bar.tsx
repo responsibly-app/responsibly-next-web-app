@@ -178,7 +178,7 @@ export function PointsGoalBar({ current, goal }: PointsGoalBarProps) {
           style={{ width: animated ? `${pct}%` : "0%" }}
         />
         {!isAtGoal && (
-          <div className="absolute inset-y-0 right-0 w-[3px] bg-foreground/15 rounded-r-full" />
+          <div className="absolute inset-y-0 right-0 w-0.75 bg-foreground/15 rounded-r-full" />
         )}
       </div>
 

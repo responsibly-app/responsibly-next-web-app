@@ -46,3 +46,18 @@ export const UpdateMemberLevelInputSchema = z.object({
 export const UpdateMemberLevelOutputSchema = z.object({
   success: z.boolean(),
 });
+
+export const GetOrgTimeSeriesInputSchema = z.object({
+  organizationId: z.string(),
+  startDate: z.string(),
+  endDate: z.string().optional(),
+});
+
+export const OrgTimeSeriesEntrySchema = z.object({
+  date: z.string(),
+  points: z.number(),
+  amas: z.number(),
+  invites: z.number(),
+});
+
+export const GetOrgTimeSeriesOutputSchema = z.array(OrgTimeSeriesEntrySchema);

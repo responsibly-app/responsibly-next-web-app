@@ -1,8 +1,9 @@
 import { db } from "@/lib/db";
 import { member, organization } from "@/lib/db/schema/better-auth-schema";
-import { and, eq } from "drizzle-orm";
+import { pointItem, amaItem, dailyInvite } from "@/lib/db/schema/personal-schema";
+import { and, eq, gte, inArray, lte, sql } from "drizzle-orm";
 import { authed } from "@/lib/orpc/base";
-import { GetMemberRoleInputSchema, GetMemberRoleOutputSchema, GetRolesInputSchema, GetRolesOutputSchema, ListMyOrganizationsOutputSchema, UpdateMemberLevelInputSchema, UpdateMemberLevelOutputSchema } from "./organization-schemas";
+import { GetMemberRoleInputSchema, GetMemberRoleOutputSchema, GetRolesInputSchema, GetRolesOutputSchema, GetOrgTimeSeriesInputSchema, GetOrgTimeSeriesOutputSchema, ListMyOrganizationsOutputSchema, UpdateMemberLevelInputSchema, UpdateMemberLevelOutputSchema } from "./organization-schemas";
 import { ALL_ASSIGNABLE_ROLES, canAssignRole, INVITABLE_ROLES, OrgRole, ROLE_LEVELS, ROLE_META } from "@/lib/auth/hooks/oraganization/permissions";
 import { ORPCError } from "@orpc/server";
 
@@ -142,5 +143,73 @@ export const organizationRouter = {
         .where(and(eq(member.id, input.memberId), eq(member.organizationId, input.organizationId)));
 
       return { success: true };
+    }),
+
+  getOrgTimeSeries: authed
+    .route({
+      method: "GET",
+      path: "/organization/time-series",
+      summary: "Get org-wide daily totals for points, AMAs, and invites",
+      tags: ["Organization"],
+    })
+    .input(GetOrgTimeSeriesInputSchema)
+    .output(GetOrgTimeSeriesOutputSchema)
+    .handler(async ({ input, context }) => {
+      const memberRow = await db
+        .select({ role: member.role })
+        .from(member)
+        .where(and(eq(member.organizationId, input.organizationId), eq(member.userId, context.session.user.id)))
+        .limit(1)
+        .then((rows) => rows[0]);
+
+      if (!memberRow) throw new ORPCError("FORBIDDEN");
+
+      const orgUserIds = db
+        .select({ userId: member.userId })
+        .from(member)
+        .where(eq(member.organizationId, input.organizationId));
+
+      const [pointsRows, amasRows, invitesRows] = await Promise.all([
+        db
+          .select({
+            date: pointItem.date,
+            total: sql<number>`cast(sum(${pointItem.amount}) as int)`.as("total"),
+          })
+          .from(pointItem)
+          .where(and(inArray(pointItem.userId, orgUserIds), gte(pointItem.date, input.startDate), ...(input.endDate ? [lte(pointItem.date, input.endDate)] : [])))
+          .groupBy(pointItem.date),
+
+        db
+          .select({
+            date: amaItem.date,
+            total: sql<number>`cast(count(${amaItem.id}) as int)`.as("total"),
+          })
+          .from(amaItem)
+          .where(and(inArray(amaItem.userId, orgUserIds), gte(amaItem.date, input.startDate), ...(input.endDate ? [lte(amaItem.date, input.endDate)] : [])))
+          .groupBy(amaItem.date),
+
+        db
+          .select({
+            date: dailyInvite.date,
+            total: sql<number>`cast(coalesce(sum(${dailyInvite.count}), 0) as int)`.as("total"),
+          })
+          .from(dailyInvite)
+          .where(and(inArray(dailyInvite.userId, orgUserIds), gte(dailyInvite.date, input.startDate), ...(input.endDate ? [lte(dailyInvite.date, input.endDate)] : [])))
+          .groupBy(dailyInvite.date),
+      ]);
+
+      const byDate = new Map<string, { points: number; amas: number; invites: number }>();
+      const getOrCreate = (date: string) => {
+        if (!byDate.has(date)) byDate.set(date, { points: 0, amas: 0, invites: 0 });
+        return byDate.get(date)!;
+      };
+
+      for (const row of pointsRows) getOrCreate(row.date).points = row.total;
+      for (const row of amasRows) getOrCreate(row.date).amas = row.total;
+      for (const row of invitesRows) getOrCreate(row.date).invites = row.total;
+
+      return Array.from(byDate.entries())
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([date, v]) => ({ date, ...v }));
     }),
 };

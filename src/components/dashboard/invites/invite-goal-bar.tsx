@@ -161,7 +161,7 @@ export function InviteGoalBar({ current, goal, orientation = "horizontal" }: Inv
         <div className="relative flex-1 w-3 rounded-full bg-muted overflow-hidden min-h-0">
           {/* Goal marker at top when not yet reached */}
           {!isAtGoal && (
-            <div className="absolute top-0 left-0 right-0 h-[3px] bg-foreground/15 rounded-t-full z-10" />
+            <div className="absolute top-0 left-0 right-0 h-0.75 bg-foreground/15 rounded-t-full z-10" />
           )}
           {/* Fill from bottom */}
           <div
@@ -218,7 +218,7 @@ export function InviteGoalBar({ current, goal, orientation = "horizontal" }: Inv
         />
         {/* Goal marker pip at right edge when not yet reached */}
         {!isAtGoal && (
-          <div className="absolute inset-y-0 right-0 w-[3px] bg-foreground/15 rounded-r-full" />
+          <div className="absolute inset-y-0 right-0 w-0.75 bg-foreground/15 rounded-r-full" />
         )}
       </div>
 
