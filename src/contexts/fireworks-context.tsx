@@ -13,18 +13,24 @@ export function useFireworks() {
 
 export function FireworksProvider({ children }: { children: React.ReactNode }) {
   const [visible, setVisible] = useState(false);
+  const [fading, setFading] = useState(false);
 
   const triggerFireworks = useCallback(() => {
     setVisible(true);
-    setTimeout(() => setVisible(false), 5000);
+    setFading(false);
+    setTimeout(() => setFading(true), 2500);
+    setTimeout(() => { setVisible(false); setFading(false); }, 3000);
   }, []);
 
   return (
     <FireworksContext.Provider value={{ triggerFireworks }}>
       {children}
       {visible && (
-        <div className="fixed inset-0 z-50 pointer-events-none">
-          <FireworksBackground transparent className="w-full h-full">
+        <div
+          className="fixed inset-0 z-50 pointer-events-none transition-opacity duration-500"
+          style={{ opacity: fading ? 0 : 1 }}
+        >
+          <FireworksBackground className="w-full h-full">
             <span />
           </FireworksBackground>
         </div>

@@ -32,11 +32,9 @@ interface Firework {
 export const FireworksBackground = ({
     children,
     className,
-    transparent = false,
 }: {
     children: React.ReactNode;
     className?: string;
-    transparent?: boolean;
 }) => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const fireworksRef = useRef<Firework[]>([]);
@@ -109,12 +107,10 @@ export const FireworksBackground = ({
 
         if (!canvas || !ctx) return;
 
-        if (transparent) {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-        } else {
-            ctx.fillStyle = "rgba(0, 0, 0, 0.1)";
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-        }
+        ctx.globalCompositeOperation = "destination-out";
+        ctx.fillStyle = "rgba(0, 0, 0, 0.1)";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.globalCompositeOperation = "source-over";
 
         const currentFireworks = fireworksRef.current;
         for (let i = 0; i < currentFireworks.length; i++) {
