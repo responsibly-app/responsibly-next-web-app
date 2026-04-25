@@ -44,6 +44,13 @@ export const DeletePointItemInputSchema = z.object({
   id: z.string(),
 });
 
+export const UpdatePointItemInputSchema = z.object({
+  id: z.string(),
+  description: z.string().min(1),
+  amount: z.number().int().min(1),
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Must be YYYY-MM-DD"),
+});
+
 export const GetPointsLeaderboardInputSchema = z.object({
   organizationId: z.string(),
   startDate: z.string().optional(),
@@ -85,6 +92,13 @@ export const ListAmaItemsOutputSchema = z.array(AmaItemSchema);
 
 export const DeleteAmaItemInputSchema = z.object({
   id: z.string(),
+});
+
+export const UpdateAmaItemInputSchema = z.object({
+  id: z.string(),
+  recruitName: z.string().min(1),
+  agentCode: z.string().optional(),
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Must be YYYY-MM-DD"),
 });
 
 // ---- Member data (admin/org-member views) ----

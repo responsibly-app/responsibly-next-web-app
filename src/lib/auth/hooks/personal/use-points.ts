@@ -34,6 +34,19 @@ export function useDeletePointItem() {
   });
 }
 
+export function useUpdatePointItem() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: { id: string; description: string; amount: number; date: string }) =>
+      orpc.personal.points.update(input),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: orpcTQUtils.personal.points.list.queryOptions({ input: undefined }).queryKey,
+      });
+    },
+  });
+}
+
 export function useGetMemberPoints(organizationId: string, targetUserId: string) {
   return useQuery(
     orpcTQUtils.personal.points.getMemberPoints.queryOptions({

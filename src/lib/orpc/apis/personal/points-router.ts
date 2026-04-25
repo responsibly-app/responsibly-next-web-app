@@ -12,6 +12,7 @@ import {
   GetPointsLeaderboardOutputSchema,
   ListPointItemsOutputSchema,
   PointItemSchema,
+  UpdatePointItemInputSchema,
 } from "./personal-schemas";
 
 async function requireOrgMember(organizationId: string, userId: string) {
@@ -79,6 +80,26 @@ export const pointsRouter = {
         .delete(pointItem)
         .where(and(eq(pointItem.id, input.id), eq(pointItem.userId, userId)));
       return { success: true };
+    }),
+
+  update: authed
+    .route({
+      method: "PATCH",
+      path: "/personal/points/update",
+      summary: "Update a point item",
+      tags: ["Personal"],
+    })
+    .input(UpdatePointItemInputSchema)
+    .output(PointItemSchema)
+    .handler(async ({ input, context }) => {
+      const userId = context.session.user.id;
+      const [row] = await db
+        .update(pointItem)
+        .set({ description: input.description, amount: input.amount, date: input.date })
+        .where(and(eq(pointItem.id, input.id), eq(pointItem.userId, userId)))
+        .returning();
+      if (!row) throw new ORPCError("NOT_FOUND", { message: "Point item not found" });
+      return row;
     }),
 
   getMemberPoints: authed

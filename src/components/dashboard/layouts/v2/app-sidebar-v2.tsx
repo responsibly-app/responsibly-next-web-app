@@ -34,7 +34,7 @@ import {
 } from "@/components/ui/drawer";
 import { appName } from "@/config";
 
-export const SIDEBAR_ICON_W = 55;
+export const SIDEBAR_ICON_W = 54;
 export const SIDEBAR_PINNED_W = 240;
 
 const navGroups = [
@@ -229,15 +229,15 @@ export function AppSidebarV2({ isPinned, onTogglePin }: AppSidebarV2Props) {
         </button>
       </div>
 
+      {/* Org switcher — pinned */}
+      <div className="px-2 py-2 shrink-0 border-b">
+        <OrgSwitcherDialog open={orgDialogOpen} onOpenChange={setOrgDialogOpen}>
+          <OrgSwitcherButton orgName={activeOrg?.name} isExpanded={isExpanded} />
+        </OrgSwitcherDialog>
+      </div>
+
       {/* Scrollable nav */}
       <div className="flex flex-1 flex-col overflow-y-auto overflow-x-hidden py-2">
-        {/* Org switcher */}
-        <div className="px-2 mb-2">
-          <OrgSwitcherDialog open={orgDialogOpen} onOpenChange={setOrgDialogOpen}>
-            <OrgSwitcherButton orgName={activeOrg?.name} isExpanded={isExpanded} />
-          </OrgSwitcherDialog>
-        </div>
-
         {/* Nav groups */}
         {navGroups.map((group, i) => (
           <div key={i} className="px-2 mb-1">

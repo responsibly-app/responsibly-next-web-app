@@ -63,7 +63,7 @@ const nextConfig: NextConfig = {
               "script-src-elem 'self' 'unsafe-inline' https://static.cloudflareinsights.com https://cdn.jsdelivr.net",
 
               "style-src 'self' 'unsafe-inline'",
-              "img-src 'self' data: https:",
+              "img-src 'self' data: blob: https:",
               "font-src 'self' https:",
               "connect-src 'self' https:",
               // REQUIRED for Zoom embedding

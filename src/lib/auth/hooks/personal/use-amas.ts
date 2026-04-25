@@ -42,3 +42,16 @@ export function useDeleteAmaItem() {
     },
   });
 }
+
+export function useUpdateAmaItem() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: { id: string; recruitName: string; agentCode?: string; date: string }) =>
+      orpc.personal.amas.update(input),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: orpcTQUtils.personal.amas.list.queryOptions({ input: undefined }).queryKey,
+      });
+    },
+  });
+}

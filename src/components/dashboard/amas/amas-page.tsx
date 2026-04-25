@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Trash2, UserPlus } from "lucide-react";
+import { Pencil, Trash2, UserPlus } from "lucide-react";
 import { Bar, BarChart, XAxis, YAxis, CartesianGrid, LabelList } from "recharts";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -81,10 +81,13 @@ function MonthlyChart({ items }: { items: { date: string }[] }) {
   );
 }
 
+type AmaItem = { id: string; recruitName: string; agentCode: string | null; date: string };
+
 export function AmasPage() {
   const { data: items = [], isPending } = useListAmas();
   const { mutate: deleteItem, isPending: isDeleting } = useDeleteAmaItem();
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+  const [editItem, setEditItem] = useState<AmaItem | null>(null);
   const { goal, setGoal } = useAmaGoal();
 
   const { totalAll, totalMonth } = useMemo(() => {
@@ -177,7 +180,7 @@ export function AmasPage() {
                     <TableHead>Recruit Name</TableHead>
                     <TableHead>Agent Code</TableHead>
                     <TableHead>Date</TableHead>
-                    <TableHead className="w-10" />
+                    <TableHead className="w-20" />
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -191,15 +194,25 @@ export function AmasPage() {
                         {formatDate(item.date)}
                       </TableCell>
                       <TableCell>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-7 w-7 text-muted-foreground hover:text-destructive"
-                          disabled={isDeleting}
-                          onClick={() => setPendingDeleteId(item.id)}
-                        >
-                          <Trash2 className="size-3.5" />
-                        </Button>
+                        <div className="flex items-center justify-end gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                            onClick={() => setEditItem(item)}
+                          >
+                            <Pencil className="size-3.5" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                            disabled={isDeleting}
+                            onClick={() => setPendingDeleteId(item.id)}
+                          >
+                            <Trash2 className="size-3.5" />
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -231,6 +244,14 @@ export function AmasPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {editItem && (
+        <AddAmaDialog
+          editItem={editItem}
+          open={!!editItem}
+          onOpenChange={(open) => !open && setEditItem(null)}
+        />
+      )}
     </div>
   );
 }
