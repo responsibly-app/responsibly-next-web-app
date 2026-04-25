@@ -10,6 +10,7 @@ import {
   DeleteAmaItemInputSchema,
   GetMemberAmasInputSchema,
   ListAmaItemsOutputSchema,
+  UpdateAmaItemInputSchema,
 } from "./personal-schemas";
 
 async function requireOrgMember(organizationId: string, userId: string) {
@@ -94,5 +95,25 @@ export const amasRouter = {
         .delete(amaItem)
         .where(and(eq(amaItem.id, input.id), eq(amaItem.userId, userId)));
       return { success: true };
+    }),
+
+  update: authed
+    .route({
+      method: "PATCH",
+      path: "/personal/amas/update",
+      summary: "Update an AMA recruit",
+      tags: ["Personal"],
+    })
+    .input(UpdateAmaItemInputSchema)
+    .output(AmaItemSchema)
+    .handler(async ({ input, context }) => {
+      const userId = context.session.user.id;
+      const [row] = await db
+        .update(amaItem)
+        .set({ recruitName: input.recruitName, agentCode: input.agentCode ?? null, date: input.date })
+        .where(and(eq(amaItem.id, input.id), eq(amaItem.userId, userId)))
+        .returning();
+      if (!row) throw new ORPCError("NOT_FOUND", { message: "AMA item not found" });
+      return row;
     }),
 };

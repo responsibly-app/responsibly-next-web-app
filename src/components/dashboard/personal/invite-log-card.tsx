@@ -57,16 +57,36 @@ export function InviteLogCard() {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
-        <div className="flex gap-2">
-          <Input
-            type="number"
-            min={0}
-            max={9999}
-            placeholder="0"
-            value={count}
-            onChange={(e) => setCount(e.target.value)}
-            className="w-28"
-          />
+        <div className="flex flex-wrap gap-2">
+          <div className="flex items-center">
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              className="h-9 w-9 rounded-r-none border-r-0"
+              onClick={() => setCount((prev) => String(Math.max(0, (parseInt(prev, 10) || 0) - 1)))}
+            >
+              −
+            </Button>
+            <Input
+              type="number"
+              min={0}
+              max={9999}
+              placeholder="0"
+              value={count}
+              onChange={(e) => setCount(e.target.value)}
+              className="w-16 rounded-none text-center [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+            />
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              className="h-9 w-9 rounded-l-none border-l-0"
+              onClick={() => setCount((prev) => String(Math.min(9999, (parseInt(prev, 10) || 0) + 1)))}
+            >
+              +
+            </Button>
+          </div>
           <Button
             onClick={handleSave}
             disabled={isSaving || count === ""}

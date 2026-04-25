@@ -1,11 +1,21 @@
 "use client";
 
-import { useMemo } from "react";
-import { Trash2, TrendingUp } from "lucide-react";
+import { useMemo, useState } from "react";
+import { Pencil, Trash2, TrendingUp } from "lucide-react";
 import { Bar, BarChart, XAxis, YAxis, CartesianGrid, LabelList } from "recharts";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import {
   ChartContainer,
   ChartTooltip,
@@ -71,10 +81,15 @@ function MonthlyChart({ items }: { items: { date: string; amount: number }[] }) 
   );
 }
 
+type PointItem = { id: string; description: string; amount: number; date: string };
+
 export function PointsPage() {
   const { data: items = [], isPending } = useListPoints();
   const { mutate: deleteItem, isPending: isDeleting } = useDeletePointItem();
   const { goal, setGoal } = usePointsGoal();
+
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+  const [editItem, setEditItem] = useState<PointItem | null>(null);
 
   const { totalAll, totalMonth } = useMemo(() => {
     const thisMonth = currentMonthStr();
@@ -168,7 +183,7 @@ export function PointsPage() {
                     <TableHead>Description</TableHead>
                     <TableHead>Date</TableHead>
                     <TableHead className="text-right">Points</TableHead>
-                    <TableHead className="w-10" />
+                    <TableHead className="w-20" />
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -182,15 +197,25 @@ export function PointsPage() {
                         +{item.amount}
                       </TableCell>
                       <TableCell>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-7 w-7 text-muted-foreground hover:text-destructive"
-                          disabled={isDeleting}
-                          onClick={() => deleteItem({ id: item.id })}
-                        >
-                          <Trash2 className="size-3.5" />
-                        </Button>
+                        <div className="flex items-center justify-end gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                            onClick={() => setEditItem(item)}
+                          >
+                            <Pencil className="size-3.5" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                            disabled={isDeleting}
+                            onClick={() => setPendingDeleteId(item.id)}
+                          >
+                            <Trash2 className="size-3.5" />
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -200,6 +225,37 @@ export function PointsPage() {
           )}
         </CardContent>
       </Card>
+
+      <AlertDialog open={!!pendingDeleteId} onOpenChange={(open) => !open && setPendingDeleteId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete point item?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently remove this point entry. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => {
+                if (pendingDeleteId) deleteItem({ id: pendingDeleteId });
+                setPendingDeleteId(null);
+              }}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {editItem && (
+        <AddPointDialog
+          editItem={editItem}
+          open={!!editItem}
+          onOpenChange={(open) => !open && setEditItem(null)}
+        />
+      )}
     </div>
   );
 }
