@@ -22,6 +22,7 @@ import { OrgRole, ROLE_META } from "@/lib/auth/hooks/oraganization/permissions";
 import { authClient } from "@/lib/auth/auth-client";
 import { routes } from "@/routes";
 import { InviteStreakGrid } from "@/components/dashboard/personal/invite-streak-grid";
+import { proxiedAvatarUrl } from "@/lib/utils/image";
 
 type MemberRow = {
   id: string;
@@ -252,7 +253,7 @@ function MemberProfileContent({ orgId, userId }: { orgId: string; userId: string
       {/* Profile card */}
       <div className="flex flex-wrap items-start gap-4">
         <Avatar className="size-30">
-          <AvatarImage src={member.user?.image ?? undefined} />
+          <AvatarImage src={proxiedAvatarUrl(member.user?.image) ?? undefined} />
           <AvatarFallback className="text-lg">
             {member.user?.name ? initials(member.user.name) : "?"}
           </AvatarFallback>
