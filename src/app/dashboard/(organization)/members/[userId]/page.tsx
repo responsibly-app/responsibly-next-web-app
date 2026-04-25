@@ -250,8 +250,8 @@ function MemberProfileContent({ orgId, userId }: { orgId: string; userId: string
       </div>
 
       {/* Profile card */}
-      <div className="flex items-start gap-4">
-        <Avatar className="size-14">
+      <div className="flex flex-wrap items-start gap-4">
+        <Avatar className="size-30">
           <AvatarImage src={member.user?.image ?? undefined} />
           <AvatarFallback className="text-lg">
             {member.user?.name ? initials(member.user.name) : "?"}
