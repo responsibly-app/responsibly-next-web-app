@@ -254,7 +254,7 @@ export function OrgMembersList({ orgId }: { orgId: string }) {
                       </TableCell>
                       <TableCell>
                         {member.level ? (
-                          canUpdateMemberRole && !isSelf && !memberIsOwner ? (
+                          canUpdateMemberRole && (!isSelf || currentRole === "owner") && (!memberIsOwner || isSelf) ? (
                             <Badge
                               variant="outline"
                               className="font-mono text-xs cursor-pointer hover:opacity-75 transition-opacity"
