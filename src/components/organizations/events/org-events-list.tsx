@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { CalendarDays, MapPin, Monitor, Blend, MoreHorizontal, Users } from "lucide-react";
+import { CalendarDays, MapPin, Monitor, Blend, MoreHorizontal, Users, Settings2 } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -30,6 +30,7 @@ import { useListEvents, useDeleteEvent } from "@/lib/auth/hooks";
 import { CreateEventDialog } from "./create-event-dialog";
 import { formatEventDateShort, formatEventTime, tzAbbr } from "@/lib/utils/timezone";
 import { routes } from "@/routes";
+import { AttendanceSettingsDialog } from "../attendance/attendance-settings-dialog";
 
 type EventRow = {
   id: string;
@@ -205,6 +206,8 @@ function EventListContent({
 export function OrgEventsList({ organizationId, canManage }: Props) {
   const [createOpen, setCreateOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<EventRow | null>(null);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+
 
   const { data: events = [], isPending } = useListEvents(organizationId);
   const deleteEvent = useDeleteEvent();
@@ -232,15 +235,32 @@ export function OrgEventsList({ organizationId, canManage }: Props) {
 
   return (
     <>
-      <div className="flex items-center justify-between mb-4">
-        <span />
+      <div className="flex items-center justify-end mb-4">
         {canManage && (
-          <Button size="sm" onClick={() => setCreateOpen(true)}>
-            <CalendarDays className="mr-1.5 size-3.5" />
-            Create Event
-          </Button>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button size="sm" onClick={() => setCreateOpen(true)}>
+              <CalendarDays className="mr-1.5 size-3.5" />
+              Create Event
+            </Button>
+
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2"
+              onClick={() => setSettingsOpen(true)}
+            >
+              <Settings2 className="size-4" />
+              Attendance Settings
+            </Button>
+          </div>
         )}
       </div>
+
+      <AttendanceSettingsDialog
+        open={settingsOpen}
+        onOpenChange={setSettingsOpen}
+        orgId={organizationId}
+      />
 
       <Tabs defaultValue="upcoming">
         <TabsList className="mb-4">
