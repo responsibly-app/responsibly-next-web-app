@@ -118,6 +118,25 @@ export const zoomParticipantSession = pgTable(
   ],
 );
 
+// RSVP — members indicate they plan to attend an in-person or hybrid event
+export const eventRsvp = pgTable(
+  "event_rsvp",
+  {
+    id: text("id").primaryKey(),
+    eventId: text("event_id")
+      .notNull()
+      .references(() => event.id, { onDelete: "cascade" }),
+    memberId: text("member_id")
+      .notNull()
+      .references(() => member.id, { onDelete: "cascade" }),
+    rsvpedAt: timestamp("rsvped_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("event_rsvp_event_id_idx").on(table.eventId),
+    uniqueIndex("event_rsvp_event_id_member_id_uidx").on(table.eventId, table.memberId),
+  ],
+);
+
 export const eventRelations = relations(event, ({ one, many }) => ({
   organization: one(organization, {
     fields: [event.organizationId],
@@ -130,6 +149,7 @@ export const eventRelations = relations(event, ({ one, many }) => ({
   attendances: many(eventAttendance),
   qrCodes: many(eventQrCode),
   zoomSessions: many(zoomParticipantSession),
+  rsvps: many(eventRsvp),
 }));
 
 export const eventAttendanceRelations = relations(eventAttendance, ({ one }) => ({
@@ -167,3 +187,14 @@ export const zoomParticipantSessionRelations = relations(
     }),
   }),
 );
+
+export const eventRsvpRelations = relations(eventRsvp, ({ one }) => ({
+  event: one(event, {
+    fields: [eventRsvp.eventId],
+    references: [event.id],
+  }),
+  member: one(member, {
+    fields: [eventRsvp.memberId],
+    references: [member.id],
+  }),
+}));

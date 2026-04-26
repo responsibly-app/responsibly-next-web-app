@@ -7,7 +7,6 @@ export const routes = {
     integrations: () => "/dashboard/integrations",
     settings: () => "/dashboard/settings",
     organizations: () => "/dashboard/organizations",
-    attendance: () => "/dashboard/attendance",
     leaderboard: () => "/dashboard/leaderboard",
     baseshop: () => "/dashboard/baseshop",
     personal: () => "/dashboard/personal",
@@ -15,7 +14,6 @@ export const routes = {
     points: () => "/dashboard/points",
     amas: () => "/dashboard/amas",
     eventDetail: (eventId: string) => `/dashboard/events/${eventId}`,
-    eventAttendance: (eventId: string) => `/dashboard/events/${eventId}/attendance`,
     acceptInvitation: (invitationId: string) => `/dashboard/accept-invitation?id=${invitationId}`,
   },
   admin: {

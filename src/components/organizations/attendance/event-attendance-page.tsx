@@ -32,6 +32,7 @@ import {
   useListEvents,
   useListMembers,
   useGetMemberRole,
+  useListRsvps,
 } from "@/lib/auth/hooks";
 import { getPermissions } from "@/lib/auth/hooks/oraganization/access-control";
 import { OrgRole } from "@/lib/auth/hooks/oraganization/permissions";
@@ -118,9 +119,9 @@ const BADGE_LABELS: Record<DisplayStatus, string> = {
 
 // ─── Main component ────────────────────────────────────────────────────────────
 
-type Props = { eventId: string; organizationId: string };
+type Props = { eventId: string; organizationId: string; hideBack?: boolean };
 
-export function EventAttendancePage({ eventId, organizationId }: Props) {
+export function EventAttendancePage({ eventId, organizationId, hideBack }: Props) {
   const router = useRouter();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<DisplayStatus | "all">("all");
@@ -133,6 +134,7 @@ export function EventAttendancePage({ eventId, organizationId }: Props) {
   const { data: attendanceRecords = [], isPending: attendancePending } =
     useGetEventAttendance(eventId);
   const { data: memberRoleData } = useGetMemberRole(organizationId);
+  const { data: rsvpData } = useListRsvps(eventId);
   const markAttendance = useMarkAttendance();
 
   const currentRole = memberRoleData?.role as OrgRole | undefined;
@@ -149,6 +151,11 @@ export function EventAttendancePage({ eventId, organizationId }: Props) {
       ? (membersRaw as Member[])
       : ((membersRaw as { members?: Member[] }).members ?? [])
     : [];
+
+  const rsvpedMemberIds = useMemo(
+    () => new Set((rsvpData?.rsvps ?? []).map((r) => r.memberId)),
+    [rsvpData],
+  );
 
   const attendanceMap = useMemo(
     () => new Map(attendanceRecords.map((r) => [r.memberId, r as AttendanceRecord])),
@@ -228,16 +235,18 @@ export function EventAttendancePage({ eventId, organizationId }: Props) {
   return (
     <div className="space-y-6">
       {/* Back */}
-      <Link
-        href={routes.dashboard.events()}
-        className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
-      >
-        <ArrowLeft className="size-4" />
-        Events
-      </Link>
+      {!hideBack && (
+        <Link
+          href={routes.dashboard.events()}
+          className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
+        >
+          <ArrowLeft className="size-4" />
+          Events
+        </Link>
+      )}
 
       {/* Event header */}
-      {eventsPending ? (
+      {!hideBack && (eventsPending ? (
         <div className="space-y-2">
           <Skeleton className="h-7 w-64" />
           <Skeleton className="h-4 w-40" />
@@ -258,7 +267,7 @@ export function EventAttendancePage({ eventId, organizationId }: Props) {
         </div>
       ) : (
         <h1 className="text-2xl font-semibold tracking-tight">Attendance</h1>
-      )}
+      ))}
 
       {/* Stats bar */}
       {!isLoading && members.length > 0 && (
@@ -340,6 +349,7 @@ export function EventAttendancePage({ eventId, organizationId }: Props) {
         eventId={eventId}
         organizationId={organizationId}
         members={members}
+        rsvpedMemberIds={rsvpedMemberIds}
       />
       {memberQR && (
         <MemberQRDialog
@@ -663,7 +673,7 @@ function MemberControls({
         variant="outline"
         disabled={qrLocked || zoomLocked}
         className={cn(baseBtn, isExcused && BTN.excused, (qrLocked || zoomLocked) && "cursor-not-allowed")}
-        onClick={() => { if (record?.status !== "excused") m("excused"); }}
+        onClick={() => m(isExcused ? "absent" : "excused")}
       >
         Excused
       </Button>

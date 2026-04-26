@@ -181,3 +181,36 @@ export function useScanMemberQR() {
     },
   });
 }
+
+export function useGetRsvpStatus(eventId: string) {
+  return useQuery(
+    orpcTQUtils.event.getRsvpStatus.queryOptions({
+      input: { eventId },
+      enabled: !!eventId,
+    }),
+  );
+}
+
+export function useToggleRsvp() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: { eventId: string }) => orpc.event.toggleRsvp(input),
+    onSuccess: (_, { eventId }) => {
+      queryClient.invalidateQueries({
+        queryKey: orpcTQUtils.event.getRsvpStatus.queryOptions({ input: { eventId } }).queryKey,
+      });
+      queryClient.invalidateQueries({
+        queryKey: orpcTQUtils.event.listRsvps.queryOptions({ input: { eventId } }).queryKey,
+      });
+    },
+  });
+}
+
+export function useListRsvps(eventId: string) {
+  return useQuery(
+    orpcTQUtils.event.listRsvps.queryOptions({
+      input: { eventId },
+      enabled: !!eventId,
+    }),
+  );
+}

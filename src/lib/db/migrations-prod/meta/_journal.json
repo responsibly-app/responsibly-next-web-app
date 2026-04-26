@@ -204,6 +204,13 @@
       "when": 1776980590989,
       "tag": "0028_wonderful_nextwave",
       "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1777188591188,
+      "tag": "0029_goofy_susan_delgado",
+      "breakpoints": true
     }
   ]
 }

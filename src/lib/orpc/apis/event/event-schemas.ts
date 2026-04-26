@@ -177,3 +177,33 @@ export const ScanMemberQRInputSchema = z.object({
   organizationId: z.string(),
 });
 
+// RSVP schemas
+export const RsvpInputSchema = z.object({
+  eventId: z.string(),
+});
+
+export const RsvpStatusSchema = z.object({
+  rsvped: z.boolean(),
+  rsvpedAt: z.date().nullable(),
+  totalCount: z.number(),
+});
+
+export const RsvpRecordSchema = z.object({
+  id: z.string(),
+  eventId: z.string(),
+  memberId: z.string(),
+  rsvpedAt: z.date(),
+  memberName: z.string().nullable(),
+  memberEmail: z.string().nullable(),
+  memberImage: z.string().nullable(),
+});
+
+export const ListRsvpsInputSchema = z.object({
+  eventId: z.string(),
+});
+
+export const ListRsvpsOutputSchema = z.object({
+  rsvps: z.array(RsvpRecordSchema),
+  count: z.number(),
+});
+

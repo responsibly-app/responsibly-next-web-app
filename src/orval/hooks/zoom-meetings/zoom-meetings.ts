@@ -31,7 +31,7 @@ import type {
   ZoomMeetingsUpdateBody,
 } from "../../model";
 
-import { customInstance } from "../../../lib/orval-clients/orval-client-fetch";
+import { customInstance } from "@/lib/orval-clients/orval-client-fetch";
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
