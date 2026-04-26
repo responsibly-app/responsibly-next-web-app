@@ -73,7 +73,7 @@ export function HeaderUserDropdown({
           <Link
             href={routes.dashboard.settings()}
             onClick={() => setOpen(false)}
-            className="flex items-center gap-2 px-2 py-1.5 text-left text-sm hover:bg-accent rounded-sm transition-colors"
+            className="flex items-center gap-2 px-2 py-1.5 text-left text-sm hover:bg-accent rounded-xl transition-colors"
           >
             <Avatar className="relative h-8 w-8 rounded-full">
               {isPending || signOut.isPending ? (
