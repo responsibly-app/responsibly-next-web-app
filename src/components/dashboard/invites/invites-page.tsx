@@ -25,7 +25,7 @@ import {
 } from "@/components/ui/table";
 import { authClient } from "@/lib/auth/auth-client";
 import { useGetInviteHistory, useLogInvites } from "@/lib/auth/hooks";
-import { useFireworks } from "@/contexts/fireworks-context";
+import { useFireworks } from "@/components/ui-custom/fireworks";
 import { InviteStreakGrid } from "@/components/dashboard/personal/invite-streak-grid";
 import { InviteGoalBar, GoalPopoverButton, useInviteGoal } from "@/components/dashboard/invites/invite-goal-bar";
 import { localDateStr } from "@/lib/utils/timezone";

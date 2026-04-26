@@ -8,8 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { authClient } from "@/lib/auth/auth-client";
 import { useGetInviteHistory, useLogInvites } from "@/lib/auth/hooks";
-import { useFireworks } from "@/contexts/fireworks-context";
 import { localDateStr } from "@/lib/utils/timezone";
+import { useFireworks } from "@/components/ui-custom/fireworks";
 
 export function InviteLogCard() {
   const { data: session } = authClient.useSession();

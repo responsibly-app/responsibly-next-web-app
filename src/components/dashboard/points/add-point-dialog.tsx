@@ -13,7 +13,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAddPointItem, useUpdatePointItem } from "@/lib/auth/hooks";
-import { useFireworks } from "@/contexts/fireworks-context";
+import { useFireworks } from "@/components/ui-custom/fireworks";
+
 
 function todayStr(): string {
   return new Date().toISOString().split("T")[0];

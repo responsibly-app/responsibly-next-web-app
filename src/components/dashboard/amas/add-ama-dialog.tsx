@@ -20,7 +20,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { useAddAmaItem, useUpdateAmaItem } from "@/lib/auth/hooks";
-import { useFireworks } from "@/contexts/fireworks-context";
+import { useFireworks } from "@/components/ui-custom/fireworks";
 
 function toDateStr(d: Date): string {
   return format(d, "yyyy-MM-dd");

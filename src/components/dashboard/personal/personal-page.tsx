@@ -14,6 +14,7 @@ import Link from "next/link";
 import { routes } from "@/routes";
 import { InviteGoalBar, GoalPopoverButton, useInviteGoal } from "@/components/dashboard/invites/invite-goal-bar";
 import { localDateStr } from "@/lib/utils/timezone";
+import { Badge } from "@/components/ui/badge";
 
 function greeting(hour: number): string {
   if (hour < 5) return "Up late";
@@ -94,16 +95,27 @@ export function PersonalPage() {
     new Intl.DateTimeFormat("en-US", { timeZone: timezone, hour: "numeric", hour12: false }).format(now),
     10,
   );
+  const localDateDisplay = new Intl.DateTimeFormat("en-US", {
+    timeZone: timezone,
+    weekday: "long",
+    month: "short",
+    day: "numeric",
+  }).format(now);
 
   return (
     <div className="space-y-6 pt-5">
-      <div>
+      <div className="flex flex-wrap items-center justify-between gap-2">
         {isPending ? (
           <Skeleton className="h-8 w-56" />
         ) : (
           <h1 className="text-2xl font-semibold tracking-tight">
             {greeting(hour)}, {firstName}
           </h1>
+        )}
+        {!isPending && (
+          <Badge variant="secondary" className="text-xs font-medium">
+            {localDateDisplay}
+          </Badge>
         )}
       </div>
 
