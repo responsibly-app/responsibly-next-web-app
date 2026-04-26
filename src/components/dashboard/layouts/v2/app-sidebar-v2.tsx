@@ -56,7 +56,7 @@ const navGroups = [
       { title: "Baseshop", url: routes.dashboard.baseshop(), icon: BarChart3 },
       { title: "Members", url: routes.dashboard.members(), icon: Users },
       { title: "Events", url: routes.dashboard.events(), icon: CalendarDays },
-      { title: "Attendance", url: routes.dashboard.attendance(), icon: ClipboardList },
+      // { title: "Attendance", url: routes.dashboard.attendance(), icon: ClipboardList },
     ],
   },
   {

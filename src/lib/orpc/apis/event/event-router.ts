@@ -6,6 +6,7 @@ import {
   event,
   eventAttendance,
   eventQrCode,
+  eventRsvp,
 } from "@/lib/db/schema/event-schema";
 import { organizationSettings } from "@/lib/db/schema/org-settings-schema";
 import { authed } from "@/lib/orpc/base";
@@ -33,6 +34,10 @@ import {
   GetEventQRCodeOutputSchema,
   CheckInWithQRInputSchema,
   ScanMemberQRInputSchema,
+  RsvpInputSchema,
+  RsvpStatusSchema,
+  ListRsvpsInputSchema,
+  ListRsvpsOutputSchema,
 } from "./event-schemas";
 
 /** Convert a UTC ISO string to local wall-clock time in the given IANA timezone, formatted as
@@ -700,6 +705,156 @@ export const eventRouter = {
         });
 
       return { success: true, eventId: qr.eventId, alreadyCheckedIn };
+    }),
+
+  toggleRsvp: authed
+    .route({
+      method: "POST",
+      path: "/event/rsvp/toggle",
+      summary: "Toggle RSVP for the current user (in-person/hybrid events only)",
+      tags: ["Event"],
+    })
+    .input(RsvpInputSchema)
+    .output(RsvpStatusSchema)
+    .handler(async ({ input, context }) => {
+      const userId = context.session.user.id;
+
+      const eventRow = await db
+        .select({ organizationId: event.organizationId, eventType: event.eventType })
+        .from(event)
+        .where(eq(event.id, input.eventId))
+        .limit(1)
+        .then((r) => r[0]);
+
+      if (!eventRow) throw new ORPCError("NOT_FOUND");
+      if (eventRow.eventType === "online") {
+        throw new ORPCError("BAD_REQUEST", {
+          message: "RSVP is only available for in-person and hybrid events",
+        });
+      }
+
+      const memberRow = await db
+        .select({ id: member.id })
+        .from(member)
+        .where(and(eq(member.organizationId, eventRow.organizationId), eq(member.userId, userId)))
+        .limit(1)
+        .then((r) => r[0]);
+
+      if (!memberRow) throw new ORPCError("FORBIDDEN");
+
+      const existing = await db
+        .select({ id: eventRsvp.id })
+        .from(eventRsvp)
+        .where(and(eq(eventRsvp.eventId, input.eventId), eq(eventRsvp.memberId, memberRow.id)))
+        .limit(1)
+        .then((r) => r[0]);
+
+      let rsvped: boolean;
+      let rsvpedAt: Date | null;
+
+      if (existing) {
+        await db.delete(eventRsvp).where(eq(eventRsvp.id, existing.id));
+        rsvped = false;
+        rsvpedAt = null;
+      } else {
+        const [row] = await db
+          .insert(eventRsvp)
+          .values({ id: crypto.randomUUID(), eventId: input.eventId, memberId: memberRow.id })
+          .returning();
+        rsvped = true;
+        rsvpedAt = row.rsvpedAt;
+      }
+
+      const [{ count }] = await db
+        .select({ count: sql<number>`cast(count(*) as int)` })
+        .from(eventRsvp)
+        .where(eq(eventRsvp.eventId, input.eventId));
+
+      return { rsvped, rsvpedAt, totalCount: count };
+    }),
+
+  getRsvpStatus: authed
+    .route({
+      method: "GET",
+      path: "/event/rsvp-status",
+      summary: "Get the current user's RSVP status for an event",
+      tags: ["Event"],
+    })
+    .input(RsvpInputSchema)
+    .output(RsvpStatusSchema)
+    .handler(async ({ input, context }) => {
+      const userId = context.session.user.id;
+
+      const eventRow = await db
+        .select({ organizationId: event.organizationId })
+        .from(event)
+        .where(eq(event.id, input.eventId))
+        .limit(1)
+        .then((r) => r[0]);
+
+      if (!eventRow) throw new ORPCError("NOT_FOUND");
+
+      const memberRow = await db
+        .select({ id: member.id })
+        .from(member)
+        .where(and(eq(member.organizationId, eventRow.organizationId), eq(member.userId, userId)))
+        .limit(1)
+        .then((r) => r[0]);
+
+      const [{ count }] = await db
+        .select({ count: sql<number>`cast(count(*) as int)` })
+        .from(eventRsvp)
+        .where(eq(eventRsvp.eventId, input.eventId));
+
+      if (!memberRow) return { rsvped: false, rsvpedAt: null, totalCount: count };
+
+      const rsvpRow = await db
+        .select({ rsvpedAt: eventRsvp.rsvpedAt })
+        .from(eventRsvp)
+        .where(and(eq(eventRsvp.eventId, input.eventId), eq(eventRsvp.memberId, memberRow.id)))
+        .limit(1)
+        .then((r) => r[0]);
+
+      return { rsvped: !!rsvpRow, rsvpedAt: rsvpRow?.rsvpedAt ?? null, totalCount: count };
+    }),
+
+  listRsvps: authed
+    .route({
+      method: "GET",
+      path: "/event/rsvps",
+      summary: "List all RSVPs for an event (managers only)",
+      tags: ["Event"],
+    })
+    .input(ListRsvpsInputSchema)
+    .output(ListRsvpsOutputSchema)
+    .handler(async ({ input, context }) => {
+      const eventRow = await db
+        .select({ organizationId: event.organizationId })
+        .from(event)
+        .where(eq(event.id, input.eventId))
+        .limit(1)
+        .then((r) => r[0]);
+
+      if (!eventRow) throw new ORPCError("NOT_FOUND");
+      await requireAtLeastRole(eventRow.organizationId, context.session.user.id, "assistant");
+
+      const rsvps = await db
+        .select({
+          id: eventRsvp.id,
+          eventId: eventRsvp.eventId,
+          memberId: eventRsvp.memberId,
+          rsvpedAt: eventRsvp.rsvpedAt,
+          memberName: user.name,
+          memberEmail: user.email,
+          memberImage: user.image,
+        })
+        .from(eventRsvp)
+        .leftJoin(member, eq(eventRsvp.memberId, member.id))
+        .leftJoin(user, eq(member.userId, user.id))
+        .where(eq(eventRsvp.eventId, input.eventId))
+        .orderBy(asc(eventRsvp.rsvpedAt));
+
+      return { rsvps, count: rsvps.length };
     }),
 
   /** Admin/assistant scans a member's QR code to mark them present in-person */

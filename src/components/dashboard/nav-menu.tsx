@@ -40,7 +40,7 @@ const organizationItems = [
   { title: "Leaderboard", url: routes.dashboard.leaderboard(), icon: Trophy },
   { title: "Members", url: routes.dashboard.members(), icon: Users },
   { title: "Events", url: routes.dashboard.events(), icon: CalendarDays },
-  { title: "Attendance", url: routes.dashboard.attendance(), icon: ClipboardList },
+  // { title: "Attendance", url: routes.dashboard.attendance(), icon: ClipboardList },
 ];
 
 const settingsItems = [

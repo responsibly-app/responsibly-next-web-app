@@ -1,4 +1,5 @@
 import { SettingsTabs } from "./_components/settings-tabs";
+import { version } from "~/package.json";
 
 export default function SettingsPage() {
   return (
@@ -8,6 +9,7 @@ export default function SettingsPage() {
         <p className="text-muted-foreground mt-1 text-sm">
           Manage your profile, security settings, and account preferences.
         </p>
+        <p className="text-muted-foreground/60 mt-1 text-xs">v{version}</p>
       </div>
 
       <SettingsTabs />

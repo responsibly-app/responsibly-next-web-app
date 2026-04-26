@@ -43,6 +43,13 @@
       "when": 1776980584662,
       "tag": "0005_sticky_silver_surfer",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1777188577418,
+      "tag": "0006_demonic_bulldozer",
+      "breakpoints": true
     }
   ]
 }
