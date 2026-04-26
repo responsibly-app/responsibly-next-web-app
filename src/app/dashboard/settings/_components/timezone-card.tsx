@@ -129,7 +129,7 @@ export function TimezoneCard() {
 
         {/* Display */}
         {isAuto ? (
-          <div className="rounded-md border bg-muted/40 px-3 py-2.5">
+          <div className="rounded-xl border bg-muted/40 px-3 py-2.5">
             <p className="text-xs text-muted-foreground mb-0.5">Detected timezone</p>
             <p className="text-sm font-medium">{tzLabel}</p>
           </div>
