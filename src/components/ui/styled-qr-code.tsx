@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
 import QRCodeStyling from "qr-code-styling";
 import { useTheme } from "next-themes";
+import { logoPath } from "@/config";
 
 export interface StyledQRCodeHandle {
   download: (filename: string) => Promise<void>;
@@ -29,7 +30,7 @@ export const StyledQRCode = forwardRef<StyledQRCodeHandle, StyledQRCodeProps>(
         type: "svg",
         data,
         margin: 5,
-        image: "/logo.png",
+        image: logoPath,
         imageOptions: {
           crossOrigin: "anonymous",
           margin: 6,

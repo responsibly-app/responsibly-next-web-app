@@ -1,4 +1,5 @@
 import type { MetadataRoute } from 'next'
+import { logoPath } from "@/config";
 
 export default function manifest(): MetadataRoute.Manifest {
     return {
@@ -11,7 +12,7 @@ export default function manifest(): MetadataRoute.Manifest {
         theme_color: '#000000',
         icons: [
             {
-                src: '/logo.png',
+                src: logoPath,
                 sizes: 'any',
                 type: 'image/png',
             },

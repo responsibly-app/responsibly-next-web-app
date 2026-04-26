@@ -16,7 +16,7 @@ import {
   SidebarMenuButton,
   SidebarRail,
 } from "@/components/ui/sidebar";
-import { appName } from "@/config";
+import { appName, logoPath } from "@/config";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
@@ -28,7 +28,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               <Link href="/">
                 <div className="flex aspect-square size-8 items-center justify-center rounded-lg overflow-hidden shrink-0">
                   <Image
-                    src="/logo.png"
+                    src={logoPath}
                     alt={appName}
                     width={32}
                     height={32}

@@ -1,12 +1,12 @@
 import Link from "next/link";
-import { appName } from "../config";
+import { appName, logoPath } from "@/config";
 
 export function Logo() {
     return (
         <Link href="/" className="flex items-center gap-2.5 group">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-                src="/logo.png"
+                src={logoPath}
                 alt={appName}
                 width={32}
                 height={32}
