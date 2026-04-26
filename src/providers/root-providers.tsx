@@ -8,7 +8,7 @@ import NextTopLoader from "nextjs-toploader";
 import { Suspense } from "react";
 import { TanstackProvider } from "./tanstack-provider";
 import { Toaster } from "@/components/ui/sonner";
-import { FireworksProvider } from "@/contexts/fireworks-context";
+import { FireworksProvider } from "@/components/ui-custom/fireworks";
 
 function TimezoneSyncProvider() {
   useAutoSyncTimezone();
