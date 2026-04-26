@@ -195,7 +195,7 @@ export function AppSidebarV2({ isPinned, onTogglePin }: AppSidebarV2Props) {
         <Link href="/" className="shrink-0">
           <Image
             src="/logo.png"
-            alt="Responsibly"
+            alt={appName}
             width={28}
             height={28}
             className="size-7 rounded-md object-contain"
