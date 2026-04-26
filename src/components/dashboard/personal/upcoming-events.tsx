@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { CalendarCheck, CalendarDays, MapPin, Monitor, Blend } from "lucide-react";
+import { CalendarCheck, CalendarDays, Check, MapPin, Monitor, Blend } from "lucide-react";
 import { JoinMeetingButton } from "@/components/organizations/events/join-meeting-button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -121,9 +121,9 @@ function UpcomingEventItem({ ev, userTz }: { ev: UpcomingEvent; userTz: string }
           {hasZoom && <JoinMeetingButton zoomJoinUrl={ev.zoomJoinUrl} />}
           {isRsvpable && (
             <Button
-              variant={rsvpStatus?.rsvped ? "default" : "outline"}
+              variant="outline"
               size="sm"
-              className="h-7 text-xs"
+              className={`h-7 text-xs ${rsvpStatus?.rsvped ? "border-emerald-500 bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300" : ""}`}
               onClick={(e) => {
                 e.preventDefault();
                 toggleRsvp.mutate({ eventId: ev.id });
@@ -132,6 +132,8 @@ function UpcomingEventItem({ ev, userTz }: { ev: UpcomingEvent; userTz: string }
             >
               {toggleRsvp.isPending ? (
                 <Spinner className="mr-1.5 size-3" data-icon="inline-start" />
+              ) : rsvpStatus?.rsvped ? (
+                <Check className="mr-1.5 size-3" />
               ) : (
                 <CalendarCheck className="mr-1.5 size-3" />
               )}

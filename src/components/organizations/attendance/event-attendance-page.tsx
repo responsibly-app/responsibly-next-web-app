@@ -32,6 +32,7 @@ import {
   useListEvents,
   useListMembers,
   useGetMemberRole,
+  useListRsvps,
 } from "@/lib/auth/hooks";
 import { getPermissions } from "@/lib/auth/hooks/oraganization/access-control";
 import { OrgRole } from "@/lib/auth/hooks/oraganization/permissions";
@@ -133,6 +134,7 @@ export function EventAttendancePage({ eventId, organizationId, hideBack }: Props
   const { data: attendanceRecords = [], isPending: attendancePending } =
     useGetEventAttendance(eventId);
   const { data: memberRoleData } = useGetMemberRole(organizationId);
+  const { data: rsvpData } = useListRsvps(eventId);
   const markAttendance = useMarkAttendance();
 
   const currentRole = memberRoleData?.role as OrgRole | undefined;
@@ -149,6 +151,11 @@ export function EventAttendancePage({ eventId, organizationId, hideBack }: Props
       ? (membersRaw as Member[])
       : ((membersRaw as { members?: Member[] }).members ?? [])
     : [];
+
+  const rsvpedMemberIds = useMemo(
+    () => new Set((rsvpData?.rsvps ?? []).map((r) => r.memberId)),
+    [rsvpData],
+  );
 
   const attendanceMap = useMemo(
     () => new Map(attendanceRecords.map((r) => [r.memberId, r as AttendanceRecord])),
@@ -342,6 +349,7 @@ export function EventAttendancePage({ eventId, organizationId, hideBack }: Props
         eventId={eventId}
         organizationId={organizationId}
         members={members}
+        rsvpedMemberIds={rsvpedMemberIds}
       />
       {memberQR && (
         <MemberQRDialog
@@ -665,7 +673,7 @@ function MemberControls({
         variant="outline"
         disabled={qrLocked || zoomLocked}
         className={cn(baseBtn, isExcused && BTN.excused, (qrLocked || zoomLocked) && "cursor-not-allowed")}
-        onClick={() => { if (record?.status !== "excused") m("excused"); }}
+        onClick={() => m(isExcused ? "absent" : "excused")}
       >
         Excused
       </Button>

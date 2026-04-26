@@ -31,9 +31,10 @@ interface Props {
   eventId: string;
   organizationId: string;
   members: Member[];
+  rsvpedMemberIds?: Set<string>;
 }
 
-export function ScannerDialog({ open, onClose, eventId, organizationId, members }: Props) {
+export function ScannerDialog({ open, onClose, eventId, organizationId, members, rsvpedMemberIds }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const rafRef = useRef<number>(0);
@@ -337,6 +338,11 @@ export function ScannerDialog({ open, onClose, eventId, organizationId, members 
                         <p className="text-center text-sm font-semibold leading-tight text-white drop-shadow">
                           {pendingMember.user.name}
                         </p>
+                        {rsvpedMemberIds && !rsvpedMemberIds.has(pendingMember.id) && (
+                          <span className="rounded-full bg-amber-400/20 px-2.5 py-0.5 text-[11px] font-medium text-amber-300">
+                            Has not RSVPed
+                          </span>
+                        )}
                         <p className="text-xs text-white/60">Confirm identity?</p>
                       </motion.div>
                       <motion.div

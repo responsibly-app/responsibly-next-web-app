@@ -211,16 +211,36 @@ export function InvitesPage() {
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="invite-count">Number of invites</Label>
-                <Input
-                  id="invite-count"
-                  type="number"
-                  min={0}
-                  max={9999}
-                  placeholder="0"
-                  value={logCount}
-                  onChange={(e) => setLogCount(e.target.value)}
-                  className="w-full"
-                />
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    className="shrink-0"
+                    onClick={() => setLogCount((v) => String(Math.max(0, (parseInt(v, 10) || 0) - 1)))}
+                  >
+                    –
+                  </Button>
+                  <Input
+                    id="invite-count"
+                    type="number"
+                    min={0}
+                    max={9999}
+                    placeholder="0"
+                    value={logCount}
+                    onChange={(e) => setLogCount(e.target.value)}
+                    className="text-center"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    className="shrink-0"
+                    onClick={() => setLogCount((v) => String(Math.min(9999, (parseInt(v, 10) || 0) + 1)))}
+                  >
+                    +
+                  </Button>
+                </div>
               </div>
               <Button onClick={handleSaveLog} disabled={isSaving || logCount === ""} className="w-full">
                 {isSaving ? "Saving…" : logEntry ? "Update" : "Save"}
@@ -289,16 +309,36 @@ export function InvitesPage() {
               <p className="text-sm text-muted-foreground">{formatDate(editEntry.date)}</p>
               <div className="space-y-1.5">
                 <Label htmlFor="edit-count">Number of invites</Label>
-                <Input
-                  id="edit-count"
-                  type="number"
-                  min={0}
-                  max={9999}
-                  value={editCount}
-                  onChange={(e) => setEditCount(e.target.value)}
-                  className="w-full"
-                  autoFocus
-                />
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    className="shrink-0"
+                    onClick={() => setEditCount((v) => String(Math.max(0, (parseInt(v, 10) || 0) - 1)))}
+                  >
+                    –
+                  </Button>
+                  <Input
+                    id="edit-count"
+                    type="number"
+                    min={0}
+                    max={9999}
+                    value={editCount}
+                    onChange={(e) => setEditCount(e.target.value)}
+                    className="text-center"
+                    autoFocus
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    className="shrink-0"
+                    onClick={() => setEditCount((v) => String(Math.min(9999, (parseInt(v, 10) || 0) + 1)))}
+                  >
+                    +
+                  </Button>
+                </div>
               </div>
             </div>
           )}

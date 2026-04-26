@@ -92,7 +92,7 @@ export function InviteLogCard() {
             disabled={isSaving || count === ""}
             size="sm"
           >
-            {isSaving ? "Saving…" : todayEntry ? "Update" : "Log"}
+            {isSaving ? "Saving…" : todayEntry ? "Update" : "Log invite"}
           </Button>
         </div>
         {todayEntry && (
