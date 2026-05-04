@@ -17,8 +17,9 @@ export default async function proxy(req: NextRequest) {
   const isOnGoodbye = pathname.startsWith(routes.auth.goodbye());
   const isOnDeleteAccount = pathname.startsWith(routes.auth.deleteAccount());
   const isOnCheckIn = pathname.startsWith(routes.checkIn());
+  const isOnChat = pathname.startsWith(routes.dashboard.chat());
 
-  const isOnAuthRequiredPages = isOnDashboard || isOnDeleteAccount || isOnAdmin || isOnCheckIn;
+  const isOnAuthRequiredPages = isOnDashboard || isOnChat || isOnDeleteAccount || isOnAdmin || isOnCheckIn;
   const isOnAuthRestrictedPages = isOnSignin || isOnGoodbye;
 
   const redirectRootToDashboard = false;

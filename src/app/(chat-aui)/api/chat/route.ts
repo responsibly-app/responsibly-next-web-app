@@ -44,22 +44,6 @@ export async function POST(req: Request) {
           return data; // returns structured payload (NOT string)
         },
       }),
-      // previewLink: tool({
-      //   description: "Show a preview card for a URL",
-      //   inputSchema: z.object({ url: z.url() }),
-      //   // outputSchema tells the AI SDK what shape the result will have
-      //   outputSchema: SerializableLinkPreviewSchema,
-      //   async execute({ url }) {
-      //     // Fetch metadata and return structured data
-      //     return {
-      //       id: "link-preview-1",
-      //       href: url,
-      //       title: "Example Site",
-      //       description: "A description of the linked content",
-      //       image: "https://example.com/image.jpg",
-      //     };
-      //   },
-      // }),
       previewLink: tool({
         description: "Show a preview card for a URL",
         inputSchema: jsonSchema<{ url: string }>({

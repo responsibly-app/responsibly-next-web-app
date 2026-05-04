@@ -1,6 +1,7 @@
 export const routes = {
   dashboard: {
     root: () => "/dashboard",
+    chat: (threadId?: string) => threadId ? `/chat/${threadId}` : "/chat",
     members: () => "/dashboard/members",
     memberProfile: (userId: string) => `/dashboard/members/${userId}`,
     events: () => "/dashboard/events",

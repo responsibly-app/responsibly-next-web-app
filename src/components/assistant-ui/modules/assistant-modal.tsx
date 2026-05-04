@@ -10,7 +10,7 @@ import {
 } from "@assistant-ui/react";
 import { type FC, forwardRef } from "react";
 
-import { Assistant } from "@/components/assistant-ui/assistant";
+import { Assistant } from "~/src/components/assistant-ui/modules/assistant";
 import { Thread } from "@/components/assistant-ui/thread";
 import { TooltipIconButton } from "@/components/assistant-ui/tooltip-icon-button";
 import {
