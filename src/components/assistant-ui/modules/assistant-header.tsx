@@ -4,7 +4,10 @@ import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useAuiState } from "@assistant-ui/react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import Link from "next/link";
 import { useEffect, useRef } from "react";
+import { routes } from "@/routes";
+import { Separator } from "@/components/ui/separator";
 
 interface TokenUsageData {
   inputTokens: number;
@@ -65,7 +68,7 @@ function CircularUsage({ used, quota, label }: { used: number; quota: number; la
                 cy="17"
                 r={RADIUS}
                 fill="none"
-                strokeWidth="3"
+                strokeWidth="2"
                 className="stroke-muted-foreground/20"
               />
               <circle
@@ -102,7 +105,14 @@ export function AssistantHeader() {
 
   return (
     <header className="bg-background/60 sticky top-0 z-10 flex h-14 shrink-0 items-center justify-between gap-2 border-b px-4 backdrop-blur-md">
-      <SidebarTrigger />
+      <div className="flex items-center gap-2">
+        <SidebarTrigger />
+        <Separator
+          orientation="vertical"
+          className="mx-2 my-auto h-8"
+        />
+        <Link href={routes.dashboard.root()}>Dashboard</Link>
+      </div>
       {usage && (
         <div className="flex items-center gap-3">
           <CircularUsage used={usage.inputTokens} quota={usage.inputQuota} label="In" />

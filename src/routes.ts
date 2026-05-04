@@ -1,7 +1,6 @@
 export const routes = {
   dashboard: {
     root: () => "/dashboard",
-    chat: (threadId?: string) => threadId ? `/chat/${threadId}` : "/chat",
     members: () => "/dashboard/members",
     memberProfile: (userId: string) => `/dashboard/members/${userId}`,
     events: () => "/dashboard/events",
@@ -17,6 +16,7 @@ export const routes = {
     eventDetail: (eventId: string) => `/dashboard/events/${eventId}`,
     acceptInvitation: (invitationId: string) => `/dashboard/accept-invitation?id=${invitationId}`,
   },
+  chat: (threadId?: string) => threadId ? `/chat/${threadId}` : "/chat",
   admin: {
     root: () => "/admin",
     users: () => "/admin/users",

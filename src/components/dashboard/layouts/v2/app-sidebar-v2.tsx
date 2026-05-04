@@ -8,6 +8,7 @@ import {
   CalendarDays,
   Flame,
   LayoutDashboard,
+  MessageSquare,
   Plug,
   Settings,
   TrendingUp,
@@ -37,7 +38,10 @@ export const SIDEBAR_PINNED_W = 240;
 
 const navGroups = [
   {
-    items: [{ title: "Dashboard", url: routes.dashboard.root(), icon: LayoutDashboard }],
+    items: [
+      { title: "Dashboard", url: routes.dashboard.root(), icon: LayoutDashboard },
+      { title: "Chat", url: routes.chat(), icon: MessageSquare },
+    ],
   },
   {
     label: "Personal",
