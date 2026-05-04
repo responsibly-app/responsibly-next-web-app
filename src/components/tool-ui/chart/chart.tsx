@@ -98,7 +98,7 @@ export const Chart = memo(function Chart({
   const chartContent = (
     <ChartContainer
       config={chartConfig}
-      className="min-h-[200px] w-full"
+      className="min-h-50 w-full"
       data-tool-ui-id={id}
     >
       <ChartComponent data={data} accessibilityLayer>

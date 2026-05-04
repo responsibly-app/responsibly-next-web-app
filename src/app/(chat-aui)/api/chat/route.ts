@@ -1,17 +1,13 @@
-// import { openai } from "@ai-sdk/openai";
-import { fetchWeatherWidgetData } from "@/components/assistant-ui/weatherAdapter";
-import { SerializableLinkPreviewSchema } from "@/components/tool-ui/link-preview/schema";
-import { azure, createAzure } from "@ai-sdk/azure";
-import { google } from "@ai-sdk/google";
+import { getWeatherTool } from "~/src/components/assistant-ui/tools/weather/get-weather.server";
+import { previewLinkTool } from "~/src/components/assistant-ui/tools/link/preview-link.server";
+import { showChartTool } from "~/src/components/assistant-ui/tools/chart/show-chart.server";
+import { requestApprovalTool } from "~/src/components/assistant-ui/tools/approval-card/request-approval.server";
+import { showDataTableTool } from "~/src/components/assistant-ui/tools/data-table/show-data-table.server";
+// import { showGeoMapTool } from "~/src/components/assistant-ui/tools/geo-map/show-geo-map.server";
+import { askQuestionFlowTool } from "~/src/components/assistant-ui/tools/question-flow/ask-question-flow.server";
+import { createAzure } from "@ai-sdk/azure";
 import type { UIMessage } from "ai";
-import {
-  convertToModelMessages,
-  jsonSchema,
-  streamText,
-  tool,
-  zodSchema,
-} from "ai";
-import { z } from "zod";
+import { convertToModelMessages, streamText } from "ai";
 
 export const maxDuration = 30;
 
@@ -20,50 +16,20 @@ export async function POST(req: Request) {
 
   const customAzure = createAzure({
     resourceName: process.env.AZURE_GPT5_RESOURCE_NAME,
-    // apiVersion: process.env.AZURE_GPT5_API_VERSION,
     apiKey: process.env.AZURE_GPT5_API_KEY!,
-    // Connection reuse is handled automatically by the SDK and underlying fetch
   });
 
   const result = streamText({
-    // model: openai("gpt-4o"),
-    // model: azure(process.env.AZURE_OPENAI_ENDPOINT!),
-    // model: google("gemini-2.5-flash"),
     model: customAzure("gpt-5.2"),
-    messages: await convertToModelMessages(messages), // Note: async in v6
+    messages: await convertToModelMessages(messages),
     tools: {
-      get_weather: tool({
-        description: "Get live weather data for a city",
-        inputSchema: zodSchema(
-          z.object({
-            city: z.string(),
-          }),
-        ),
-        execute: async ({ city }) => {
-          const data = await fetchWeatherWidgetData(city);
-          return data; // returns structured payload (NOT string)
-        },
-      }),
-      previewLink: tool({
-        description: "Show a preview card for a URL",
-        inputSchema: jsonSchema<{ url: string }>({
-          type: "object",
-          properties: { url: { type: "string", format: "uri" } },
-          required: ["url"],
-          additionalProperties: false,
-        }),
-        // execute() runs on the server when the LLM calls the tool.
-        // It returns JSON that matches the LinkPreview component's schema.
-        async execute({ url }) {
-          return {
-            id: "link-preview-1",
-            href: url,
-            title: "Example Site",
-            description: "A description of the linked content",
-            image: "https://example.com/image.jpg",
-          };
-        },
-      }),
+      get_weather: getWeatherTool,
+      preview_link: previewLinkTool,
+      show_chart: showChartTool,
+      request_approval: requestApprovalTool,
+      show_data_table: showDataTableTool,
+      // show_geo_map: showGeoMapTool,
+      ask_question_flow: askQuestionFlowTool,
     },
   });
 
