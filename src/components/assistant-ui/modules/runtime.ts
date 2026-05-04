@@ -28,6 +28,8 @@ export function useRuntime({ initialThreadId }: RuntimeProps) {
                         continuous: true,
                         interimResults: false,
                     }),
+                    // voice: "voice",
+
                 },
             });
         },

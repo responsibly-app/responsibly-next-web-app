@@ -1,10 +1,5 @@
 import {
-    AssistantRuntimeProvider,
-    Tools,
     useAui,
-    useAuiState,
-    useRemoteThreadListRuntime,
-    WebSpeechDictationAdapter,
     type RemoteThreadListAdapter,
     type ThreadHistoryAdapter,
 } from "@assistant-ui/react";

@@ -31,8 +31,10 @@ import {
   SuggestionPrimitive,
   ThreadPrimitive,
   useAuiState,
+  useVoiceControls,
+  useVoiceState,
 } from "@assistant-ui/react";
-import { Loader2Icon } from "lucide-react";
+import { Loader2Icon, MicIcon, PhoneIcon, PhoneOffIcon, Square } from "lucide-react";
 import { useThreadInitLoading } from "./modules/thread-init-loading";
 import {
   ArrowDownIcon,
@@ -84,7 +86,7 @@ export const Thread: FC = () => {
             </ThreadPrimitive.Messages>
           </div>
 
-          <ThreadPrimitive.ViewportFooter className="aui-thread-viewport-footer sticky bottom-0 mt-auto flex flex-col gap-4 overflow-visible rounded-t-(--composer-radius) bg-background pb-4 md:pb-6">
+          <ThreadPrimitive.ViewportFooter className="aui-thread-viewport-footer sticky bottom-0 mt-auto flex flex-col gap-4 overflow-visible rounded-t-(--composer-radius) bg-background/70 pb-4 md:pb-6">
             <ThreadScrollToBottom />
             <Composer />
           </ThreadPrimitive.ViewportFooter>
@@ -191,7 +193,7 @@ const Composer: FC = () => {
       <ComposerPrimitive.AttachmentDropzone asChild>
         <div
           data-slot="aui_composer-shell"
-          className="flex w-full flex-col gap-2 rounded-(--composer-radius) border bg-card p-(--composer-padding) transition-shadow focus-within:border-ring/75 focus-within:ring-2 focus-within:ring-ring/20 data-[dragging=true]:border-ring data-[dragging=true]:border-dashed data-[dragging=true]:bg-accent/50"
+          className="flex w-full flex-col gap-2 rounded-(--composer-radius) border bg-card/50 backdrop-blur-sm p-(--composer-padding) transition-shadow focus-within:border-ring/75 focus-within:ring-1 focus-within:ring-ring/20 data-[dragging=true]:border-ring data-[dragging=true]:border-dashed data-[dragging=true]:bg-accent/50"
         >
           <ComposerAttachments />
           <ComposerPrimitive.Input
@@ -208,10 +210,71 @@ const Composer: FC = () => {
   );
 };
 
+function ComposerVoiceToggle() {
+  const voiceState = useVoiceState();
+  const { connect, disconnect } = useVoiceControls();
+  const isActive =
+    voiceState?.status.type === "running" ||
+    voiceState?.status.type === "starting";
+
+  return (
+    <AuiIf condition={(s) => s.thread.capabilities.voice}>
+      <button
+        type="button"
+        onClick={() => (isActive ? disconnect() : connect())}
+        aria-label={isActive ? "End voice" : "Start voice"}
+      >
+        {isActive ? <PhoneOffIcon className="size-5" /> : <PhoneIcon className="size-5" />}
+      </button>
+    </AuiIf>
+  );
+}
+
+function ComposerDictationToggle() {
+  return (
+    <div>
+      {/* Dictation Button - Show when NOT dictating */}
+      <ComposerPrimitive.If dictation={false}>
+        <ComposerPrimitive.Dictate asChild>
+          <TooltipIconButton
+            tooltip="Voice input"
+            side="top"
+            variant="ghost"
+            className="aui-composer-dictate size-8 rounded-full p-1"
+            aria-label="Start voice input"
+          >
+            <MicIcon className="size-5" />
+          </TooltipIconButton>
+        </ComposerPrimitive.Dictate>
+      </ComposerPrimitive.If>
+
+      {/* Stop Dictation Button - Show when dictating */}
+      <ComposerPrimitive.If dictation>
+        <ComposerPrimitive.StopDictation asChild>
+          <TooltipIconButton
+            tooltip="Stop dictation"
+            side="top"
+            variant="default"
+            className="aui-composer-stop-dictation size-8 rounded-full p-1"
+            aria-label="Stop voice input"
+          >
+            <Square className="size-4 animate-pulse fill-current" />
+          </TooltipIconButton>
+        </ComposerPrimitive.StopDictation>
+      </ComposerPrimitive.If>
+    </div>
+  );
+}
+
 const ComposerAction: FC = () => {
   return (
     <div className="aui-composer-action-wrapper relative flex items-center justify-between">
-      <ComposerAddAttachment />
+      <div className="flex items-center gap-1">
+        <ComposerAddAttachment />
+        <ComposerDictationToggle />
+        <ComposerVoiceToggle />
+      </div>
+
       <AuiIf condition={(s) => !s.thread.isRunning}>
         <ComposerPrimitive.Send asChild>
           <TooltipIconButton
