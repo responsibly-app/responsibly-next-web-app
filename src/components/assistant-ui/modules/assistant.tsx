@@ -2,10 +2,10 @@
 
 import { Thread } from "@/components/assistant-ui/thread";
 import { ThreadListSidebar } from "@/components/assistant-ui/threadlist-sidebar";
+import { AssistantHeader } from "@/components/assistant-ui/modules/assistant-header";
 import {
   SidebarInset,
   SidebarProvider,
-  SidebarTrigger,
 } from "@/components/ui/sidebar";
 import {
   AssistantRuntimeProvider,
@@ -15,7 +15,7 @@ import {
   useAuiState,
 } from "@assistant-ui/react";
 import { DevToolsModal } from "@assistant-ui/react-devtools";
-import { useEffect, useRef, type ReactNode } from "react";
+import { useEffect, useRef } from "react";
 import { useRuntime } from "./runtime";
 import { toolkit } from "./toolkit";
 import { ThreadInitLoadingProvider } from "./thread-init-loading";
@@ -59,9 +59,7 @@ export const Assistant = ({ initialThreadId }: AssistantProps = {}) => {
           <div className="flex h-dvh w-full pr-0.5">
             <ThreadListSidebar />
             <SidebarInset>
-              <header className="bg-background/60 flex h-12 shrink-0 items-center gap-2 border-b px-4 backdrop-blur-md">
-                <SidebarTrigger />
-              </header>
+              <AssistantHeader />
               <div className="flex-1 overflow-hidden">
                 <Thread />
               </div>

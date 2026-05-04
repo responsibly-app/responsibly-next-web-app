@@ -1,4 +1,4 @@
-import { index, jsonb, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import { index, integer, jsonb, pgTable, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
 import { user } from "./better-auth-schema";
 
 export const chatThread = pgTable(
@@ -32,4 +32,25 @@ export const chatMessage = pgTable(
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
   (table) => [index("chat_message_thread_id_idx").on(table.threadId)],
+);
+
+export const chatTokenUsage = pgTable(
+  "chat_token_usage",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    month: text("month").notNull(), // "YYYY-MM" format
+    inputTokens: integer("input_tokens").default(0).notNull(),
+    outputTokens: integer("output_tokens").default(0).notNull(),
+    updatedAt: timestamp("updated_at")
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (table) => [
+    uniqueIndex("chat_token_usage_user_month_uidx").on(table.userId, table.month),
+    index("chat_token_usage_user_id_idx").on(table.userId),
+  ],
 );

@@ -1,10 +1,9 @@
 import * as React from "react";
-import { Github, MessagesSquare } from "lucide-react";
+import { MessagesSquare, SquarePen } from "lucide-react";
 import Link from "next/link";
 import {
   Sidebar,
   SidebarContent,
-  SidebarFooter,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
@@ -12,63 +11,49 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar";
 import { ThreadList } from "@/components/assistant-ui/thread-list";
-import ENVConfig from "~/src/config";
+import ENVConfig from "@/config";
+import { ThreadListPrimitive } from "@assistant-ui/react";
 
 export function ThreadListSidebar({
   ...props
 }: React.ComponentProps<typeof Sidebar>) {
   return (
-    <Sidebar {...props}>
-      <SidebarHeader className="aui-sidebar-header mb-2 border-b">
-        <div className="aui-sidebar-header-content flex items-center justify-between">
+    <Sidebar collapsible="icon" {...props}>
+      <SidebarHeader className="aui-sidebar-header p-0">
+        <div className="flex h-15 items-center px-2">
           <SidebarMenu>
             <SidebarMenuItem>
               <SidebarMenuButton size="lg" asChild>
-                <Link
-                  href={ENVConfig.backend_base_url}
-                  // target="_blank"
-                  // rel="noopener noreferrer"
-                >
-                  <div className="aui-sidebar-header-icon-wrapper flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-                    <MessagesSquare className="aui-sidebar-header-icon size-4" />
+                <Link href={ENVConfig.backend_base_url}>
+                  <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
+                    <MessagesSquare className="size-4" />
                   </div>
-                  <div className="aui-sidebar-header-heading mr-6 flex flex-col gap-0.5 leading-none">
-                    <span className="aui-sidebar-header-title font-semibold">
-                      {ENVConfig.app_name}
-                    </span>
-                  </div>
+                  <span className="font-semibold">{ENVConfig.app_name}</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
         </div>
       </SidebarHeader>
-      <SidebarContent className="aui-sidebar-content px-2">
-        <ThreadList />
-      </SidebarContent>
-      <SidebarRail />
-      {/* <SidebarFooter className="aui-sidebar-footer border-t">
+      <SidebarContent className="aui-sidebar-content px-2 pt-2">
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton size="lg" asChild>
-              <Link
-                href="https://github.com/assistant-ui/assistant-ui"
-                target="_blank"
-              >
-                <div className="aui-sidebar-footer-icon-wrapper flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-                  <Github className="aui-sidebar-footer-icon size-4" />
-                </div>
-                <div className="aui-sidebar-footer-heading flex flex-col gap-0.5 leading-none">
-                  <span className="aui-sidebar-footer-title font-semibold">
-                    GitHub
-                  </span>
-                  <span>View Source</span>
-                </div>
-              </Link>
-            </SidebarMenuButton>
+            <ThreadListPrimitive.New asChild>
+              <SidebarMenuButton>
+                <SquarePen className="size-4" />
+                <span>New Chat</span>
+              </SidebarMenuButton>
+            </ThreadListPrimitive.New>
           </SidebarMenuItem>
         </SidebarMenu>
-      </SidebarFooter> */}
+        <div className="group-data-[collapsible=icon]:hidden">
+          <p className="px-3 pb-1 pt-4 text-xs font-medium text-muted-foreground">
+            Recents
+          </p>
+          <ThreadList />
+        </div>
+      </SidebarContent>
+      <SidebarRail />
     </Sidebar>
   );
 }

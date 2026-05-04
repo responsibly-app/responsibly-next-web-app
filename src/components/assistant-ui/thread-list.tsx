@@ -21,7 +21,7 @@ import { type FC, useEffect, useRef, useState } from "react";
 export const ThreadList: FC = () => {
   return (
     <ThreadListPrimitive.Root className="aui-root aui-thread-list-root flex flex-col gap-1">
-      <ThreadListNew />
+      {/* <ThreadListNew /> */}
       <AuiIf condition={(s) => s.threads.isLoading}>
         <ThreadListSkeleton />
       </AuiIf>
