@@ -100,7 +100,7 @@ export function DashboardAmasCard() {
             <YAxis tickLine={false} axisLine={false} tick={{ fontSize: 11 }} allowDecimals={false} />
             <ChartTooltip content={<ChartTooltipContent />} />
             <Bar dataKey="recruits" fill="var(--color-primary)" radius={[4, 4, 0, 0]} minPointSize={3}>
-              <LabelList dataKey="recruits" position="top" style={{ fontSize: 11, fill: "var(--muted-foreground)" }} formatter={(v: number) => (v === 0 ? "" : v)} />
+              <LabelList dataKey="recruits" position="top" style={{ fontSize: 11, fill: "var(--muted-foreground)" }} formatter={(v: unknown) => (v === 0 ? "" : (v as string | number))} />
             </Bar>
           </BarChart>
         </ChartContainer>

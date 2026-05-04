@@ -49,7 +49,7 @@ import {
   RefreshCwIcon,
   SquareIcon,
 } from "lucide-react";
-import type { FC } from "react";
+import { type FC, type ReactNode, Component } from "react";
 // import "@assistant-ui/react-markdown/styles/dot.css";
 
 export const Thread: FC = () => {
@@ -317,6 +317,27 @@ const MessageError: FC = () => {
   );
 };
 
+class MessagePartErrorBoundary extends Component<
+  { children: ReactNode },
+  { hasError: boolean }
+> {
+  state = { hasError: false };
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  componentDidCatch() {
+    // Transient tapClientLookup out-of-bounds during thread reload — retry after state settles
+    setTimeout(() => this.setState({ hasError: false }), 0);
+  }
+
+  render() {
+    if (this.state.hasError) return null;
+    return this.props.children;
+  }
+}
+
 const AssistantMessage: FC = () => {
   // reserves space for action bar and compensates with `-mb` for consistent msg spacing
   // keeps hovered action bar from shifting layout (autohide doesn't support absolute positioning well)
@@ -334,6 +355,7 @@ const AssistantMessage: FC = () => {
         data-slot="aui_assistant-message-content"
         className="wrap-break-word px-2 text-foreground leading-relaxed"
       >
+        <MessagePartErrorBoundary>
         <MessagePrimitive.GroupedParts
           groupBy={(part) => {
             if (part.type === "reasoning")
@@ -379,6 +401,7 @@ const AssistantMessage: FC = () => {
             }
           }}
         </MessagePrimitive.GroupedParts>
+        </MessagePartErrorBoundary>
         <MessageError />
       </div>
 

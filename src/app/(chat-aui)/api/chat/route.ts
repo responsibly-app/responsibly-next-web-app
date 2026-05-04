@@ -3,7 +3,6 @@ import { previewLinkTool } from "~/src/components/assistant-ui/tools/link/previe
 import { showChartTool } from "~/src/components/assistant-ui/tools/chart/show-chart.server";
 import { requestApprovalTool } from "~/src/components/assistant-ui/tools/approval-card/request-approval.server";
 import { showDataTableTool } from "~/src/components/assistant-ui/tools/data-table/show-data-table.server";
-// import { showGeoMapTool } from "~/src/components/assistant-ui/tools/geo-map/show-geo-map.server";
 import { askQuestionFlowTool } from "~/src/components/assistant-ui/tools/question-flow/ask-question-flow.server";
 import { createAzure } from "@ai-sdk/azure";
 import type { UIMessage } from "ai";
@@ -28,7 +27,6 @@ export async function POST(req: Request) {
       show_chart: showChartTool,
       request_approval: requestApprovalTool,
       show_data_table: showDataTableTool,
-      // show_geo_map: showGeoMapTool,
       ask_question_flow: askQuestionFlowTool,
     },
   });

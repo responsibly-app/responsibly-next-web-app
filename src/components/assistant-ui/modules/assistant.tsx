@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/sidebar";
 import {
   AssistantRuntimeProvider,
+  Suggestions,
   Tools,
   useAui,
   useAuiState,
@@ -44,7 +45,10 @@ interface AssistantProps {
 
 export const Assistant = ({ initialThreadId }: AssistantProps = {}) => {
   const runtime = useRuntime({ initialThreadId });
-  const aui = useAui({ tools: Tools({ toolkit }) });
+    const aui = useAui({
+      suggestions: Suggestions(["What's the weather?", "Tell me a joke"]),
+      tools: Tools({ toolkit })
+    });
 
   return (
     <AssistantRuntimeProvider runtime={runtime} aui={aui}>

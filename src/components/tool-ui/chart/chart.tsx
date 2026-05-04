@@ -120,8 +120,8 @@ export const Chart = memo(function Chart({
               dataKey={s.key}
               fill={seriesColors[i]}
               radius={4}
-              onClick={(data) =>
-                handleDataPointClick(s.key, s.label, data.payload, data.index)
+              onClick={(data, index) =>
+                handleDataPointClick(s.key, s.label, data.payload, index)
               }
               cursor={onDataPointClick ? "pointer" : undefined}
             />
@@ -139,18 +139,15 @@ export const Chart = memo(function Chart({
               activeDot={{
                 r: 6,
                 cursor: onDataPointClick ? "pointer" : undefined,
-                // Recharts types are incorrect - onClick receives (event, dotData) at runtime
-                onClick: ((
-                  _: unknown,
-                  dotData: { payload: Record<string, unknown>; index: number },
-                ) => {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                onClick: ((_: unknown, dotData: any) => {
                   handleDataPointClick(
                     s.key,
                     s.label,
                     dotData.payload,
                     dotData.index,
                   );
-                }) as unknown as React.MouseEventHandler,
+                }) as any,
               }}
             />
           ))}

@@ -5,6 +5,8 @@ import { BotIcon, ChevronDownIcon } from "lucide-react";
 import {
   AssistantModalPrimitive,
   AssistantRuntimeProvider,
+  Suggestions,
+  Tools,
   useAui,
   WebSpeechDictationAdapter,
 } from "@assistant-ui/react";
@@ -13,29 +15,16 @@ import { type FC, forwardRef } from "react";
 import { Assistant } from "~/src/components/assistant-ui/modules/assistant";
 import { Thread } from "@/components/assistant-ui/thread";
 import { TooltipIconButton } from "@/components/assistant-ui/tooltip-icon-button";
-import {
-  AssistantChatTransport,
-  useChatRuntime,
-} from "@assistant-ui/react-ai-sdk";
-import { lastAssistantMessageIsCompleteWithToolCalls } from "ai";
+import { useRuntime } from "./runtime";
+import { toolkit } from "./toolkit";
 
 export const AssistantModal: FC = () => {
-  const runtime = useChatRuntime({
-    sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithToolCalls,
-    transport: new AssistantChatTransport({
-      api: "/api/chat",
-    }),
-    adapters: {
-      dictation: new WebSpeechDictationAdapter({
-        // Optional configuration
-        language: "en-US", // Language for recognition (default: browser language)
-        continuous: true, // Keep recording after user stops (default: true)
-        interimResults: false, // Return interim results (default: true)
-      }),
-    },
+  const runtime = useRuntime({});
+  const aui = useAui({
+    suggestions: Suggestions(["What's the weather?", "Tell me a joke"]),
+    tools: Tools({ toolkit })
   });
 
-  // const aui = useAui({ tools: Tools({ toolkit }) });
   return (
     <AssistantRuntimeProvider runtime={runtime}>
       <AssistantModalPrimitive.Root>

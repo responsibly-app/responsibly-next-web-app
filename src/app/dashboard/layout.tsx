@@ -1,6 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import { AssistantModal } from "~/src/components/assistant-ui/modules/assistant-modal";
 
 const dashboardLayout: string = "v2";
 
@@ -13,5 +14,8 @@ const DashboardLayout = dynamic(
 );
 
 export default function Page({ children }: { children: React.ReactNode }) {
-  return <DashboardLayout>{children}</DashboardLayout>;
+  return <DashboardLayout>
+    <AssistantModal />
+    {children}
+  </DashboardLayout>;
 }
