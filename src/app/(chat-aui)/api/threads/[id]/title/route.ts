@@ -1,9 +1,9 @@
 import { auth } from "@/lib/auth/auth";
 import { db } from "@/lib/db";
 import { chatThread } from "@/lib/db/schema/chat-schema";
-import { createAzure } from "@ai-sdk/azure";
 import { generateText } from "ai";
 import { and, eq } from "drizzle-orm";
+import { titleGenerationModel } from "@/lib/ai-models/foundry";
 
 export async function POST(
   req: Request,
@@ -38,13 +38,8 @@ export async function POST(
     return Response.json({ title: "New Chat" });
   }
 
-  const customAzure = createAzure({
-    resourceName: process.env.AZURE_GPT5_RESOURCE_NAME,
-    apiKey: process.env.AZURE_GPT5_API_KEY!,
-  });
-
   const { text: title } = await generateText({
-    model: customAzure("gpt-5.2"),
+    model: titleGenerationModel,
     prompt: `Generate a short title (max 6 words, no punctuation at end) for a conversation starting with: "${firstUserText.slice(0, 300)}"`,
   });
 

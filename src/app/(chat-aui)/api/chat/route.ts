@@ -7,11 +7,12 @@ import { askQuestionFlowTool } from "~/src/components/assistant-ui/tools/questio
 import { auth } from "@/lib/auth/auth";
 import { db } from "@/lib/db";
 import { chatTokenUsage } from "@/lib/db/schema/chat-schema";
+import { buildContextBlock, retrieveChunks } from "@/lib/rag/retriever";
 import { and, eq, sql } from "drizzle-orm";
-import { createAzure } from "@ai-sdk/azure";
 import type { UIMessage } from "ai";
 import { convertToModelMessages, streamText } from "ai";
 import { INPUT_TOKEN_QUOTA, OUTPUT_TOKEN_QUOTA } from "../token-usage/route";
+import { chatModel } from "@/lib/ai-models/foundry";
 
 export const maxDuration = 30;
 const MAX_CONTEXT_MESSAGES = 5;
@@ -113,13 +114,30 @@ export async function POST(req: Request) {
 
   const { messages }: { messages: UIMessage[] } = await req.json();
 
-  const customAzure = createAzure({
-    resourceName: process.env.AZURE_GPT5_RESOURCE_NAME,
-    apiKey: process.env.AZURE_GPT5_API_KEY!,
-  });
+  // RAG: retrieve relevant strategy chunks for the latest user message
+  const lastUserText = messages
+    .filter((m) => m.role === "user")
+    .at(-1)
+    ?.parts.filter((p) => p.type === "text")
+    .map((p) => p.text)
+    .join(" ") ?? "";
+
+  const ragChunks = lastUserText.length > 10 ? await retrieveChunks(lastUserText) : [];
+  const contextBlock = buildContextBlock(ragChunks);
+  console.log(`[RAG] Retrieved ${ragChunks.length} chunks for query: "${lastUserText}"`);
+
+  const systemPrompt = [
+    "You are a sales coaching assistant. Help users with objection handling, sales strategies, and best practices.",
+    contextBlock.length > 0
+      ? `\nUse the following knowledge base context to inform your response. If the context is directly relevant, ground your answer in it. If not, answer from general knowledge.\n\n${contextBlock}`
+      : "",
+  ]
+    .filter(Boolean)
+    .join("\n");
 
   const result = streamText({
-    model: customAzure("gpt-5.2"),
+    model: chatModel,
+    system: systemPrompt,
     messages: await convertToModelMessages(messages.slice(-MAX_CONTEXT_MESSAGES)),
     tools: {
       // get_weather: getWeatherTool,

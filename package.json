@@ -24,6 +24,8 @@
     "db:pull:dev": "npx drizzle-kit pull --config=drizzle-dev.config.ts",
     "db:check:dev": "npx drizzle-kit check --config=drizzle-dev.config.ts",
     "db:studio:dev": "npx drizzle-kit studio --config=drizzle-dev.config.ts",
+    "rag:sync:dev": "DOTENV_PATH=.env.local npx tsx scripts/sync-knowledge.ts",
+    "rag:sync:prod": "DOTENV_PATH=.env.production npx tsx scripts/sync-knowledge.ts",
     "save-zoom-assets": "for asset in cover feature-1 feature-2 feature-3 feature-4; do curl -s \"http://localhost:3000/zoom-assets/$asset\" -o \"./documentation/integrations/zoom/zoom-assets/$asset.png\" && echo \"Saved $asset.png\"; done"
   },
   "dependencies": {
@@ -69,6 +71,7 @@
     "js-cookie": "^3.0.5",
     "leaflet": "^1.9.4",
     "lucide-react": "^0.564.0",
+    "mammoth": "^1.12.0",
     "mermaid": "^11.14.0",
     "motion": "^12.34.3",
     "next": "16.1.6",
@@ -77,6 +80,7 @@
     "node-gyp": "^12.2.0",
     "nodemailer": "^8.0.2",
     "ogl": "^1.0.11",
+    "pdf-parse": "^2.4.5",
     "postgres": "^3.4.8",
     "qr-code-styling": "^1.9.2",
     "qrcode": "^1.5.4",
@@ -111,6 +115,7 @@
     "@types/js-cookie": "^3.0.6",
     "@types/node": "^20",
     "@types/nodemailer": "^7.0.11",
+    "@types/pdf-parse": "^1.1.5",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "drizzle-kit": "^0.31.9",
