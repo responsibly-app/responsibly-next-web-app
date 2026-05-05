@@ -3,7 +3,7 @@ import { db } from "@/lib/db";
 import { chatThread } from "@/lib/db/schema/chat-schema";
 import { generateText } from "ai";
 import { and, eq } from "drizzle-orm";
-import { titleGenerationModel } from "@/lib/ai-models/foundry";
+import { titleGenerationModel } from "~/src/lib/ai-chat/models";
 
 export async function POST(
   req: Request,

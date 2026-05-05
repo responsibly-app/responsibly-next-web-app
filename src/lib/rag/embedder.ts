@@ -1,5 +1,5 @@
 import { embedMany, embed } from "ai";
-import { embeddingModel } from "@/lib/ai-models/foundry";
+import { embeddingModel } from "@/lib/ai-chat/models";
 
 const BATCH_SIZE = 20; // embedding rate limit is generous, but batching keeps memory low
 
