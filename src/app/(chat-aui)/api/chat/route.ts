@@ -13,6 +13,7 @@ import type { UIMessage } from "ai";
 import { convertToModelMessages, streamText } from "ai";
 import { INPUT_TOKEN_QUOTA, OUTPUT_TOKEN_QUOTA } from "../token-usage/route";
 import { chatModel } from "@/lib/ai-models/foundry";
+// import { injectQuoteContext } from "@assistant-ui/react-ai-sdk";
 
 export const maxDuration = 30;
 const MAX_CONTEXT_MESSAGES = 5;
@@ -153,5 +154,19 @@ export async function POST(req: Request) {
     },
   });
 
-  return result.toUIMessageStreamResponse();
+  return result.toUIMessageStreamResponse({
+    messageMetadata: ({ part }) => {
+      if (part.type === "finish") {
+        return {
+          usage: part.totalUsage,
+        };
+      }
+      if (part.type === "finish-step") {
+        return {
+          modelId: part.response.modelId,
+        };
+      }
+      return undefined;
+    },
+  });
 }

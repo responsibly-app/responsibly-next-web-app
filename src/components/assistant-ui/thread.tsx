@@ -51,6 +51,9 @@ import {
 } from "lucide-react";
 import { type FC, type ReactNode, Component } from "react";
 // import "@assistant-ui/react-markdown/styles/dot.css";
+import { ComposerQuotePreview, QuoteBlock, SelectionToolbar } from "@/components/assistant-ui/quote";
+
+const ENABLE_QUOTE_CONTEXT = false; // set to false to disable quote context injection and rendering
 
 export const Thread: FC = () => {
   return (
@@ -92,6 +95,7 @@ export const Thread: FC = () => {
           </ThreadPrimitive.ViewportFooter>
         </div>
       </ThreadPrimitive.Viewport>
+      {ENABLE_QUOTE_CONTEXT && <SelectionToolbar />}
     </ThreadPrimitive.Root>
   );
 };
@@ -190,6 +194,7 @@ const ThreadSuggestionItem: FC = () => {
 const Composer: FC = () => {
   return (
     <ComposerPrimitive.Root className="aui-composer-root relative flex w-full flex-col">
+      {ENABLE_QUOTE_CONTEXT && <ComposerQuotePreview />}
       <ComposerPrimitive.AttachmentDropzone asChild>
         <div
           data-slot="aui_composer-shell"
@@ -356,51 +361,56 @@ const AssistantMessage: FC = () => {
         className="wrap-break-word px-2 text-foreground leading-relaxed"
       >
         <MessagePartErrorBoundary>
-        <MessagePrimitive.GroupedParts
-          groupBy={(part) => {
-            if (part.type === "reasoning")
-              return ["group-chainOfThought", "group-reasoning"];
-            if (part.type === "tool-call")
-              return ["group-chainOfThought", "group-tool"];
-            return null;
-          }}
-        >
-          {({ part, children }) => {
-            switch (part.type) {
-              case "group-chainOfThought":
-                return <div data-slot="aui_chain-of-thought">{children}</div>;
-              case "group-reasoning": {
-                const running = part.status.type === "running";
-                return (
-                  <ReasoningRoot defaultOpen={running}>
-                    <ReasoningTrigger active={running} />
-                    <ReasoningContent aria-busy={running}>
-                      <ReasoningText>{children}</ReasoningText>
-                    </ReasoningContent>
-                  </ReasoningRoot>
-                );
+          {ENABLE_QUOTE_CONTEXT && (
+            <MessagePrimitive.Quote>
+              {(quote) => <QuoteBlock {...quote} />}
+            </MessagePrimitive.Quote>
+          )}
+          <MessagePrimitive.GroupedParts
+            groupBy={(part) => {
+              if (part.type === "reasoning")
+                return ["group-chainOfThought", "group-reasoning"];
+              if (part.type === "tool-call")
+                return ["group-chainOfThought", "group-tool"];
+              return null;
+            }}
+          >
+            {({ part, children }) => {
+              switch (part.type) {
+                case "group-chainOfThought":
+                  return <div data-slot="aui_chain-of-thought">{children}</div>;
+                case "group-reasoning": {
+                  const running = part.status.type === "running";
+                  return (
+                    <ReasoningRoot defaultOpen={running}>
+                      <ReasoningTrigger active={running} />
+                      <ReasoningContent aria-busy={running}>
+                        <ReasoningText>{children}</ReasoningText>
+                      </ReasoningContent>
+                    </ReasoningRoot>
+                  );
+                }
+                case "group-tool":
+                  return (
+                    <ToolGroupRoot defaultOpen={true}>
+                      <ToolGroupTrigger
+                        count={part.indices.length}
+                        active={part.status.type === "running"}
+                      />
+                      <ToolGroupContent>{children}</ToolGroupContent>
+                    </ToolGroupRoot>
+                  );
+                case "text":
+                  return <MarkdownText />;
+                case "reasoning":
+                  return <Reasoning {...part} />;
+                case "tool-call":
+                  return part.toolUI ?? <ToolFallback {...part} />;
+                default:
+                  return null;
               }
-              case "group-tool":
-                return (
-                  <ToolGroupRoot defaultOpen={true}>
-                    <ToolGroupTrigger
-                      count={part.indices.length}
-                      active={part.status.type === "running"}
-                    />
-                    <ToolGroupContent>{children}</ToolGroupContent>
-                  </ToolGroupRoot>
-                );
-              case "text":
-                return <MarkdownText />;
-              case "reasoning":
-                return <Reasoning {...part} />;
-              case "tool-call":
-                return part.toolUI ?? <ToolFallback {...part} />;
-              default:
-                return null;
-            }
-          }}
-        </MessagePrimitive.GroupedParts>
+            }}
+          </MessagePrimitive.GroupedParts>
         </MessagePartErrorBoundary>
         <MessageError />
       </div>

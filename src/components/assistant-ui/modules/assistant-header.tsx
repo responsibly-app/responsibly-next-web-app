@@ -8,6 +8,7 @@ import Link from "next/link";
 import { useEffect, useRef } from "react";
 import { routes } from "@/routes";
 import { Separator } from "@/components/ui/separator";
+import { ContextDisplay } from "../context-display";
 
 interface TokenUsageData {
   inputTokens: number;
@@ -117,7 +118,11 @@ export function AssistantHeader() {
         <div className="flex items-center gap-3">
           <CircularUsage used={usage.inputTokens} quota={usage.inputQuota} label="In" />
           <CircularUsage used={usage.outputTokens} quota={usage.outputQuota} label="Out" />
+          {/* <div className="flex items-center justify-end px-3 py-1.5">
+            <ContextDisplay.Ring modelContextWindow={128000} />
+          </div> */}
         </div>
+
       )}
     </header>
   );
