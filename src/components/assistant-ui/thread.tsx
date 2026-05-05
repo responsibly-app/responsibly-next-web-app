@@ -35,7 +35,7 @@ import {
   useVoiceState,
 } from "@assistant-ui/react";
 import { Loader2Icon, MicIcon, PhoneIcon, PhoneOffIcon, Square } from "lucide-react";
-import { useThreadInitLoading } from "./modules/thread-init-loading";
+import { useThreadInitLoading } from "@/components/assistant-ui/modules/thread-init-loading";
 import {
   ArrowDownIcon,
   ArrowUpIcon,
@@ -205,11 +205,8 @@ const Composer: FC = () => {
             placeholder="Send a message..."
             className="aui-composer-input max-h-50 min-h-10 w-full resize-none bg-transparent px-1.75 py-1 text-sm outline-none placeholder:text-muted-foreground/80"
             rows={1}
-            // autoFocus
+            autoFocus
             aria-label="Message input"
-            unstable_focusOnRunStart={false}
-            unstable_focusOnScrollToBottom={false}
-            unstable_focusOnThreadSwitched={false}
           />
           <ComposerAction />
         </div>
@@ -528,10 +525,7 @@ const EditComposer: FC = () => {
       <ComposerPrimitive.Root className="aui-edit-composer-root ms-auto flex w-full max-w-[85%] flex-col rounded-2xl bg-muted">
         <ComposerPrimitive.Input
           className="aui-edit-composer-input min-h-14 w-full resize-none bg-transparent p-4 text-foreground text-sm outline-none"
-          // autoFocus
-          unstable_focusOnRunStart={false}
-          unstable_focusOnScrollToBottom={false}
-          unstable_focusOnThreadSwitched={false}
+          autoFocus
         />
         <div className="aui-edit-composer-footer mx-3 mb-3 flex items-center gap-2 self-end">
           <ComposerPrimitive.Cancel asChild>
