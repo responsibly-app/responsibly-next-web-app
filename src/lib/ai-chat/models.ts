@@ -19,6 +19,12 @@ const models = {
         maxTokens: 32768,
         supportsStreaming: true
     },
+    "gpt-5.4-mini": {
+        id: "gpt-5.4-mini",
+        name: "GPT-5.4 Mini",
+        maxTokens: 32768,
+        supportsStreaming: true
+    },
     "text-embedding-3-small": {
         id: "text-embedding-3-small",
         name: "Text Embedding 3 Small",
@@ -27,6 +33,6 @@ const models = {
     }
 }
 
-export const chatModel = Azure("gpt-4.1")
-export const titleGenerationModel = Azure("gpt-5.2");
+export const chatModel = Azure("gpt-5.4-mini")
+export const titleGenerationModel = Azure("gpt-5.4-mini");
 export const embeddingModel = Azure.embeddingModel("text-embedding-3-small");
