@@ -36,7 +36,7 @@ import {
   useVoiceControls,
   useVoiceState,
 } from "@assistant-ui/react";
-import { Loader2Icon, MicIcon, PhoneIcon, PhoneOffIcon, Square } from "lucide-react";
+import { Loader2Icon, LoaderIcon, MicIcon, PhoneIcon, PhoneOffIcon, Square } from "lucide-react";
 import { useThreadInitLoading } from "@/components/assistant-ui/modules/thread-init-loading";
 import {
   ArrowDownIcon,
@@ -325,6 +325,17 @@ const MessageError: FC = () => {
   );
 };
 
+const ThinkingIndicator: FC = () => {
+  return (
+    <AuiIf condition={(s) => s.thread.isRunning && s.message.content.length === 0}>
+      <div className="flex items-center gap-2 text-muted-foreground">
+        <LoaderIcon className="size-4 animate-spin" />
+        <span className="text-sm">Thinking...</span>
+      </div>
+    </AuiIf>
+  );
+}
+
 class MessagePartErrorBoundary extends Component<
   { children: ReactNode },
   { hasError: boolean }
@@ -424,6 +435,7 @@ const AssistantMessage: FC = () => {
         </MessagePartErrorBoundary>
         <AssistantMessageSources />
         <MessageError />
+        <ThinkingIndicator />
       </div>
 
       <div
