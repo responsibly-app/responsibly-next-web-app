@@ -46,7 +46,7 @@ interface AssistantProps {
 export const Assistant = ({ initialThreadId }: AssistantProps = {}) => {
   const runtime = useRuntime({ initialThreadId });
     const aui = useAui({
-      suggestions: Suggestions(["What's the weather?", "Tell me a joke"]),
+      suggestions: Suggestions(["What's the weather?", "Show my top agents as a bar chart"]),
       tools: Tools({ toolkit })
     });
 
