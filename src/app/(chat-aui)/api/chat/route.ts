@@ -1,6 +1,6 @@
 import { auth } from "@/lib/auth/auth";
-import { checkQuota } from "@/lib/ai-chat/quota";
-import { createChatStream } from "@/lib/ai-chat/stream";
+import { checkQuota } from "~/src/lib/ai/quota";
+import { createChatStream } from "~/src/lib/ai/stream";
 import type { UIMessage } from "ai";
 
 export const maxDuration = 60;

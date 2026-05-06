@@ -16,10 +16,10 @@ import * as dotenv from "dotenv";
 dotenv.config({ path: process.env.DOTENV_PATH ?? ".env.local" });
 
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
-import { parseFile } from "../src/lib/rag/parser";
-import { chunkText } from "../src/lib/rag/chunker";
-import { embedBatch } from "../src/lib/rag/embedder";
-import type { StorageFile } from "../src/lib/rag/types";
+import { parseFile } from "../src/lib/ai/rag-utils/parser";
+import { chunkText } from "../src/lib/ai/rag-utils/chunker";
+import { embedBatch } from "../src/lib/ai/rag-utils/embedder";
+import type { StorageFile } from "../src/lib/ai/rag-utils/types";
 
 const BUCKET = "knowledge-base";
 const SUPPORTED_TYPES = new Set(["md", "mdx", "pdf", "json", "txt", "docx"]);

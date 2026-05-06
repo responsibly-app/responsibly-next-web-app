@@ -9,33 +9,17 @@ import {
 } from "ai";
 import { chatModel } from "./models";
 import { buildSystemPrompt } from "./system-prompt";
-import { getRAGContext } from "./rag";
-import { createAgentTools } from "./ai-tools/agent-tools";
-import { createUITools } from "./ai-tools/ui-tool";
-import { selectToolNames } from "./ai-tools/tool-selector";
+import { getRAGContext } from "./get-rag-context";
+import { getTools } from "./get-tools";
 import { trackUsage } from "./quota";
+import { deduplicateMessages, stripCallProviderMetadata } from "./message-utils";
+import { logLLMInput, logLLMStepOutput, logSelectedTools } from "./logger";
 
 const MAX_CONTEXT_MESSAGES = 30;
 const MIN_THINKING_LENGTH = 5;
 const PERFORM_PLANNING = false;
 
 const PLANNING_SYSTEM = `You are a thoughtful planning assistant. Given a user request and the available tools, briefly think through how to best help them — what information to look up, what to compute, and in what order. Be natural and concise: 2–4 sentences, no headers or bullet points.`;
-
-// Azure Responses API assigns itemIds to function calls. Re-sending those IDs
-// in subsequent turns causes "Duplicate item" errors, so we strip them here.
-function stripCallProviderMetadata(messages: UIMessage[]): UIMessage[] {
-  return messages.map((msg) => ({
-    ...msg,
-    parts: msg.parts.map((part) => {
-      if (["callProviderMetadata", "providerMetadata", "resultProviderMetadata"].some((k) => k in part)) {
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { callProviderMetadata: _a, providerMetadata: _b, resultProviderMetadata: _c, ...rest } = part as typeof part & { callProviderMetadata?: unknown; providerMetadata?: unknown; resultProviderMetadata?: unknown };
-        return rest;
-      }
-      return part;
-    }),
-  }));
-}
 
 export async function createChatStream(session: Session, messages: UIMessage[]) {
   const lastUserText =
@@ -46,36 +30,18 @@ export async function createChatStream(session: Session, messages: UIMessage[]) 
       .map((p) => p.text)
       .join(" ") ?? "";
 
-  // Use recent conversation context for tool selection so short follow-ups
-  // (e.g. "first one") inherit the intent of earlier messages.
-  const toolSelectionQuery = messages
-    .filter((m) => m.role === "user")
-    .slice(-6)
-    .flatMap((m) => m.parts.filter((p) => p.type === "text").map((p) => (p as { text: string }).text))
-    .join(" ")
-    .slice(0, 600);
-
-  const [{ context: contextBlock, chunks: ragChunks }, selectedToolNames] = await Promise.all([
+  const [{ context: contextBlock, chunks: ragChunks }, tools] = await Promise.all([
     getRAGContext(lastUserText),
-    selectToolNames(toolSelectionQuery),
+    getTools(session, messages),
   ]);
 
   const systemPrompt = buildSystemPrompt(session, contextBlock);
 
-  const allTools = { ...createAgentTools(session), ...createUITools() } as Record<string, unknown>;
-  // Meta-tools are always available — they support any task, not a specific one
-  const ALWAYS_INCLUDE = ["ask_question_flow", "request_approval"];
-  const resolvedToolNames = [...new Set([...selectedToolNames, ...ALWAYS_INCLUDE])];
-  const tools = Object.fromEntries(
-    resolvedToolNames
-      .map((name) => [name, allTools[name]])
-      .filter(([, t]) => t !== undefined),
-  );
+  logSelectedTools(Object.keys(tools));
 
-  console.log(`[ChatStream] final selected tools: ${Object.keys(tools).join(", ")}`);
-
+  const toolNames = Object.keys(tools);
   const shouldThink =
-    PERFORM_PLANNING && selectedToolNames.length > 0 && lastUserText.trim().length >= MIN_THINKING_LENGTH;
+    PERFORM_PLANNING && toolNames.length > 0 && lastUserText.trim().length >= MIN_THINKING_LENGTH;
 
   const stream = createUIMessageStream({
     execute: async ({ writer }) => {
@@ -89,7 +55,7 @@ export async function createChatStream(session: Session, messages: UIMessage[]) 
           messages: [
             {
               role: "user",
-              content: `User request: ${lastUserText}\n\nAvailable tools: ${selectedToolNames.join(", ")}`,
+              content: `User request: ${lastUserText}\n\nAvailable tools: ${toolNames.join(", ")}`,
             },
           ],
           maxOutputTokens: 250,
@@ -107,15 +73,25 @@ export async function createChatStream(session: Session, messages: UIMessage[]) 
         writer.write({ type: "reasoning-end", id: reasoningId });
       }
 
+      const modelMessages = await convertToModelMessages(
+        stripCallProviderMetadata(deduplicateMessages(messages.slice(-MAX_CONTEXT_MESSAGES))),
+      );
+
+      logLLMInput(messages.length, modelMessages as Parameters<typeof logLLMInput>[1]);
+
       const result = streamText({
         model: chatModel,
         system: systemPrompt,
-        messages: await convertToModelMessages(stripCallProviderMetadata(messages.slice(-MAX_CONTEXT_MESSAGES))),
+        messages: modelMessages,
         tools,
         stopWhen: stepCountIs(15),
-        onFinish: async ({ usage: tokenUsage }) => {
-          await trackUsage(session.user.id, tokenUsage.inputTokens ?? 0, tokenUsage.outputTokens ?? 0);
-        },
+        // onFinish: async ({ usage: tokenUsage }) => {
+        //   await trackUsage(session.user.id, tokenUsage.inputTokens ?? 0, tokenUsage.outputTokens ?? 0);
+        // },
+        onStepFinish: async (step) => {
+          await trackUsage(session.user.id, step.usage.inputTokens ?? 0, step.usage.outputTokens ?? 0);
+          logLLMStepOutput(step, step.stepNumber);
+        }
       });
 
       const ragSources = ragChunks.length > 0

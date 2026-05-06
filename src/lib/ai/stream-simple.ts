@@ -9,10 +9,10 @@ import {
 } from "ai";
 import { chatModel } from "./models";
 import { buildSystemPrompt } from "./system-prompt";
-import { getRAGContext } from "./rag";
+import { getRAGContext } from "./get-rag-context";
 import { createAgentTools } from "./ai-tools/agent-tools";
 import { createUITools } from "./ai-tools/ui-tool";
-import { selectToolNames } from "./ai-tools/tool-selector";
+import { discoverToolNames } from "./ai-tools/tool-discovery";
 import { trackUsage } from "./quota";
 
 const MAX_CONTEXT_MESSAGES = 5;
@@ -35,7 +35,7 @@ export async function createChatStream(session: Session, messages: UIMessage[]) 
 
   const [{ context: contextBlock, chunks: ragChunks }, selectedToolNames] = await Promise.all([
     getRAGContext(lastUserText),
-    selectToolNames(toolSelectionQuery),
+    discoverToolNames(toolSelectionQuery),
   ]);
 
   const ragSources = ragChunks.length > 0

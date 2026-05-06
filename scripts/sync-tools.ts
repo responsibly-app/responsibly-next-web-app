@@ -47,8 +47,8 @@ async function main() {
   const supabase = createClient(supabaseUrl, supabaseKey);
 
   const [{ embedBatch }, { allToolMeta }] = await Promise.all([
-    import("../src/lib/rag/embedder"),
-    import("../src/lib/ai-chat/ai-tools/tool-registry"),
+    import("../src/lib/ai/rag-utils/embedder"),
+    import("../src/lib/ai/ai-tools/tool-registry"),
   ]);
 
   console.log(`\nSyncing tool index (${allToolMeta.length} tools registered)...\n`);

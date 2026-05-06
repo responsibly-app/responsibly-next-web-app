@@ -1,5 +1,5 @@
-import { buildContextBlock, retrieveChunks } from "@/lib/rag/retriever";
-import type { RetrievedChunk } from "@/lib/rag/types";
+import { buildContextBlock, retrieveChunks } from "@/lib/ai/rag-utils/retriever";
+import type { RetrievedChunk } from "@/lib/ai/rag-utils/types";
 
 export interface RAGResult {
   context: string;

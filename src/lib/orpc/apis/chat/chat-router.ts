@@ -4,8 +4,8 @@ import { chatMessage, chatThread, chatTokenUsage } from "@/lib/db/schema/chat-sc
 import { ORPCError } from "@orpc/server";
 import { authed } from "@/lib/orpc/base";
 import { generateText } from "ai";
-import { titleGenerationModel } from "@/lib/ai-chat/models";
-import { INPUT_TOKEN_QUOTA, OUTPUT_TOKEN_QUOTA } from "@/lib/ai-chat/quota";
+import { titleGenerationModel } from "@/lib/ai/models";
+import { INPUT_TOKEN_QUOTA, OUTPUT_TOKEN_QUOTA } from "~/src/lib/ai/quota";
 import {
   AddMessageInputSchema,
   CreateThreadOutputSchema,

@@ -1,5 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
-import { embedOne } from "@/lib/rag/embedder";
+import { embedOne } from "~/src/lib/ai/rag-utils/embedder";
 import { allToolMeta } from "./tool-registry";
 
 const SIMILARITY_THRESHOLD = 0.3;
@@ -19,7 +19,7 @@ function supabaseClient() {
  * Empty array means no tools (short/conversational message).
  * Falls back to all registered tools if the index is unavailable.
  */
-export async function selectToolNames(userMessage: string): Promise<string[]> {
+export async function discoverToolNames(userMessage: string): Promise<string[]> {
   if (userMessage.trim().length < MIN_QUERY_LENGTH) return [];
 
   try {
@@ -51,11 +51,11 @@ export async function selectToolNames(userMessage: string): Promise<string[]> {
     }
 
     const result = [...withDeps];
-    console.log(`[ToolSelector] selected ${result.length} tools for: "${userMessage.slice(0, 60)}"`);
-    console.log(`[ToolSelector] selected ${result.join(", ")} tools for: "${userMessage.slice(0, 60)}"`);
+    console.log(`[ToolDiscovery] selected ${result.length} tools for: "${userMessage.slice(0, 60)}"`);
+    console.log(`[ToolDiscovery] selected ${result.join(", ")} tools for: "${userMessage.slice(0, 60)}"`);
     return result;
   } catch (err) {
-    console.error("[ToolSelector] falling back to all tools:", err);
+    console.error("[ToolDiscovery] falling back to all tools:", err);
     return allToolMeta.map((m) => m.name);
   }
 }
