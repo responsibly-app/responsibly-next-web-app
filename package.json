@@ -26,6 +26,8 @@
     "db:studio:dev": "npx drizzle-kit studio --config=drizzle-dev.config.ts",
     "rag:sync:dev": "DOTENV_PATH=.env.local npx tsx scripts/sync-knowledge.ts",
     "rag:sync:prod": "DOTENV_PATH=.env.production npx tsx scripts/sync-knowledge.ts",
+    "tools:sync:dev": "DOTENV_PATH=.env.local npx tsx scripts/sync-tools.ts",
+    "tools:sync:prod": "DOTENV_PATH=.env.production npx tsx scripts/sync-tools.ts",
     "save-zoom-assets": "for asset in cover feature-1 feature-2 feature-3 feature-4; do curl -s \"http://localhost:3000/zoom-assets/$asset\" -o \"./documentation/integrations/zoom/zoom-assets/$asset.png\" && echo \"Saved $asset.png\"; done"
   },
   "dependencies": {

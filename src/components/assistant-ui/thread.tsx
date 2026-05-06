@@ -17,6 +17,7 @@ import {
   ToolGroupTrigger,
 } from "@/components/assistant-ui/tool-group";
 import { ToolFallback } from "@/components/assistant-ui/tool-fallback";
+import { ContextDisplay } from "@/components/assistant-ui/context-display";
 import { TooltipIconButton } from "@/components/assistant-ui/tooltip-icon-button";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -277,6 +278,7 @@ const ComposerAction: FC = () => {
       <div className="flex items-center gap-1">
         <ComposerAddAttachment />
         <ComposerDictationToggle />
+        <ContextDisplay.Ring modelContextWindow={1_047_576} side="top" />
         <ComposerVoiceToggle />
       </div>
 
