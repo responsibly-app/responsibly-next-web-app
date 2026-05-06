@@ -16,9 +16,16 @@ const stepSchema = z.object({
   selectionMode: z.enum(["single", "multi"]).optional(),
 });
 
-export const askQuestionFlowTool = tool({
+export const meta = {
+  name: "ask_question_flow",
   description:
     "Present a multi-step question flow for the user to make selections. Use when you need the user to choose from options across one or more steps before proceeding.",
+  embeddingDescription:
+    "Show an interactive multi-step question or survey flow where the user selects from options at each step. Use when you need to gather structured input, preferences, or choices from the user before taking an action — such as filtering results, configuring a setting, or onboarding.",
+} as const;
+
+export const askQuestionFlowTool = tool({
+  description: meta.description,
   inputSchema: zodSchema(
     z.object({
       steps: z.array(stepSchema).min(1),

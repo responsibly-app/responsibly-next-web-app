@@ -6,7 +6,13 @@ import {
   type BadgeProps,
 } from "@/components/assistant-ui/badge";
 import { cn } from "@/lib/utils";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import type { SourceMessagePartComponent } from "@assistant-ui/react";
+import { FileTextIcon } from "lucide-react";
 import { memo, useState, type ComponentProps } from "react";
 
 const extractDomain = (url: string): string => {
@@ -130,6 +136,59 @@ Sources.displayName = "Sources";
 Sources.Root = Source;
 Sources.Icon = SourceIcon;
 Sources.Title = SourceTitle;
+
+export interface RAGSourceItem {
+  path: string;
+  topic: string;
+  content?: string;
+}
+
+function RAGSourceBadge({ path, topic, content }: RAGSourceItem) {
+  const filename = path.split("/").pop() ?? path;
+  const label = topic || filename;
+
+  const badge = (
+    <Badge
+      variant="secondary"
+      size="sm"
+      className="gap-1.5 font-normal text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+    >
+      <FileTextIcon className="size-3 shrink-0" />
+      <span className="max-w-37.5 truncate">{label}</span>
+    </Badge>
+  );
+
+  if (!content) return badge;
+
+  return (
+    <Popover>
+      <PopoverTrigger asChild>{badge}</PopoverTrigger>
+      <PopoverContent
+        side="top"
+        align="start"
+        className="w-lg p-0 gap-0"
+      >
+        <div className="border-b px-3 py-2">
+          <p className="text-xs font-medium text-muted-foreground truncate">{label}</p>
+        </div>
+        <div className="max-h-80 overflow-y-auto px-3 py-2">
+          <p className="text-xs leading-relaxed whitespace-pre-wrap">{content}</p>
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+export function RAGSources({ sources }: { sources: RAGSourceItem[] }) {
+  if (!sources.length) return null;
+  return (
+    <div className="mt-3 flex flex-wrap gap-1.5">
+      {sources.map((src, i) => (
+        <RAGSourceBadge key={i} {...src} />
+      ))}
+    </div>
+  );
+}
 
 export {
   Source,

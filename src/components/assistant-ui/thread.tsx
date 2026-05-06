@@ -17,6 +17,7 @@ import {
   ToolGroupTrigger,
 } from "@/components/assistant-ui/tool-group";
 import { ToolFallback } from "@/components/assistant-ui/tool-fallback";
+import { RAGSources, type RAGSourceItem } from "@/components/assistant-ui/sources";
 import { ContextDisplay } from "@/components/assistant-ui/context-display";
 import { TooltipIconButton } from "@/components/assistant-ui/tooltip-icon-button";
 import { Button } from "@/components/ui/button";
@@ -345,6 +346,13 @@ class MessagePartErrorBoundary extends Component<
   }
 }
 
+const AssistantMessageSources: FC = () => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const sources = useAuiState((s) => (s.message as any).metadata?.custom?.sources as RAGSourceItem[] | undefined);
+  if (!sources?.length) return null;
+  return <RAGSources sources={sources} />;
+};
+
 const AssistantMessage: FC = () => {
   // reserves space for action bar and compensates with `-mb` for consistent msg spacing
   // keeps hovered action bar from shifting layout (autohide doesn't support absolute positioning well)
@@ -414,6 +422,7 @@ const AssistantMessage: FC = () => {
             }}
           </MessagePrimitive.GroupedParts>
         </MessagePartErrorBoundary>
+        <AssistantMessageSources />
         <MessageError />
       </div>
 

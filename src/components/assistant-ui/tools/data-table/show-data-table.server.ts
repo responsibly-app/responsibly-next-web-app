@@ -77,9 +77,16 @@ const columnSchema = z.object({
 
 const JsonPrimitive = z.union([z.string(), z.number(), z.boolean(), z.null()]);
 
-export const showDataTableTool = tool({
+export const meta = {
+  name: "show_data_table",
   description:
     "Render a data table with rows and typed columns. Use for any structured list or comparison the user asks to see in tabular form.",
+  embeddingDescription:
+    "Display a structured table of rows and columns with typed formatting. Use when the user asks to see a list, table, grid, spreadsheet-style view, or any collection of records with multiple fields — such as events, users, transactions, or leaderboard entries.",
+} as const;
+
+export const showDataTableTool = tool({
+  description: meta.description,
   inputSchema: zodSchema(
     z.object({
       columns: z.array(columnSchema),

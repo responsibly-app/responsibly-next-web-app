@@ -1,9 +1,15 @@
 import { buildContextBlock, retrieveChunks } from "@/lib/rag/retriever";
+import type { RetrievedChunk } from "@/lib/rag/types";
 
-export async function getRAGContext(query: string): Promise<string> {
-  if (query.length <= 10) return "";
+export interface RAGResult {
+  context: string;
+  chunks: RetrievedChunk[];
+}
+
+export async function getRAGContext(query: string): Promise<RAGResult> {
+  if (query.length <= 10) return { context: "", chunks: [] };
 
   const chunks = await retrieveChunks(query);
   console.log(`[RAG] Retrieved ${chunks.length} chunks for query: "${query}"`);
-  return buildContextBlock(chunks);
+  return { context: buildContextBlock(chunks), chunks };
 }

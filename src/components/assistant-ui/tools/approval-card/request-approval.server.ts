@@ -1,9 +1,16 @@
 import { tool, zodSchema } from "ai";
 import { z } from "zod";
 
-export const requestApprovalTool = tool({
+export const meta = {
+  name: "request_approval",
   description:
     "Show an approval card requiring the user to approve or deny before proceeding. Use for consequential, irreversible, or sensitive actions.",
+  embeddingDescription:
+    "Present a confirmation or approval dialog before taking a consequential action. Use when the user is about to do something irreversible, destructive, or sensitive — such as deleting data, submitting a form, or making a financial transaction — and needs to explicitly confirm or cancel.",
+} as const;
+
+export const requestApprovalTool = tool({
+  description: meta.description,
   inputSchema: zodSchema(
     z.object({
       title: z.string().min(1),

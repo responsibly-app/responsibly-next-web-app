@@ -1,9 +1,16 @@
 import { tool, zodSchema } from "ai";
 import { z } from "zod";
 
-export const showChartTool = tool({
+export const meta = {
+  name: "show_chart",
   description:
     "Render a bar or line chart from provided data. Use for any numeric comparison, trend, or distribution the user asks to visualize.",
+  embeddingDescription:
+    "Display a bar chart or line chart visualizing numeric data. Use when the user asks to see a graph, chart, plot, visualization, trend over time, comparison between values, or distribution of data.",
+} as const;
+
+export const showChartTool = tool({
+  description: meta.description,
   inputSchema: zodSchema(
     z.object({
       type: z.enum(["bar", "line"]),
