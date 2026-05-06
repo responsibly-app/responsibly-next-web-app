@@ -2,8 +2,8 @@ import { db } from "@/lib/db";
 import { chatTokenUsage } from "@/lib/db/schema/chat-schema";
 import { and, eq, sql } from "drizzle-orm";
 
-export const INPUT_TOKEN_QUOTA = 100_000;
-export const OUTPUT_TOKEN_QUOTA = 10_000;
+export const INPUT_TOKEN_QUOTA = 1_000_000;
+export const OUTPUT_TOKEN_QUOTA = 1_000_000;
 
 function currentMonth() {
   const now = new Date();

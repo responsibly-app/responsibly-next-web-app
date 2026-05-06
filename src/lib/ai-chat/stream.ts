@@ -15,11 +15,27 @@ import { createUITools } from "./ai-tools/ui-tool";
 import { selectToolNames } from "./ai-tools/tool-selector";
 import { trackUsage } from "./quota";
 
-const MAX_CONTEXT_MESSAGES = 5;
+const MAX_CONTEXT_MESSAGES = 30;
 const MIN_THINKING_LENGTH = 5;
 const PERFORM_PLANNING = false;
 
 const PLANNING_SYSTEM = `You are a thoughtful planning assistant. Given a user request and the available tools, briefly think through how to best help them — what information to look up, what to compute, and in what order. Be natural and concise: 2–4 sentences, no headers or bullet points.`;
+
+// Azure Responses API assigns itemIds to function calls. Re-sending those IDs
+// in subsequent turns causes "Duplicate item" errors, so we strip them here.
+function stripCallProviderMetadata(messages: UIMessage[]): UIMessage[] {
+  return messages.map((msg) => ({
+    ...msg,
+    parts: msg.parts.map((part) => {
+      if (["callProviderMetadata", "providerMetadata", "resultProviderMetadata"].some((k) => k in part)) {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { callProviderMetadata: _a, providerMetadata: _b, resultProviderMetadata: _c, ...rest } = part as typeof part & { callProviderMetadata?: unknown; providerMetadata?: unknown; resultProviderMetadata?: unknown };
+        return rest;
+      }
+      return part;
+    }),
+  }));
+}
 
 export async function createChatStream(session: Session, messages: UIMessage[]) {
   const lastUserText =
@@ -47,8 +63,11 @@ export async function createChatStream(session: Session, messages: UIMessage[]) 
   const systemPrompt = buildSystemPrompt(session, contextBlock);
 
   const allTools = { ...createAgentTools(session), ...createUITools() } as Record<string, unknown>;
+  // Meta-tools are always available — they support any task, not a specific one
+  const ALWAYS_INCLUDE = ["ask_question_flow", "request_approval"];
+  const resolvedToolNames = [...new Set([...selectedToolNames, ...ALWAYS_INCLUDE])];
   const tools = Object.fromEntries(
-    selectedToolNames
+    resolvedToolNames
       .map((name) => [name, allTools[name]])
       .filter(([, t]) => t !== undefined),
   );
@@ -91,9 +110,9 @@ export async function createChatStream(session: Session, messages: UIMessage[]) 
       const result = streamText({
         model: chatModel,
         system: systemPrompt,
-        messages: await convertToModelMessages(messages.slice(-MAX_CONTEXT_MESSAGES)),
+        messages: await convertToModelMessages(stripCallProviderMetadata(messages.slice(-MAX_CONTEXT_MESSAGES))),
         tools,
-        stopWhen: stepCountIs(5),
+        stopWhen: stepCountIs(15),
         onFinish: async ({ usage: tokenUsage }) => {
           await trackUsage(session.user.id, tokenUsage.inputTokens ?? 0, tokenUsage.outputTokens ?? 0);
         },
