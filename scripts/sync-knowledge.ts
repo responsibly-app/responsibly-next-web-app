@@ -18,7 +18,8 @@ dotenv.config({ path: process.env.DOTENV_PATH ?? ".env.local" });
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { parseFile } from "../src/lib/ai/rag-utils/parser";
 import { chunkText } from "../src/lib/ai/rag-utils/chunker";
-import { embedBatch } from "../src/lib/ai/rag-utils/embedder";
+// Dynamic import deferred to after dotenv.config() runs (avoids import-hoisting bug
+// where createAzure captures undefined env vars before .env.local is loaded)
 import type { StorageFile } from "../src/lib/ai/rag-utils/types";
 
 const BUCKET = "knowledge-base";
@@ -125,7 +126,8 @@ async function ingestFile(supabase: SupabaseClient, file: StorageFile) {
     return;
   }
 
-  // 4. Embed
+  // 4. Embed (dynamic import ensures env vars are loaded before createAzure is called)
+  const { embedBatch } = await import("../src/lib/ai/rag-utils/embedder");
   const texts = chunks.map((c) => c.text);
   const vectors = await embedBatch(texts);
 

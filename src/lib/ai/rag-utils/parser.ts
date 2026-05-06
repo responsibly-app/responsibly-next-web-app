@@ -33,21 +33,18 @@ export function parseMarkdown(content: string): TextChunk[] {
 // ─── PDF ─────────────────────────────────────────────────────────────────────
 
 export async function parsePDF(buffer: Buffer): Promise<TextChunk[]> {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const pdfParseModule: any = await import("pdf-parse");
-  const pdfParse: (buf: Buffer) => Promise<{ text: string; numpages: number }> =
-    pdfParseModule.default ?? pdfParseModule;
-  const data = await pdfParse(buffer);
+  const { PDFParse } = await import("pdf-parse");
+  const parser = new PDFParse({ data: buffer });
+  const result = await parser.getText();
 
-  // pdf-parse gives us full text; we split by form-feed or double-newline as page proxy
-  const pages = data.text.split(/\f/).filter((p: string) => p.trim().length > 0);
-
-  if (pages.length > 1) {
-    return pages.map((page: string, i: number) => ({ text: page.trim(), page: i + 1 }));
+  if (result.pages.length > 1) {
+    return result.pages
+      .map((page: { num: number; text: string }) => ({ text: page.text.trim(), page: page.num }))
+      .filter((chunk: TextChunk) => chunk.text.length > 0);
   }
 
   // Fallback: single blob — return as one chunk so the chunker can split it
-  return [{ text: data.text.trim() }];
+  return [{ text: result.text.trim() }];
 }
 
 // ─── JSON ─────────────────────────────────────────────────────────────────────
