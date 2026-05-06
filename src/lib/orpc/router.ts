@@ -9,6 +9,7 @@ import { telegramRouter } from "./apis/integrations/telegram/telegram-router";
 import { invitesRouter } from "./apis/personal/invites-router";
 import { pointsRouter } from "./apis/personal/points-router";
 import { amasRouter } from "./apis/personal/amas-router";
+import { chatRouter } from "./apis/chat/chat-router";
 
 export const appRouter = {
   session: sessionRouter,
@@ -25,6 +26,7 @@ export const appRouter = {
     points: pointsRouter,
     amas: amasRouter,
   },
+  chat: chatRouter,
 };
 
 export type AppRouter = typeof appRouter;

@@ -3,6 +3,7 @@
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useAuiState } from "@assistant-ui/react";
+import { orpc } from "@/lib/orpc/orpc-client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { useEffect, useRef } from "react";
@@ -21,11 +22,7 @@ interface TokenUsageData {
 function useTokenUsage() {
   return useQuery<TokenUsageData>({
     queryKey: ["token-usage"],
-    queryFn: async () => {
-      const res = await fetch("/api/token-usage");
-      if (!res.ok) throw new Error("Failed to fetch token usage");
-      return res.json();
-    },
+    queryFn: () => orpc.chat.getTokenUsage({}),
     staleTime: 10_000,
   });
 }

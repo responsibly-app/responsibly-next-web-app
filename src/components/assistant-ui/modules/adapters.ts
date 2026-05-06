@@ -4,17 +4,24 @@ import {
     type ThreadHistoryAdapter,
 } from "@assistant-ui/react";
 import { createAssistantStream } from "assistant-stream";
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { orpc } from "@/lib/orpc/orpc-client";
+
+export const THREAD_LIST_BATCH_SIZE = 20;
+
+export const threadListPaginationState = {
+    limit: THREAD_LIST_BATCH_SIZE,
+    hasMore: false,
+};
 
 export const threadListAdapter: RemoteThreadListAdapter = {
     async list() {
-        const rows = (await fetch("/api/threads").then((r) => r.json())) as {
-            id: string;
-            title: string | null;
-            status: string;
-        }[];
+        const fetchLimit = threadListPaginationState.limit + 1;
+        const rows = await orpc.chat.listThreads({ limit: fetchLimit });
+        threadListPaginationState.hasMore = rows.length > threadListPaginationState.limit;
+        const visible = rows.slice(0, threadListPaginationState.limit);
         return {
-            threads: rows.map((t) => ({
+            threads: visible.map((t) => ({
                 status: t.status as "regular" | "archived",
                 remoteId: t.id,
                 title: t.title ?? undefined,
@@ -23,59 +30,38 @@ export const threadListAdapter: RemoteThreadListAdapter = {
     },
 
     async initialize(_threadId: string) {
-        const { id } = (await fetch("/api/threads", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-        }).then((r) => r.json())) as { id: string };
+        const { id } = await orpc.chat.createThread({});
         return { remoteId: id, externalId: undefined };
     },
 
     async rename(remoteId, title) {
-        await fetch(`/api/threads/${remoteId}`, {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ title }),
-        });
+        await orpc.chat.updateThread({ id: remoteId, title });
     },
 
     async archive(remoteId) {
-        await fetch(`/api/threads/${remoteId}`, {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ status: "archived" }),
-        });
+        await orpc.chat.updateThread({ id: remoteId, status: "archived" });
     },
 
     async unarchive(remoteId) {
-        await fetch(`/api/threads/${remoteId}`, {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ status: "regular" }),
-        });
+        await orpc.chat.updateThread({ id: remoteId, status: "regular" });
     },
 
     async delete(remoteId) {
-        await fetch(`/api/threads/${remoteId}`, { method: "DELETE" });
+        await orpc.chat.deleteThread({ id: remoteId });
     },
 
     async generateTitle(remoteId, messages) {
         return createAssistantStream(async (controller) => {
-            const res = await fetch(`/api/threads/${remoteId}/title`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ messages }),
+            const { title } = await orpc.chat.generateTitle({
+                id: remoteId,
+                messages: messages.map((m) => ({ role: m.role, content: [...m.content] as { type: string; text?: string }[] })),
             });
-            if (res.ok) {
-                const { title } = (await res.json()) as { title: string };
-                controller.appendText(title);
-            }
+            controller.appendText(title);
         });
     },
 
     async fetch(remoteId) {
-        const t = (await fetch(`/api/threads/${remoteId}`).then((r) =>
-            r.json(),
-        )) as { id: string; title: string | null; status: string };
+        const t = await orpc.chat.getThread({ id: remoteId });
         return {
             status: t.status as "regular" | "archived",
             remoteId: t.id,
@@ -95,42 +81,33 @@ export function useHistoryAdapter(): ThreadHistoryAdapter {
             async load() {
                 const remoteId = aui.threadListItem().getState().remoteId;
                 if (!remoteId) return { messages: [] };
-                const res = await fetch(`/api/threads/${remoteId}/messages`);
-                if (!res.ok) return { messages: [] };
-                const rows = (await res.json()) as {
-                    id: string;
-                    parent_id: string | null;
-                    format: string;
-                    content: Record<string, unknown>;
-                }[];
-                return {
-                    messages: rows.map((row) =>
-                        fmt.decode({
-                            id: row.id,
-                            parent_id: row.parent_id,
-                            format: row.format,
-                            content: row.content as never,
-                        }),
-                    ),
-                };
+                try {
+                    const rows = await orpc.chat.listMessages({ threadId: remoteId });
+                    return {
+                        messages: rows.map((row) =>
+                            fmt.decode({
+                                id: row.id,
+                                parent_id: row.parent_id,
+                                format: row.format,
+                                content: row.content as never,
+                            }),
+                        ),
+                    };
+                } catch {
+                    return { messages: [] };
+                }
             },
             async append(item) {
                 const state = aui.threadListItem().getState();
                 const remoteId =
                     state.remoteId ?? (await aui.threadListItem().initialize()).remoteId;
-                const res = await fetch(`/api/threads/${remoteId}/messages`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        id: fmt.getId(item.message),
-                        parent_id: item.parentId,
-                        format: fmt.format,
-                        content: fmt.encode(item),
-                    }),
+                await orpc.chat.addMessage({
+                    threadId: remoteId,
+                    id: fmt.getId(item.message),
+                    parent_id: item.parentId,
+                    format: fmt.format,
+                    content: fmt.encode(item) as Record<string, unknown>,
                 });
-                if (!res.ok) {
-                    throw new Error(`Failed to save message: ${res.status}`);
-                }
             },
         }),
     }));

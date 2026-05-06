@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { THREAD_LIST_BATCH_SIZE, threadListPaginationState } from "@/components/assistant-ui/modules/adapters";
 import {
-  AuiIf,
   ThreadListItemMorePrimitive,
   ThreadListItemPrimitive,
   ThreadListPrimitive,
@@ -11,6 +11,7 @@ import {
 import {
   ArchiveIcon,
   ArchiveRestoreIcon,
+  Loader2Icon,
   MoreHorizontalIcon,
   PencilIcon,
   PlusIcon,
@@ -18,18 +19,53 @@ import {
 } from "lucide-react";
 import { type FC, useEffect, useRef, useState } from "react";
 
+const BATCH_SIZE = THREAD_LIST_BATCH_SIZE;
+
 export const ThreadList: FC = () => {
+  const aui = useAui();
+  const isLoading = useAuiState((s) => s.threads.isLoading);
+  const [hasMore, setHasMore] = useState(threadListPaginationState.hasMore);
+  const [loadingMore, setLoadingMore] = useState(false);
+
+  // Sync hasMore after initial list() call completes
+  useEffect(() => {
+    if (!isLoading) setHasMore(threadListPaginationState.hasMore);
+  }, [isLoading]);
+
+  const handleLoadMore = async () => {
+    setLoadingMore(true);
+    threadListPaginationState.limit += BATCH_SIZE;
+    await aui.threads().reload();
+    setHasMore(threadListPaginationState.hasMore);
+    setLoadingMore(false);
+  };
+
   return (
     <ThreadListPrimitive.Root className="aui-root aui-thread-list-root flex flex-col gap-1">
       {/* <ThreadListNew /> */}
-      <AuiIf condition={(s) => s.threads.isLoading}>
+      {isLoading && !loadingMore ? (
         <ThreadListSkeleton />
-      </AuiIf>
-      <AuiIf condition={(s) => !s.threads.isLoading}>
-        <ThreadListPrimitive.Items>
-          {() => <ThreadListItem />}
-        </ThreadListPrimitive.Items>
-      </AuiIf>
+      ) : (
+        <>
+          <ThreadListPrimitive.Items>
+            {() => <ThreadListItem />}
+          </ThreadListPrimitive.Items>
+          {hasMore && (
+            <Button
+              variant="ghost"
+              className="h-8 w-full justify-center text-xs text-muted-foreground hover:text-foreground"
+              onClick={handleLoadMore}
+              disabled={loadingMore}
+            >
+              {loadingMore ? (
+                <Loader2Icon className="size-3.5 animate-spin" />
+              ) : (
+                "Load more"
+              )}
+            </Button>
+          )}
+        </>
+      )}
     </ThreadListPrimitive.Root>
   );
 };
@@ -69,7 +105,7 @@ const ThreadListItem: FC = () => {
   const [isRenaming, setIsRenaming] = useState(false);
 
   return (
-    <ThreadListItemPrimitive.Root className="aui-thread-list-item group flex h-9 items-center gap-2 rounded-lg transition-colors hover:bg-muted focus-visible:bg-muted focus-visible:outline-none data-active:bg-muted">
+    <ThreadListItemPrimitive.Root className="aui-thread-list-item group flex h-9 items-center gap-2 rounded-lg transition-colors hover:bg-sidebar-accent/80 focus-visible:bg-sidebar-accent/80 focus-visible:outline-none data-active:bg-sidebar-accent">
       {isRenaming ? (
         <ThreadListItemRenameInput onDone={() => setIsRenaming(false)} />
       ) : (
