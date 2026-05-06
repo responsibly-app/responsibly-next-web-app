@@ -2,7 +2,7 @@ import type { Session } from "@/lib/orpc/context";
 
 function instructions(): string {
     return [
-        `You are a sales coaching assistant. Help with objection handling, sales strategies, and best practices.`,
+        `You are a helpful assistant.`,
     ].join("\n");
 }
 

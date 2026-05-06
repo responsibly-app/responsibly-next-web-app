@@ -29,6 +29,7 @@ function currentMonth() {
 
 export const chatRouter = {
   listThreads: authed
+    .route({ method: "GET", path: "/chat/threads", summary: "List chat threads", tags: ["Chat"] })
     .input(ListThreadsInputSchema)
     .output(ListThreadsOutputSchema)
     .handler(async ({ input, context }) => {
@@ -41,6 +42,7 @@ export const chatRouter = {
     }),
 
   createThread: authed
+    .route({ method: "POST", path: "/chat/threads", summary: "Create chat thread", tags: ["Chat"] })
     .output(CreateThreadOutputSchema)
     .handler(async ({ context }) => {
       const id = crypto.randomUUID();
@@ -54,6 +56,7 @@ export const chatRouter = {
     }),
 
   getThread: authed
+    .route({ method: "GET", path: "/chat/threads/{id}", summary: "Get chat thread", tags: ["Chat"] })
     .input(GetThreadInputSchema)
     .output(ThreadSchema)
     .handler(async ({ input, context }) => {
@@ -66,6 +69,7 @@ export const chatRouter = {
     }),
 
   updateThread: authed
+    .route({ method: "PATCH", path: "/chat/threads/{id}", summary: "Update chat thread", tags: ["Chat"] })
     .input(UpdateThreadInputSchema)
     .handler(async ({ input, context }) => {
       const updates: Record<string, unknown> = { updatedAt: new Date() };
@@ -78,6 +82,7 @@ export const chatRouter = {
     }),
 
   deleteThread: authed
+    .route({ method: "DELETE", path: "/chat/threads/{id}", summary: "Delete chat thread", tags: ["Chat"] })
     .input(DeleteThreadInputSchema)
     .handler(async ({ input, context }) => {
       await db
@@ -86,6 +91,7 @@ export const chatRouter = {
     }),
 
   listMessages: authed
+    .route({ method: "GET", path: "/chat/threads/{threadId}/messages", summary: "List thread messages", tags: ["Chat"] })
     .input(ListMessagesInputSchema)
     .output(ListMessagesOutputSchema)
     .handler(async ({ input, context }) => {
@@ -110,6 +116,7 @@ export const chatRouter = {
     }),
 
   addMessage: authed
+    .route({ method: "POST", path: "/chat/threads/{threadId}/messages", summary: "Add message to thread", tags: ["Chat"] })
     .input(AddMessageInputSchema)
     .handler(async ({ input, context }) => {
       const [thread] = await db
@@ -134,6 +141,7 @@ export const chatRouter = {
     }),
 
   generateTitle: authed
+    .route({ method: "POST", path: "/chat/threads/{id}/title", summary: "Generate thread title", tags: ["Chat"] })
     .input(GenerateTitleInputSchema)
     .output(GenerateTitleOutputSchema)
     .handler(async ({ input, context }) => {
@@ -168,6 +176,7 @@ export const chatRouter = {
     }),
 
   getTokenUsage: authed
+    .route({ method: "GET", path: "/chat/token-usage", summary: "Get token usage", tags: ["Chat"] })
     .output(TokenUsageOutputSchema)
     .handler(async ({ context }) => {
       const month = currentMonth();
