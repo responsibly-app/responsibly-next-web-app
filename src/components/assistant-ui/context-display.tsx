@@ -1,8 +1,6 @@
 "use client";
 
 import { useAuiState } from "@assistant-ui/react";
-import { useThreadTokenUsage } from "@assistant-ui/react-ai-sdk";
-import type { ThreadTokenUsage } from "@assistant-ui/react-ai-sdk";
 import {
   Tooltip,
   TooltipContent,
@@ -17,6 +15,10 @@ import {
   type FC,
   type ReactNode,
 } from "react";
+import {
+  useThreadTotalTokenUsage,
+  type ThreadTokenUsage,
+} from "@/components/assistant-ui/modules/use-thread-token-usage";
 
 const formatTokenCount = (tokens: number): string => {
   if (tokens >= 1_000_000) return `${(tokens / 1_000_000).toFixed(1)}M`;
@@ -108,8 +110,8 @@ function ContextDisplayRootBase({
       if (prev.threadId !== threadId) {
         return {
           threadId,
-          totalTokens: rawTokens > 0 ? rawTokens : 0,
-          usage,
+          totalTokens: 0,
+          usage: undefined,
         };
       }
       if (rawTokens > 0 && rawTokens !== prev.totalTokens) {
@@ -146,7 +148,7 @@ function ContextDisplayRootInternal({
   modelContextWindow: number;
   children: ReactNode;
 }) {
-  const usage = useThreadTokenUsage();
+  const usage = useThreadTotalTokenUsage();
   return (
     <ContextDisplayRootBase
       modelContextWindow={modelContextWindow}

@@ -115,10 +115,16 @@ export async function createChatStream(session: Session, messages: UIMessage[]) 
           messageMetadata: ({ part }) => {
             if (part.type === "finish")
               return {
-                usage: part.totalUsage,
-                ...(ragSources ? { custom: { sources: ragSources } } : {}),
+                usage: (part as any).totalUsage,
+                custom: {
+                  usage: (part as any).totalUsage,
+                  ...(ragSources ? { sources: ragSources } : {}),
+                },
               };
-            if (part.type === "finish-step") return { modelId: part.response.modelId };
+            if (part.type === "finish-step")
+              return {
+                usage: (part as any).usage,
+              };
             return undefined;
           },
         }),

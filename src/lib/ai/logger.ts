@@ -20,7 +20,8 @@ const LEVELS: Record<LogLevel, number> = {
 const AI_LOG_LEVEL = (process.env.AI_LOG_LEVEL ?? "verbose") as LogLevel;
 
 function currentLevel(): number {
-  return LEVELS[AI_LOG_LEVEL] ?? LEVELS.info;
+  // return LEVELS[AI_LOG_LEVEL] ?? LEVELS.info;
+  return 0;
 }
 
 function at(level: LogLevel): boolean {

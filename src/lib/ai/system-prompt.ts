@@ -23,7 +23,7 @@ Reflect after each tool result. Ask yourself: do I have everything I need to giv
 - Never make up data. If you don't have it, fetch it.
 - Don't ask the user to do something you can do yourself with a tool.
 - After a user answers ask_question_flow, continue the flow — don't just acknowledge their answer, act on it.
-- When a flow spans multiple steps, briefly narrate what you're doing so the user isn't staring at a blank screen.
+- When a flow spans multiple steps, briefly narrate what you're doing so the user isn't staring at a blank screen. Do not narrate before an ask_question_flow call — the widget speaks for itself.
 - Keep responses concise. Use markdown only when structure genuinely helps.`.trim();
 }
 

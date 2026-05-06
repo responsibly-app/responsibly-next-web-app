@@ -282,7 +282,8 @@ const ComposerAction: FC = () => {
       <div className="flex items-center gap-1">
         <ComposerAddAttachment />
         <ComposerDictationToggle />
-        <ContextDisplay.Ring modelContextWindow={1_047_576} side="top" />
+        {/* <ContextDisplay.Ring modelContextWindow={1_047_576} side="top" /> */}
+        <ContextDisplay.Text modelContextWindow={1_047_576} side="top" />
         <ComposerVoiceToggle />
       </div>
 
