@@ -60,12 +60,14 @@ const nextConfig: NextConfig = {
               "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
 
               // External scripts (CDNs)
-              "script-src-elem 'self' 'unsafe-inline' https://static.cloudflareinsights.com https://cdn.jsdelivr.net",
+              "script-src-elem 'self' 'unsafe-inline' https://static.cloudflareinsights.com https://cdn.jsdelivr.net https://vercel.live",
 
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: blob: https:",
               "font-src 'self' https:",
               "connect-src 'self' https:",
+              // assistant-ui devtools panel
+              "frame-src 'self' https://devtools-frame.assistant-ui.com https://vercel.live",
               // REQUIRED for Zoom embedding
               "frame-ancestors 'self' https://*.zoom.us https://*.zoom.com",
               // prevents iframe injection attacks

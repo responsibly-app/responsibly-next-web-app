@@ -50,6 +50,20 @@
       "when": 1777188577418,
       "tag": "0006_demonic_bulldozer",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1777833673066,
+      "tag": "0007_reflective_molecule_man",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1777919684068,
+      "tag": "0008_smooth_luke_cage",
+      "breakpoints": true
     }
   ]
 }

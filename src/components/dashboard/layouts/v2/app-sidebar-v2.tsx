@@ -8,6 +8,7 @@ import {
   CalendarDays,
   Flame,
   LayoutDashboard,
+  MessageSquare,
   Plug,
   Settings,
   TrendingUp,
@@ -37,7 +38,10 @@ export const SIDEBAR_PINNED_W = 240;
 
 const navGroups = [
   {
-    items: [{ title: "Dashboard", url: routes.dashboard.root(), icon: LayoutDashboard }],
+    items: [
+      { title: "Dashboard", url: routes.dashboard.root(), icon: LayoutDashboard },
+      { title: "Chat", url: routes.chat(), icon: MessageSquare },
+    ],
   },
   {
     label: "Personal",
@@ -207,49 +211,50 @@ export function AppSidebarV2({ isPinned, onTogglePin }: AppSidebarV2Props) {
 
       {/* Scrollable nav */}
       <div className="relative flex-1 min-h-0">
-        <div className="h-full flex flex-col overflow-y-auto overflow-x-hidden py-2">
-        {/* Nav groups */}
-        {navGroups.map((group, i) => (
-          <div key={i} className="px-2 mb-1">
-            {group.label && (
-              <p
-                className={cn(
-                  "mb-0.5 px-2 text-xs font-medium text-sidebar-foreground/50 whitespace-nowrap overflow-hidden transition-[opacity,max-width] duration-200",
-                  isExpanded ? "opacity-100 max-w-50" : "opacity-0 max-w-0",
-                )}
-              >
-                {group.label}
-              </p>
-            )}
-            {group.items.map((item) => {
-              const isActive = pathname === item.url;
-              return (
-                <Link
-                  key={item.title}
-                  href={item.url}
+        {/* <div className="h-full flex flex-col overflow-y-auto overflow-x-hidden py-2"> */}
+        <div className={cn("h-full flex flex-col overflow-y-auto overflow-x-hidden py-2", isExpanded ? "scrollbar-thin" : "scrollbar-hide")}>
+          {/* Nav groups */}
+          {navGroups.map((group, i) => (
+            <div key={i} className="px-2 mb-1">
+              {group.label && (
+                <p
                   className={cn(
-                    "flex items-center gap-2 rounded-xl px-2 py-2 text-sm transition-colors mb-1",
-                    isActive
-                      ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
-                      : "text-sidebar-foreground hover:bg-sidebar-accent/60",
+                    "mb-0.5 px-2 text-xs font-medium text-sidebar-foreground/50 whitespace-nowrap overflow-hidden transition-[opacity,max-width] duration-200",
+                    isExpanded ? "opacity-100 max-w-50" : "opacity-0 max-w-0",
                   )}
                 >
-                  <span className="flex size-5 shrink-0 items-center justify-center">
-                    <item.icon className="size-4" />
-                  </span>
-                  <span
+                  {group.label}
+                </p>
+              )}
+              {group.items.map((item) => {
+                const isActive = pathname === item.url;
+                return (
+                  <Link
+                    key={item.title}
+                    href={item.url}
                     className={cn(
-                      "whitespace-nowrap overflow-hidden transition-[opacity,max-width] duration-200",
-                      isExpanded ? "opacity-100 max-w-50" : "opacity-0 max-w-0",
+                      "flex items-center gap-2 rounded-xl px-2 py-2 text-sm transition-colors mb-1",
+                      isActive
+                        ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+                        : "text-sidebar-foreground hover:bg-sidebar-accent/60",
                     )}
                   >
-                    {item.title}
-                  </span>
-                </Link>
-              );
-            })}
-          </div>
-        ))}
+                    <span className="flex size-5 shrink-0 items-center justify-center">
+                      <item.icon className="size-4" />
+                    </span>
+                    <span
+                      className={cn(
+                        "whitespace-nowrap overflow-hidden transition-[opacity,max-width] duration-200",
+                        isExpanded ? "opacity-100 max-w-50" : "opacity-0 max-w-0",
+                      )}
+                    >
+                      {item.title}
+                    </span>
+                  </Link>
+                );
+              })}
+            </div>
+          ))}
         </div>
         <div className="pointer-events-none absolute bottom-0 inset-x-0 h-5 bg-linear-to-t from-sidebar/90 to-transparent" />
       </div>

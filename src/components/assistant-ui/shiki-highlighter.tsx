@@ -1,10 +1,9 @@
 "use client";
 
-// https://www.assistant-ui.com/docs/ui/syntax-highlighting
-import { cn } from "@/lib/utils";
-import type { SyntaxHighlighterProps as AUIProps } from "@assistant-ui/react-markdown";
-import { FC } from "react";
+import type { FC } from "react";
 import ShikiHighlighter, { type ShikiHighlighterProps } from "react-shiki";
+import type { SyntaxHighlighterProps as AUIProps } from "@assistant-ui/react-markdown";
+import { cn } from "@/lib/utils";
 
 /**
  * Props for the SyntaxHighlighter component
@@ -31,7 +30,7 @@ export type HighlighterProps = Omit<
 export const SyntaxHighlighter: FC<HighlighterProps> = ({
   code,
   language,
-  theme = { light: "github-light", dark: "github-dark" },
+  theme = { dark: "github-dark", light: "github-light" }, // https://shiki.style/themes
   className,
   addDefaultStyles = false, // assistant-ui requires custom base styles
   showLanguage = false, // assistant-ui/react-markdown handles language labels
@@ -48,7 +47,7 @@ export const SyntaxHighlighter: FC<HighlighterProps> = ({
       showLanguage={showLanguage}
       defaultColor="light-dark()"
       className={cn(
-        "aui-shiki-base [&_pre]:bg-muted/75! [&_pre]:overflow-x-auto [&_pre]:rounded-b-lg [&_pre]:p-4",
+        "aui-shiki-base [&_pre]:overflow-x-auto [&_pre]:rounded-b-lg [&_pre]:bg-muted/75! [&_pre]:p-4 [&_pre]:text-[0.85rem]",
         className,
       )}
     >

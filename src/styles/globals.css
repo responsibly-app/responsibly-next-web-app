@@ -1,0 +1,9 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+@import "tw-shimmer";
+
+@import "./theme.css";
+@import "./base.css";
+@import "./animations.css";
+@import "./scrollbar.css";

@@ -1,24 +1,71 @@
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { THREAD_LIST_BATCH_SIZE, threadListPaginationState } from "@/components/assistant-ui/modules/adapters";
 import {
-  AssistantIf,
   ThreadListItemMorePrimitive,
   ThreadListItemPrimitive,
   ThreadListPrimitive,
+  useAui,
+  useAuiState,
 } from "@assistant-ui/react";
-import { ArchiveIcon, MoreHorizontalIcon, PlusIcon } from "lucide-react";
-import type { FC } from "react";
+import {
+  ArchiveIcon,
+  ArchiveRestoreIcon,
+  Loader2Icon,
+  MoreHorizontalIcon,
+  PencilIcon,
+  PlusIcon,
+  TrashIcon,
+} from "lucide-react";
+import { type FC, useEffect, useRef, useState } from "react";
+
+const BATCH_SIZE = THREAD_LIST_BATCH_SIZE;
 
 export const ThreadList: FC = () => {
+  const aui = useAui();
+  const isLoading = useAuiState((s) => s.threads.isLoading);
+  const [hasMore, setHasMore] = useState(threadListPaginationState.hasMore);
+  const [loadingMore, setLoadingMore] = useState(false);
+
+  // Sync hasMore after initial list() call completes
+  useEffect(() => {
+    if (!isLoading) setHasMore(threadListPaginationState.hasMore);
+  }, [isLoading]);
+
+  const handleLoadMore = async () => {
+    setLoadingMore(true);
+    threadListPaginationState.limit += BATCH_SIZE;
+    await aui.threads().reload();
+    setHasMore(threadListPaginationState.hasMore);
+    setLoadingMore(false);
+  };
+
   return (
     <ThreadListPrimitive.Root className="aui-root aui-thread-list-root flex flex-col gap-1">
-      <ThreadListNew />
-      <AssistantIf condition={({ threads }) => threads.isLoading}>
+      {/* <ThreadListNew /> */}
+      {isLoading && !loadingMore ? (
         <ThreadListSkeleton />
-      </AssistantIf>
-      <AssistantIf condition={({ threads }) => !threads.isLoading}>
-        <ThreadListPrimitive.Items components={{ ThreadListItem }} />
-      </AssistantIf>
+      ) : (
+        <>
+          <ThreadListPrimitive.Items>
+            {() => <ThreadListItem />}
+          </ThreadListPrimitive.Items>
+          {hasMore && (
+            <Button
+              variant="ghost"
+              className="h-8 w-full justify-center text-xs text-muted-foreground hover:text-foreground"
+              onClick={handleLoadMore}
+              disabled={loadingMore}
+            >
+              {loadingMore ? (
+                <Loader2Icon className="size-3.5 animate-spin" />
+              ) : (
+                "Load more"
+              )}
+            </Button>
+          )}
+        </>
+      )}
     </ThreadListPrimitive.Root>
   );
 };
@@ -28,7 +75,7 @@ const ThreadListNew: FC = () => {
     <ThreadListPrimitive.New asChild>
       <Button
         variant="outline"
-        className="aui-thread-list-new hover:bg-muted data-active:bg-muted h-9 justify-start gap-2 rounded-lg px-3 text-sm"
+        className="aui-thread-list-new h-9 justify-start gap-2 rounded-lg px-3 text-sm hover:bg-muted data-active:bg-muted"
       >
         <PlusIcon className="size-4" />
         New Thread
@@ -55,24 +102,70 @@ const ThreadListSkeleton: FC = () => {
 };
 
 const ThreadListItem: FC = () => {
+  const [isRenaming, setIsRenaming] = useState(false);
+
   return (
-    <ThreadListItemPrimitive.Root className="aui-thread-list-item group hover:bg-muted focus-visible:bg-muted data-active:bg-muted flex h-9 items-center gap-2 rounded-lg transition-colors focus-visible:outline-none">
-      <ThreadListItemPrimitive.Trigger className="aui-thread-list-item-trigger flex h-full min-w-0 flex-1 items-center truncate px-3 text-start text-sm">
-        <ThreadListItemPrimitive.Title fallback="New Chat" />
-      </ThreadListItemPrimitive.Trigger>
-      <ThreadListItemMore />
+    <ThreadListItemPrimitive.Root className="aui-thread-list-item group flex h-9 items-center gap-2 rounded-lg transition-colors hover:bg-sidebar-accent/80 focus-visible:bg-sidebar-accent/80 focus-visible:outline-none data-active:bg-sidebar-accent">
+      {isRenaming ? (
+        <ThreadListItemRenameInput onDone={() => setIsRenaming(false)} />
+      ) : (
+        <>
+          <ThreadListItemPrimitive.Trigger className="aui-thread-list-item-trigger flex h-full min-w-0 flex-1 items-center px-3 text-start text-sm">
+            <span className="aui-thread-list-item-title min-w-0 flex-1 truncate">
+              <ThreadListItemPrimitive.Title fallback="New Chat" />
+            </span>
+          </ThreadListItemPrimitive.Trigger>
+          <ThreadListItemMore onRename={() => setIsRenaming(true)} />
+        </>
+      )}
     </ThreadListItemPrimitive.Root>
   );
 };
 
-const ThreadListItemMore: FC = () => {
+const ThreadListItemRenameInput: FC<{ onDone: () => void }> = ({ onDone }) => {
+  const aui = useAui();
+  const currentTitle = useAuiState((s) => s.threadListItem.title);
+  const [value, setValue] = useState(currentTitle ?? "");
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    inputRef.current?.focus();
+    inputRef.current?.select();
+  }, []);
+
+  const handleSubmit = async () => {
+    const trimmed = value.trim();
+    if (trimmed && trimmed !== currentTitle) {
+      await aui.threadListItem().rename(trimmed);
+    }
+    onDone();
+  };
+
+  return (
+    <input
+      ref={inputRef}
+      value={value}
+      onChange={(e) => setValue(e.target.value)}
+      onBlur={handleSubmit}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") { e.preventDefault(); handleSubmit(); }
+        if (e.key === "Escape") onDone();
+      }}
+      className="h-full min-w-0 flex-1 bg-transparent px-3 text-sm outline-none"
+    />
+  );
+};
+
+const ThreadListItemMore: FC<{ onRename: () => void }> = ({ onRename }) => {
+  const status = useAuiState((s) => s.threadListItem.status);
+
   return (
     <ThreadListItemMorePrimitive.Root>
       <ThreadListItemMorePrimitive.Trigger asChild>
         <Button
           variant="ghost"
           size="icon"
-          className="aui-thread-list-item-more data-[state=open]:bg-accent mr-2 size-7 p-0 opacity-0 transition-opacity group-hover:opacity-100 group-data-active:opacity-100 data-[state=open]:opacity-100"
+          className="aui-thread-list-item-more me-2 size-7 p-0 opacity-0 transition-opacity group-hover:opacity-100 data-[state=open]:bg-accent data-[state=open]:opacity-100 group-data-active:opacity-100"
         >
           <MoreHorizontalIcon className="size-4" />
           <span className="sr-only">More options</span>
@@ -81,14 +174,37 @@ const ThreadListItemMore: FC = () => {
       <ThreadListItemMorePrimitive.Content
         side="bottom"
         align="start"
-        className="aui-thread-list-item-more-content bg-popover text-popover-foreground z-50 min-w-32 overflow-hidden rounded-md border p-1 shadow-md"
+        className="aui-thread-list-item-more-content z-50 min-w-36 overflow-hidden rounded-md border bg-popover p-1 text-popover-foreground shadow-md"
       >
-        <ThreadListItemPrimitive.Archive asChild>
-          <ThreadListItemMorePrimitive.Item className="aui-thread-list-item-more-item hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none select-none">
-            <ArchiveIcon className="size-4" />
-            Archive
+        <ThreadListItemMorePrimitive.Item
+          className="aui-thread-list-item-more-item flex cursor-pointer select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+          onSelect={onRename}
+        >
+          <PencilIcon className="size-4" />
+          Rename
+        </ThreadListItemMorePrimitive.Item>
+        {status === "regular" && (
+          <ThreadListItemPrimitive.Archive asChild>
+            <ThreadListItemMorePrimitive.Item className="aui-thread-list-item-more-item flex cursor-pointer select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground">
+              <ArchiveIcon className="size-4" />
+              Archive
+            </ThreadListItemMorePrimitive.Item>
+          </ThreadListItemPrimitive.Archive>
+        )}
+        {status === "archived" && (
+          <ThreadListItemPrimitive.Unarchive asChild>
+            <ThreadListItemMorePrimitive.Item className="aui-thread-list-item-more-item flex cursor-pointer select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground">
+              <ArchiveRestoreIcon className="size-4" />
+              Unarchive
+            </ThreadListItemMorePrimitive.Item>
+          </ThreadListItemPrimitive.Unarchive>
+        )}
+        <ThreadListItemPrimitive.Delete asChild>
+          <ThreadListItemMorePrimitive.Item className="aui-thread-list-item-more-item flex cursor-pointer select-none items-center gap-2 rounded-sm px-2 py-1.5 text-destructive text-sm outline-none hover:bg-destructive/10 hover:text-destructive focus:bg-destructive/10 focus:text-destructive">
+            <TrashIcon className="size-4" />
+            Delete
           </ThreadListItemMorePrimitive.Item>
-        </ThreadListItemPrimitive.Archive>
+        </ThreadListItemPrimitive.Delete>
       </ThreadListItemMorePrimitive.Content>
     </ThreadListItemMorePrimitive.Root>
   );

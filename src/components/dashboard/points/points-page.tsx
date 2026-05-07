@@ -74,7 +74,7 @@ function MonthlyChart({ items }: { items: { date: string; amount: number }[] }) 
         <YAxis tickLine={false} axisLine={false} tick={{ fontSize: 12 }} allowDecimals={false} />
         <ChartTooltip content={<ChartTooltipContent />} />
         <Bar dataKey="points" fill="hsl(142 71% 45%)" radius={[4, 4, 0, 0]} minPointSize={3}>
-          <LabelList dataKey="points" position="top" style={{ fontSize: 11 }} formatter={(v: number) => (v === 0 ? "" : v)} />
+          <LabelList dataKey="points" position="top" style={{ fontSize: 11 }} formatter={(v: unknown) => (v === 0 ? "" : (v as string | number))} />
         </Bar>
       </BarChart>
     </ChartContainer>

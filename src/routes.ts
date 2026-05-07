@@ -16,6 +16,7 @@ export const routes = {
     eventDetail: (eventId: string) => `/dashboard/events/${eventId}`,
     acceptInvitation: (invitationId: string) => `/dashboard/accept-invitation?id=${invitationId}`,
   },
+  chat: (threadId?: string) => threadId ? `/chat/${threadId}` : "/chat",
   admin: {
     root: () => "/admin",
     users: () => "/admin/users",
