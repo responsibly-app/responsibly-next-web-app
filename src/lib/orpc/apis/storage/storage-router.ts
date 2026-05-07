@@ -4,6 +4,7 @@ import { authed } from "@/lib/orpc/base";
 import { supabase } from "@/supabase/client";
 import {
     DeleteAvatarInputSchema,
+    DeleteChatAttachmentInputSchema,
     UploadAvatarInputSchema,
     UploadAvatarOutputSchema,
     UploadChatAttachmentInputSchema,
@@ -58,6 +59,23 @@ export const storageRouter = {
 
             const { data } = supabase.storage.from("chat-attachments").getPublicUrl(path);
             return { publicUrl: data.publicUrl };
+        }),
+
+    deleteChatAttachment: authed
+        .route({ method: "DELETE", path: "/storage/chat-attachment", summary: "Delete chat attachment", tags: ["Storage"] })
+        .input(DeleteChatAttachmentInputSchema)
+        .handler(async ({ input, context }) => {
+            const userId = context.session.user.id;
+            // Extract the storage path from the public URL: everything after "/chat-attachments/"
+            const marker = "/chat-attachments/";
+            const markerIndex = input.publicUrl.indexOf(marker);
+            if (markerIndex === -1) throw new ORPCError("BAD_REQUEST", { message: "Invalid attachment URL" });
+            const path = input.publicUrl.slice(markerIndex + marker.length).split("?")[0];
+            // Ensure the file belongs to this user
+            if (!path.startsWith(`${userId}/`)) throw new ORPCError("FORBIDDEN", { message: "Not authorized to delete this attachment" });
+
+            const { error } = await supabase.storage.from("chat-attachments").remove([path]);
+            if (error) throw new ORPCError("INTERNAL_SERVER_ERROR", { message: error.message });
         }),
 
     deleteAvatar: authed
