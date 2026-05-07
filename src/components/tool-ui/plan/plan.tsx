@@ -117,7 +117,7 @@ const PlanTodoItem = memo(function PlanTodoItem({
   const labelElement = (
     <span
       className={cn(
-        "text-sm leading-6 font-medium break-words",
+        "text-sm leading-6 font-medium wrap-break-word",
         todo.status === "pending" && "text-muted-foreground",
         todo.status === "in_progress" &&
           "motion-safe:shimmer shimmer-invert text-foreground",
@@ -184,14 +184,14 @@ const PlanTodoItem = memo(function PlanTodoItem({
               <TodoIcon status={todo.status} />
             </div>
             <span className="min-w-0 flex-1">{labelElement}</span>
-            <ChevronRight className="text-muted-foreground/50 group-hover/todo:text-muted-foreground mt-0.5 size-4 shrink-0 rotate-90 group-data-[state=open]/todo:[transform:rotateY(180deg)] motion-safe:transition-transform motion-safe:duration-300 motion-safe:ease-[cubic-bezier(0.34,1.56,0.64,1)]" />
+            <ChevronRight className="text-muted-foreground/50 group-hover/todo:text-muted-foreground mt-0.5 size-4 shrink-0 rotate-90 group-data-[state=open]/todo:transform-[rotateY(180deg)] motion-safe:transition-transform motion-safe:duration-300 motion-safe:ease-[cubic-bezier(0.34,1.56,0.64,1)]" />
           </CollapsibleTrigger>
           <CollapsibleContent
             className="group/content"
             data-slot="collapsible-content"
           >
             <div className="min-w-0 motion-safe:group-data-[state=closed]/content:animate-out motion-safe:group-data-[state=closed]/content:fade-out motion-safe:group-data-[state=closed]/content:slide-out-to-top-1 motion-safe:group-data-[state=closed]/content:duration-150 motion-safe:group-data-[state=open]/content:animate-in motion-safe:group-data-[state=open]/content:fade-in motion-safe:group-data-[state=open]/content:slide-in-from-top-1 motion-safe:group-data-[state=open]/content:delay-75 motion-safe:group-data-[state=open]/content:duration-150 motion-safe:group-data-[state=open]/content:fill-mode-both">
-              <p className="text-muted-foreground min-w-0 pr-2 pb-1.5 pl-11 text-sm text-pretty break-words">
+              <p className="text-muted-foreground min-w-0 pr-2 pb-1.5 pl-11 text-sm text-pretty wrap-break-word">
                 {todo.description}
               </p>
             </div>
@@ -259,7 +259,7 @@ const ProgressBar = memo(function ProgressBar({
         className={cn(
           "h-full rounded-full transition-all duration-500",
           progress === 100
-            ? "bg-gradient-to-r from-emerald-600 via-emerald-500 to-emerald-400 motion-safe:animate-in motion-safe:fade-in motion-safe:duration-500 motion-safe:ease-out"
+            ? "bg-linear-to-r from-emerald-600 via-emerald-500 to-emerald-400 motion-safe:animate-in motion-safe:fade-in motion-safe:duration-500 motion-safe:ease-out"
             : "bg-primary",
         )}
         style={{

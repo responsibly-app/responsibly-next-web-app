@@ -47,7 +47,7 @@ function ProgressBar({ current, total }: ProgressBarProps) {
           <div
             className={cn(
               "absolute inset-0 origin-left rounded-full bg-primary",
-              "motion-safe:transition-transform motion-safe:duration-300 motion-safe:ease-[var(--cubic-ease-in-out)]",
+              "motion-safe:transition-transform motion-safe:duration-300 motion-safe:ease-(--cubic-ease-in-out)",
               i < current ? "scale-x-100" : "scale-x-0",
             )}
           />
@@ -131,7 +131,7 @@ function OptionItem({
       tabIndex={tabIndex}
       disabled={isDisabled}
       className={cn(
-        "peer group relative h-auto min-h-[50px] w-full justify-start text-left text-sm font-medium",
+        "peer group relative h-auto min-h-12.5 w-full justify-start text-left text-sm font-medium",
         "rounded-none border-0 bg-transparent px-0 py-2 text-base shadow-none transition-none hover:bg-transparent! @md/question-flow:text-sm",
         isFirst && "pb-2.5",
         hasAdjacentOptions && "py-2.5",
@@ -389,12 +389,12 @@ function StepBodyContent({
         "flex flex-col gap-4",
         isExiting && [
           "absolute inset-0",
-          "motion-safe:animate-out motion-safe:fade-out motion-safe:blur-out-sm motion-safe:duration-250 motion-safe:ease-[var(--cubic-ease-in-out)] motion-safe:fill-mode-forwards",
+          "motion-safe:animate-out motion-safe:fade-out motion-safe:blur-out-sm motion-safe:duration-250 motion-safe:ease-(--cubic-ease-in-out) motion-safe:fill-mode-forwards",
           exitClass,
         ],
         !isExiting &&
           isTransitioning && [
-            "motion-safe:animate-in motion-safe:fade-in motion-safe:blur-in-sm motion-safe:duration-250 motion-safe:ease-[var(--cubic-ease-in-out)] motion-safe:fill-mode-both",
+            "motion-safe:animate-in motion-safe:fade-in motion-safe:blur-in-sm motion-safe:duration-250 motion-safe:ease-(--cubic-ease-in-out) motion-safe:fill-mode-both",
             enterClass,
           ],
       )}

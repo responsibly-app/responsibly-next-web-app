@@ -116,9 +116,9 @@ const AttachmentPreview: FC<AttachmentPreviewProps> = ({ src }) => {
   );
 };
 
-const AttachmentPreviewDialog: FC<PropsWithChildren> = ({ children }) => {
-  const src = useAttachmentSrc();
+type AttachmentPreviewDialogProps = PropsWithChildren<{ src?: string }>;
 
+const AttachmentPreviewDialog: FC<AttachmentPreviewDialogProps> = ({ src, children }) => {
   if (!src) return children;
 
   return (
@@ -141,9 +141,9 @@ const AttachmentPreviewDialog: FC<PropsWithChildren> = ({ children }) => {
   );
 };
 
-const AttachmentThumb: FC = () => {
-  const src = useAttachmentSrc();
+type AttachmentThumbProps = { src?: string };
 
+const AttachmentThumb: FC<AttachmentThumbProps> = ({ src }) => {
   return (
     <Avatar className="aui-attachment-tile-avatar h-full w-full rounded-none">
       <AvatarImage
@@ -161,6 +161,7 @@ const AttachmentThumb: FC = () => {
 const AttachmentUI: FC = () => {
   const aui = useAui();
   const isComposer = aui.attachment.source !== "message";
+  const src = useAttachmentSrc();
 
   const isImage = useAuiState((s) => s.attachment.type === "image");
   const typeLabel = useAuiState((s) => {
@@ -185,7 +186,7 @@ const AttachmentUI: FC = () => {
           isImage && "aui-attachment-root-composer only:*:first:size-24",
         )}
       >
-        <AttachmentPreviewDialog>
+        <AttachmentPreviewDialog src={src}>
           <TooltipTrigger asChild>
             <div
               className="aui-attachment-tile size-14 cursor-pointer overflow-hidden rounded-[calc(var(--composer-radius)-var(--composer-padding))] border bg-muted transition-opacity hover:opacity-75"
@@ -193,7 +194,7 @@ const AttachmentUI: FC = () => {
               tabIndex={0}
               aria-label={`${typeLabel} attachment`}
             >
-              <AttachmentThumb />
+              <AttachmentThumb src={src} />
             </div>
           </TooltipTrigger>
         </AttachmentPreviewDialog>
