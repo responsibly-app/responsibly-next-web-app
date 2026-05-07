@@ -191,9 +191,13 @@ export const chatRouter = {
         .from(chatTokenUsage)
         .where(and(eq(chatTokenUsage.userId, context.session.user.id), eq(chatTokenUsage.month, month)));
 
+      const inputTokens = usage?.inputTokens ?? 0;
+      const outputTokens = usage?.outputTokens ?? 0;
+
       return {
-        inputTokens: usage?.inputTokens ?? 0,
-        outputTokens: usage?.outputTokens ?? 0,
+        inputTokens,
+        outputTokens,
+        totalTokens: inputTokens + outputTokens,
         inputQuota: INPUT_TOKEN_QUOTA,
         outputQuota: OUTPUT_TOKEN_QUOTA,
         month,
