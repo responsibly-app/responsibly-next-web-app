@@ -54,7 +54,28 @@ export const threadListAdapter: RemoteThreadListAdapter = {
         return createAssistantStream(async (controller) => {
             const { title } = await orpc.chat.generateTitle({
                 id: remoteId,
-                messages: messages.map((m) => ({ role: m.role, content: [...m.content] as { type: string; text?: string }[] })),
+                messages: messages.map((m) => {
+                    const attachments = (m as { attachments?: { content: { type: string; filename?: string }[] }[] }).attachments ?? [];
+                    return {
+                        role: m.role,
+                        content: [
+                            ...m.content.map((p) => {
+                                const part = p as Record<string, unknown>;
+                                return {
+                                    type: part.type as string,
+                                    ...(typeof part.text === "string" && { text: part.text }),
+                                    ...(typeof part.filename === "string" && { filename: part.filename }),
+                                };
+                            }),
+                            ...attachments.flatMap((a) =>
+                                a.content.map((c) => ({
+                                    type: c.type,
+                                    ...(c.filename && { filename: c.filename }),
+                                }))
+                            ),
+                        ],
+                    };
+                }),
             });
             controller.appendText(title);
         });

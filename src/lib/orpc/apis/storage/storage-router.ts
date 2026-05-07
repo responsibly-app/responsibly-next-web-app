@@ -2,7 +2,14 @@ import { ORPCError } from "@orpc/server";
 import { auth } from "@/lib/auth/auth";
 import { authed } from "@/lib/orpc/base";
 import { supabase } from "@/supabase/client";
-import { DeleteAvatarInputSchema, UploadAvatarInputSchema, UploadAvatarOutputSchema } from "./storage-schemas";
+import {
+    DeleteAvatarInputSchema,
+    DeleteChatAttachmentInputSchema,
+    UploadAvatarInputSchema,
+    UploadAvatarOutputSchema,
+    UploadChatAttachmentInputSchema,
+    UploadChatAttachmentOutputSchema,
+} from "./storage-schemas";
 
 export const storageRouter = {
     uploadAvatar: authed
@@ -29,6 +36,46 @@ export const storageRouter = {
             if (!status) throw new ORPCError("INTERNAL_SERVER_ERROR", { message: "Failed to update user image" });
 
             return { publicUrl };
+        }),
+
+    uploadChatAttachment: authed
+        .route({ method: "POST", path: "/storage/chat-attachment/upload", summary: "Upload chat attachment", tags: ["Storage"] })
+        .input(UploadChatAttachmentInputSchema)
+        .output(UploadChatAttachmentOutputSchema)
+        .handler(async ({ input, context }) => {
+            const { file } = input;
+            const userId = context.session.user.id;
+            const ext = (file as File).name?.includes(".")
+                ? (file as File).name.split(".").pop()
+                : "bin";
+            const path = `${userId}/${crypto.randomUUID()}.${ext}`;
+
+            const { error } = await supabase.storage.from("chat-attachments").upload(path, file, {
+                upsert: false,
+                contentType: file.type || "application/octet-stream",
+            });
+
+            if (error) throw new ORPCError("INTERNAL_SERVER_ERROR", { message: error.message });
+
+            const { data } = supabase.storage.from("chat-attachments").getPublicUrl(path);
+            return { publicUrl: data.publicUrl };
+        }),
+
+    deleteChatAttachment: authed
+        .route({ method: "DELETE", path: "/storage/chat-attachment", summary: "Delete chat attachment", tags: ["Storage"] })
+        .input(DeleteChatAttachmentInputSchema)
+        .handler(async ({ input, context }) => {
+            const userId = context.session.user.id;
+            // Extract the storage path from the public URL: everything after "/chat-attachments/"
+            const marker = "/chat-attachments/";
+            const markerIndex = input.publicUrl.indexOf(marker);
+            if (markerIndex === -1) throw new ORPCError("BAD_REQUEST", { message: "Invalid attachment URL" });
+            const path = input.publicUrl.slice(markerIndex + marker.length).split("?")[0];
+            // Ensure the file belongs to this user
+            if (!path.startsWith(`${userId}/`)) throw new ORPCError("FORBIDDEN", { message: "Not authorized to delete this attachment" });
+
+            const { error } = await supabase.storage.from("chat-attachments").remove([path]);
+            if (error) throw new ORPCError("INTERNAL_SERVER_ERROR", { message: error.message });
         }),
 
     deleteAvatar: authed

@@ -34,7 +34,7 @@ export const AssistantModal: FC = () => {
         </AssistantModalPrimitive.Anchor>
         <AssistantModalPrimitive.Content
           sideOffset={10}
-          className="aui-root aui-modal-content data-[state=closed]:fade-out-0 data-[state=closed]:slide-out-to-bottom-1/2 data-[state=closed]:slide-out-to-right-1/2 data-[state=closed]:zoom-out data-[state=open]:fade-in-0 data-[state=open]:slide-in-from-bottom-1/2 data-[state=open]:slide-in-from-right-1/2 data-[state=open]:zoom-in bg-popover text-popover-foreground data-[state=closed]:animate-out data-[state=open]:animate-in z-50 h-dvh w-dvw sm:h-150 sm:w-100 overflow-clip overscroll-contain sm:rounded-4xl sm:border p-0 sm:shadow-md outline-none max-sm:!inset-0 max-sm:![transform:none] [&_.aui-thread-root]:bg-inherit [&_.aui-thread-root_.aui-thread-viewport-footer]:bg-inherit"
+          className="aui-root aui-modal-content data-[state=closed]:fade-out-0 data-[state=closed]:slide-out-to-bottom-1/2 data-[state=closed]:slide-out-to-right-1/2 data-[state=closed]:zoom-out data-[state=open]:fade-in-0 data-[state=open]:slide-in-from-bottom-1/2 data-[state=open]:slide-in-from-right-1/2 data-[state=open]:zoom-in bg-popover text-popover-foreground data-[state=closed]:animate-out data-[state=open]:animate-in z-50 h-dvh w-dvw sm:h-150 sm:w-100 overflow-clip overscroll-contain sm:rounded-4xl sm:border p-0 sm:shadow-md outline-none max-sm:inset-0! max-sm:transform-none! [&_.aui-thread-root]:bg-inherit [&_.aui-thread-root_.aui-thread-viewport-footer]:bg-inherit"
         >
           <div className="flex h-full flex-col">
             <ModalHeader />

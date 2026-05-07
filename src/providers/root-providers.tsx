@@ -9,6 +9,13 @@ import { Suspense } from "react";
 import { TanstackProvider } from "./tanstack-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { FireworksProvider } from "@/components/ui-custom/fireworks";
+import {
+  CheckCircle2,
+  Info,
+  AlertTriangle,
+  XCircle,
+  Loader2,
+} from "lucide-react";
 
 function TimezoneSyncProvider() {
   useAutoSyncTimezone();
@@ -38,7 +45,15 @@ export function Providers({ children }: { children: React.ReactNode }) {
           disableTransitionOnChange
         >
           <NextTopLoader color="var(--primary)" showSpinner={false} />
-          <Toaster />
+          <Toaster
+            icons={{
+              success: <CheckCircle2 className="size-4 text-emerald-500" />,
+              info: <Info className="size-4 text-blue-500" />,
+              warning: <AlertTriangle className="size-4 text-amber-500" />,
+              error: <XCircle className="size-4 text-red-500" />,
+              loading: <Loader2 className="size-4 animate-spin text-muted-foreground" />,
+            }}
+          />
           <TimezoneSyncProvider />
           <FireworksProvider>
             <Suspense fallback={<SuspendFallback />}>{children}</Suspense>

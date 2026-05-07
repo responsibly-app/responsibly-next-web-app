@@ -196,7 +196,7 @@ function RAGSourceBadge({ path, chunkIds }: RAGSourceItem) {
       const ordered = chunkIds
         .map((id) => chunks.find((c) => c.id === id))
         .filter(Boolean) as { id: string; content: string }[];
-      setContent(ordered.map((c) => c.content).join("\n\n---\n\n"));
+      setContent(ordered.map((c) => c.content).join("\n\n--- next chunk ---\n\n"));
       setDownloadUrl(url);
       setIsLoading(false);
     }

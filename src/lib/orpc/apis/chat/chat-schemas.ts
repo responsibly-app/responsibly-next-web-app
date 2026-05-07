@@ -57,6 +57,7 @@ export const AddMessageInputSchema = z.object({
 const MessagePartSchema = z.object({
   type: z.string(),
   text: z.string().optional(),
+  filename: z.string().optional(),
 });
 
 const TitleMessageSchema = z.object({
@@ -76,6 +77,7 @@ export const GenerateTitleOutputSchema = z.object({
 export const TokenUsageOutputSchema = z.object({
   inputTokens: z.number(),
   outputTokens: z.number(),
+  totalTokens: z.number(),
   inputQuota: z.number(),
   outputQuota: z.number(),
   month: z.string(),

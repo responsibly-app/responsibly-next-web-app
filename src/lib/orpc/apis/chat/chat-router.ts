@@ -151,28 +151,34 @@ export const chatRouter = {
         .where(and(eq(chatThread.id, input.id), eq(chatThread.userId, context.session.user.id)));
       if (!thread) throw new ORPCError("NOT_FOUND");
 
-      const firstUserText =
-        input.messages
-          .find((m) => m.role === "user")
-          ?.content.filter((p) => p.type === "text")
-          .map((p) => p.text ?? "")
-          .join(" ") ?? "";
+      const firstUserMessage = input.messages.find((m) => m.role === "user");
+      const firstUserText = firstUserMessage?.content
+        .filter((p) => p.type === "text")
+        .map((p) => p.text ?? "")
+        .join(" ") ?? "";
+      const firstFilename = firstUserMessage?.content
+        .find((p) => p.type !== "text" && p.filename)
+        ?.filename;
 
-      if (!firstUserText) return { title: "New Chat" };
+      if (!firstUserText && !firstFilename) return { title: "New Chat" };
 
-      const { text: title } = await generateText({
-        model: titleGenerationModel,
-        prompt: `Generate a short title (max 6 words, no punctuation at end) for a conversation starting with: "${firstUserText.slice(0, 300)}"`,
-      });
-
-      const trimmedTitle = title.trim();
+      let title: string;
+      if (firstUserText) {
+        const { text } = await generateText({
+          model: titleGenerationModel,
+          prompt: `Generate a short title (max 6 words, no punctuation at end) for a conversation starting with: "${firstUserText.slice(0, 300)}"`,
+        });
+        title = text.trim();
+      } else {
+        title = `File: ${firstFilename}`;
+      }
 
       await db
         .update(chatThread)
-        .set({ title: trimmedTitle, updatedAt: new Date() })
+        .set({ title, updatedAt: new Date() })
         .where(eq(chatThread.id, input.id));
 
-      return { title: trimmedTitle };
+      return { title };
     }),
 
   getTokenUsage: authed
@@ -185,9 +191,13 @@ export const chatRouter = {
         .from(chatTokenUsage)
         .where(and(eq(chatTokenUsage.userId, context.session.user.id), eq(chatTokenUsage.month, month)));
 
+      const inputTokens = usage?.inputTokens ?? 0;
+      const outputTokens = usage?.outputTokens ?? 0;
+
       return {
-        inputTokens: usage?.inputTokens ?? 0,
-        outputTokens: usage?.outputTokens ?? 0,
+        inputTokens,
+        outputTokens,
+        totalTokens: inputTokens + outputTokens,
         inputQuota: INPUT_TOKEN_QUOTA,
         outputQuota: OUTPUT_TOKEN_QUOTA,
         month,

@@ -9,3 +9,15 @@ export const UploadAvatarOutputSchema = z.object({
 });
 
 export const DeleteAvatarInputSchema = z.object({});
+
+export const UploadChatAttachmentInputSchema = z.object({
+    file: z.instanceof(Blob),
+});
+
+export const UploadChatAttachmentOutputSchema = z.object({
+    publicUrl: z.string(),
+});
+
+export const DeleteChatAttachmentInputSchema = z.object({
+    publicUrl: z.string(),
+});

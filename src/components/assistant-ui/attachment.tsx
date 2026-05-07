@@ -1,6 +1,7 @@
 "use client";
 
 import { type PropsWithChildren, useEffect, useState, type FC } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { XIcon, PlusIcon, FileText } from "lucide-react";
 import {
   AttachmentPrimitive,
@@ -24,6 +25,30 @@ import {
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { TooltipIconButton } from "@/components/assistant-ui/tooltip-icon-button";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/supabase/client";
+
+const CHAT_ATTACH_PREFIX = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/chat-attachments/`;
+const SIGNED_URL_TTL_S = 3600;
+
+const useSignedAttachmentUrl = (publicUrl: string | undefined): string | undefined => {
+  const isChatAttachment = publicUrl?.startsWith(CHAT_ATTACH_PREFIX) ?? false;
+
+  const { data } = useQuery({
+    queryKey: ["signed-attachment-url", publicUrl],
+    enabled: isChatAttachment,
+    staleTime: (SIGNED_URL_TTL_S - 60) * 1000,
+    gcTime: SIGNED_URL_TTL_S * 1000,
+    queryFn: async () => {
+      const path = publicUrl!.slice(CHAT_ATTACH_PREFIX.length);
+      const { data } = await supabase.storage
+        .from("chat-attachments")
+        .createSignedUrl(path, SIGNED_URL_TTL_S);
+      return data?.signedUrl ?? publicUrl!;
+    },
+  });
+
+  return data;
+};
 
 const useFileSrc = (file: File | undefined) => {
   const [src, setSrc] = useState<string | undefined>(undefined);
@@ -57,7 +82,10 @@ const useAttachmentSrc = () => {
     }),
   );
 
-  return useFileSrc(file) ?? src;
+  const fileSrc = useFileSrc(file);
+  const signedSrc = useSignedAttachmentUrl(src);
+
+  return fileSrc ?? signedSrc;
 };
 
 type AttachmentPreviewProps = {
@@ -81,9 +109,9 @@ const AttachmentPreview: FC<AttachmentPreviewProps> = ({ src }) => {
   );
 };
 
-const AttachmentPreviewDialog: FC<PropsWithChildren> = ({ children }) => {
-  const src = useAttachmentSrc();
+type AttachmentPreviewDialogProps = PropsWithChildren<{ src?: string }>;
 
+const AttachmentPreviewDialog: FC<AttachmentPreviewDialogProps> = ({ src, children }) => {
   if (!src) return children;
 
   return (
@@ -106,9 +134,9 @@ const AttachmentPreviewDialog: FC<PropsWithChildren> = ({ children }) => {
   );
 };
 
-const AttachmentThumb: FC = () => {
-  const src = useAttachmentSrc();
+type AttachmentThumbProps = { src?: string };
 
+const AttachmentThumb: FC<AttachmentThumbProps> = ({ src }) => {
   return (
     <Avatar className="aui-attachment-tile-avatar h-full w-full rounded-none">
       <AvatarImage
@@ -126,6 +154,7 @@ const AttachmentThumb: FC = () => {
 const AttachmentUI: FC = () => {
   const aui = useAui();
   const isComposer = aui.attachment.source !== "message";
+  const src = useAttachmentSrc();
 
   const isImage = useAuiState((s) => s.attachment.type === "image");
   const typeLabel = useAuiState((s) => {
@@ -150,7 +179,7 @@ const AttachmentUI: FC = () => {
           isImage && "aui-attachment-root-composer only:*:first:size-24",
         )}
       >
-        <AttachmentPreviewDialog>
+        <AttachmentPreviewDialog src={src}>
           <TooltipTrigger asChild>
             <div
               className="aui-attachment-tile size-14 cursor-pointer overflow-hidden rounded-[calc(var(--composer-radius)-var(--composer-padding))] border bg-muted transition-opacity hover:opacity-75"
@@ -158,7 +187,7 @@ const AttachmentUI: FC = () => {
               tabIndex={0}
               aria-label={`${typeLabel} attachment`}
             >
-              <AttachmentThumb />
+              <AttachmentThumb src={src} />
             </div>
           </TooltipTrigger>
         </AttachmentPreviewDialog>

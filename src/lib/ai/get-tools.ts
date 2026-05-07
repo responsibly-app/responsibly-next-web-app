@@ -4,7 +4,11 @@ import { createAgentTools } from "./ai-tools/agent-tools";
 import { createUITools } from "./ai-tools/ui-tool";
 import { discoverToolNames } from "./ai-tools/tool-discovery";
 
-const ALWAYS_INCLUDE = ["ask_question_flow", "request_approval"];
+const ALWAYS_INCLUDE = [
+  "ask_question_flow",
+  "request_approval",
+  // "show_plan"
+];
 
 export async function getTools(session: Session, messages: UIMessage[]): Promise<ToolSet> {
   const toolSelectionQuery = messages

@@ -4,6 +4,7 @@ import { showDataTableTool } from "@/components/assistant-ui/tools/data-table/sh
 import { askQuestionFlowTool } from "@/components/assistant-ui/tools/question-flow/ask-question-flow.server";
 import { previewLinkTool } from "@/components/assistant-ui/tools/link/preview-link.server";
 import { getWeatherTool } from "@/components/assistant-ui/tools/weather/get-weather.server";
+import { showPlanTool } from "@/components/assistant-ui/tools/plan/plan.server";
 
 export function createUITools() {
     return {
@@ -13,5 +14,6 @@ export function createUITools() {
         ask_question_flow: askQuestionFlowTool,
         preview_link: previewLinkTool,
         get_weather: getWeatherTool,
+        // show_plan: showPlanTool,
     };
 }

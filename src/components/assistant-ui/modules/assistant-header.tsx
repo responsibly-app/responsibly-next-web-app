@@ -9,6 +9,8 @@ import Link from "next/link";
 import { useEffect, useRef } from "react";
 import { routes } from "@/routes";
 import { Separator } from "@/components/ui/separator";
+import { HeaderUserDropdown, NavUserType } from "./header-user";
+import { authClient } from "@/lib/auth/auth-client";
 import { ContextDisplay } from "../context-display";
 
 interface TokenUsageData {
@@ -100,9 +102,17 @@ function CircularUsage({ used, quota, label }: { used: number; quota: number; la
 export function AssistantHeader() {
   const { data: usage } = useTokenUsage();
   useInvalidateUsageOnRunEnd();
+  const { data: session, isPending } = authClient.useSession();
+
+  const user: NavUserType = {
+    id: session?.user.id ?? "",
+    name: session?.user.name ?? "",
+    email: session?.user.email ?? "",
+    avatar: session?.user.image ?? "avatar",
+  };
 
   return (
-    <header className="bg-background/60 sticky top-0 z-10 flex h-14 shrink-0 items-center justify-between gap-2 border-b px-4 backdrop-blur-md">
+    <header className="bg-background/60 sticky top-0 z-10 flex h-12 shrink-0 items-center justify-between gap-2 border-b px-4 backdrop-blur-md lg:px-6">
       <div className="flex items-center gap-2">
         <SidebarTrigger />
         <Separator
@@ -111,16 +121,18 @@ export function AssistantHeader() {
         />
         <Link href={routes.dashboard.root()}>Dashboard</Link>
       </div>
-      {usage && (
-        <div className="flex items-center gap-3">
-          <CircularUsage used={usage.inputTokens} quota={usage.inputQuota} label="In" />
-          <CircularUsage used={usage.outputTokens} quota={usage.outputQuota} label="Out" />
-          {/* <div className="flex items-center justify-end px-3 py-1.5">
-            <ContextDisplay.Ring modelContextWindow={128000} />
-          </div> */}
+      <div className="flex items-center gap-4">
+        {usage && (
+          <div className="flex items-center gap-3">
+            <CircularUsage used={usage.inputTokens} quota={usage.inputQuota} label="In" />
+            <CircularUsage used={usage.outputTokens} quota={usage.outputQuota} label="Out" />
+          </div>
+        )}
+        <div>
+          <HeaderUserDropdown user={user} isPending={isPending} />
         </div>
+      </div>
 
-      )}
     </header>
   );
 }
