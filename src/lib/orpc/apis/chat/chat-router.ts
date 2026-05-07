@@ -156,28 +156,29 @@ export const chatRouter = {
         .filter((p) => p.type === "text")
         .map((p) => p.text ?? "")
         .join(" ") ?? "";
+      const firstFilename = firstUserMessage?.content
+        .find((p) => p.type !== "text" && p.filename)
+        ?.filename;
 
-      if (!firstUserText) {
-        const firstFilename = firstUserMessage?.content
-          .find((p) => p.type !== "text" && p.filename)
-          ?.filename;
-        const title = firstFilename ? `File: ${firstFilename}` : "New Chat";
-        return { title };
+      if (!firstUserText && !firstFilename) return { title: "New Chat" };
+
+      let title: string;
+      if (firstUserText) {
+        const { text } = await generateText({
+          model: titleGenerationModel,
+          prompt: `Generate a short title (max 6 words, no punctuation at end) for a conversation starting with: "${firstUserText.slice(0, 300)}"`,
+        });
+        title = text.trim();
+      } else {
+        title = `File: ${firstFilename}`;
       }
-
-      const { text: title } = await generateText({
-        model: titleGenerationModel,
-        prompt: `Generate a short title (max 6 words, no punctuation at end) for a conversation starting with: "${firstUserText.slice(0, 300)}"`,
-      });
-
-      const trimmedTitle = title.trim();
 
       await db
         .update(chatThread)
-        .set({ title: trimmedTitle, updatedAt: new Date() })
+        .set({ title, updatedAt: new Date() })
         .where(eq(chatThread.id, input.id));
 
-      return { title: trimmedTitle };
+      return { title };
     }),
 
   getTokenUsage: authed
