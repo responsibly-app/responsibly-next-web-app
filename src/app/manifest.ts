@@ -1,10 +1,12 @@
 import type { MetadataRoute } from 'next'
-import { logoPath } from "@/config";
+import { logoPath, ENVIRONMENT } from "@/config";
+
+const suffix = ENVIRONMENT === 'dev' ? ' Dev' : ''
 
 export default function manifest(): MetadataRoute.Manifest {
     return {
-        name: 'Responsibly',
-        short_name: 'Responsibly',
+        name: `Responsibly${suffix}`,
+        short_name: `Responsibly${suffix}`,
         description: 'A Progressive Web App built with Next.js',
         start_url: '/',
         display: 'standalone',
