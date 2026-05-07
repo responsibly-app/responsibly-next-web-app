@@ -60,7 +60,7 @@ const nextConfig: NextConfig = {
               "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
 
               // External scripts (CDNs)
-              "script-src-elem 'self' 'unsafe-inline' https://static.cloudflareinsights.com https://cdn.jsdelivr.net",
+              "script-src-elem 'self' 'unsafe-inline' https://static.cloudflareinsights.com https://cdn.jsdelivr.net https://vercel.live",
 
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: blob: https:",
