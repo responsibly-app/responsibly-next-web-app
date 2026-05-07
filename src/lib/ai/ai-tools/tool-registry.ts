@@ -9,6 +9,7 @@ import { meta as showDataTable } from "@/components/assistant-ui/tools/data-tabl
 import { meta as askQuestionFlow } from "@/components/assistant-ui/tools/question-flow/ask-question-flow.server";
 import { meta as previewLink } from "@/components/assistant-ui/tools/link/preview-link.server";
 import { meta as getWeather } from "@/components/assistant-ui/tools/weather/get-weather.server";
+import { meta as showPlan } from "@/components/assistant-ui/tools/plan/plan.server";
 
 export interface ToolMeta {
   name: string;
@@ -32,6 +33,7 @@ export const uiToolMeta = [
   askQuestionFlow,
   previewLink,
   getWeather,
+  // showPlan,
 ] satisfies ToolMeta[];
 
 export const allToolMeta: ToolMeta[] = [...agentToolMeta, ...uiToolMeta];
