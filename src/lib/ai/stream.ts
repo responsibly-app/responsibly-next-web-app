@@ -96,12 +96,12 @@ export async function createChatStream(session: Session, messages: UIMessage[]) 
 
       const ragSources = ragChunks.length > 0
         ? Object.values(
-          ragChunks.reduce<Record<string, { path: string; topic: string; content: string }>>(
+          ragChunks.reduce<Record<string, { path: string; topic: string; chunkIds: string[] }>>(
             (acc, c) => {
               if (acc[c.source_path]) {
-                acc[c.source_path].content += "\n\n -------- next chunk ---------- \n\n" + c.content;
+                acc[c.source_path].chunkIds.push(c.id);
               } else {
-                acc[c.source_path] = { path: c.source_path, topic: c.topic, content: c.content };
+                acc[c.source_path] = { path: c.source_path, topic: c.topic, chunkIds: [c.id] };
               }
               return acc;
             },
