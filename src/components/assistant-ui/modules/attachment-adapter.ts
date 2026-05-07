@@ -6,6 +6,7 @@ import { mimeTypeToAttachmentType } from "@/lib/utils/image";
 import { toast } from "sonner";
 
 export const CHAT_ATTACHMENT_ACCEPT = "image/jpeg,image/png,image/gif,image/webp,text/plain,text/markdown,text/csv,application/pdf";
+export const CHAT_ATTACHMENT_MAX = 5;
 
 export class SupabaseChatAttachmentAdapter implements AttachmentAdapter {
   accept = CHAT_ATTACHMENT_ACCEPT;
@@ -18,6 +19,13 @@ export class SupabaseChatAttachmentAdapter implements AttachmentAdapter {
   private activeFileKeys = new Map<string, string>();
 
   async *add({ file }: { file: File }): AsyncGenerator<PendingAttachment, void> {
+    if (this.activeFileKeys.size >= CHAT_ATTACHMENT_MAX) {
+      toast.error("Attachment limit reached", {
+        description: `You can attach a maximum of ${CHAT_ATTACHMENT_MAX} files per message.`,
+      });
+      return;
+    }
+
     const fileKey = `${file.name}:${file.size}`;
     if ([...this.activeFileKeys.values()].includes(fileKey)) {
       toast.error("Already attached", {
