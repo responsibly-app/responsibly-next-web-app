@@ -1,19 +1,27 @@
-import { showChartTool } from "@/components/assistant-ui/tools/chart/show-chart.server";
-import { requestApprovalTool } from "@/components/assistant-ui/tools/approval-card/request-approval.server";
-import { showDataTableTool } from "@/components/assistant-ui/tools/data-table/show-data-table.server";
-import { askQuestionFlowTool } from "@/components/assistant-ui/tools/question-flow/ask-question-flow.server";
-import { previewLinkTool } from "@/components/assistant-ui/tools/link/preview-link.server";
-import { getWeatherTool } from "@/components/assistant-ui/tools/weather/get-weather.server";
-import { showPlanTool } from "@/components/assistant-ui/tools/plan/plan.server";
+import { showChart } from "@/components/assistant-ui/tools/chart/show-chart.server";
+import { requestApproval } from "@/components/assistant-ui/tools/approval-card/request-approval.server";
+import { showDataTable } from "@/components/assistant-ui/tools/data-table/show-data-table.server";
+import { askQuestionFlow } from "@/components/assistant-ui/tools/question-flow/ask-question-flow.server";
+import { previewLink } from "@/components/assistant-ui/tools/link/preview-link.server";
+import { getWeather } from "@/components/assistant-ui/tools/weather/get-weather.server";
+// import { showPlan } from "@/components/assistant-ui/tools/plan/plan.server";
 
-export function createUITools() {
-    return {
-        show_chart: showChartTool,
-        request_approval: requestApprovalTool,
-        show_data_table: showDataTableTool,
-        ask_question_flow: askQuestionFlowTool,
-        preview_link: previewLinkTool,
-        get_weather: getWeatherTool,
-        // show_plan: showPlanTool,
-    };
+const uiToolDefs = [
+  showChart,
+  requestApproval,
+  showDataTable,
+  askQuestionFlow,
+  previewLink,
+  getWeather,
+  // showPlan,
+] as const;
+
+export const uiToolMeta = uiToolDefs.map((t) => t.meta);
+
+type UITools = {
+  [T in (typeof uiToolDefs)[number] as T["meta"]["name"]]: T["tool"];
+};
+
+export function createUITools(): UITools {
+  return Object.fromEntries(uiToolDefs.map((t) => [t.meta.name, t.tool])) as UITools;
 }

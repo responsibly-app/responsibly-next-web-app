@@ -1,18 +1,54 @@
 import type { Session } from "@/lib/orpc/context";
-import { getMyPoints } from "./tools/get-my-points";
-import { getOrgLeaderboard } from "./tools/get-org-leaderboard";
-import { listEventsForOrg } from "./tools/list-events-for-org";
-import { listMyOrganizations } from "./tools/list-my-organizations";
-import { listUpcomingEvents } from "./tools/list-upcoming-events";
+import { createServerCaller } from "@/lib/orpc/server-caller";
+import { getMyProfile, listMyOrganizations } from "./tools/profile-tools";
+import {
+  listUpcomingEvents,
+  listEventsForOrg,
+  getEvent,
+  createEvent,
+  deleteEvent,
+  getEventAttendance,
+  getEventAttendanceLeaderboard,
+  rsvpEvent,
+} from "./tools/event-tools";
+import { getMyPoints, getOrgLeaderboard, addPoint } from "./tools/points-tools";
+import { getMyAmas, addAma } from "./tools/ama-tools";
+import { getInviteHistory, logInvites } from "./tools/invite-tools";
 
-export function createAgentTools(session: Session) {
-  const userId = session.user.id;
+const toolDefs = [
+  // Profile
+  getMyProfile,
+  listMyOrganizations,
+  // Events
+  listUpcomingEvents,
+  listEventsForOrg,
+  getEvent,
+  createEvent,
+  deleteEvent,
+  getEventAttendance,
+  getEventAttendanceLeaderboard,
+  rsvpEvent,
+  // Points
+  getMyPoints,
+  getOrgLeaderboard,
+  addPoint,
+  // AMAs
+  getMyAmas,
+  addAma,
+  // Invites
+  getInviteHistory,
+  logInvites,
+] as const;
 
-  return {
-    list_my_organizations: listMyOrganizations(userId),
-    list_upcoming_events: listUpcomingEvents(userId),
-    list_events_for_org: listEventsForOrg(userId),
-    get_my_points: getMyPoints(userId),
-    get_org_leaderboard: getOrgLeaderboard(userId),
-  };
+export const agentToolMeta = toolDefs.map((t) => t.meta);
+
+type AgentTools = {
+  [T in (typeof toolDefs)[number] as T["meta"]["name"]]: ReturnType<T["create"]>;
+};
+
+export function createAgentTools(session: Session): AgentTools {
+  const caller = createServerCaller(session);
+  return Object.fromEntries(
+    toolDefs.map((t) => [t.meta.name, t.create(caller)]),
+  ) as AgentTools;
 }

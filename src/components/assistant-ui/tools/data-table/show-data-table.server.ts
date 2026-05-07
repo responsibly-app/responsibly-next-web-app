@@ -77,7 +77,7 @@ const columnSchema = z.object({
 
 const JsonPrimitive = z.union([z.string(), z.number(), z.boolean(), z.null()]);
 
-export const meta = {
+const meta = {
   name: "show_data_table",
   description:
     "Render a data table with rows and typed columns. Use for any structured list or comparison the user asks to see in tabular form.",
@@ -85,23 +85,26 @@ export const meta = {
     "Display a structured table of rows and columns with typed formatting. Use when the user asks to see a list, table, grid, spreadsheet-style view, or any collection of records with multiple fields — such as events, users, transactions, or leaderboard entries.",
 } as const;
 
-export const showDataTableTool = tool({
-  description: meta.description,
-  inputSchema: zodSchema(
-    z.object({
-      columns: z.array(columnSchema),
-      data: z.array(z.record(z.string(), z.union([JsonPrimitive, z.array(JsonPrimitive)]))),
-      rowIdKey: z.string().optional(),
-      defaultSort: z
-        .object({
-          by: z.string().optional(),
-          direction: z.enum(["asc", "desc"]).optional(),
-        })
-        .optional(),
-      emptyMessage: z.string().optional(),
-      maxHeight: z.string().optional(),
-      locale: z.string().optional(),
-    }),
-  ),
-  execute: async (args) => ({ id: `table-${Date.now()}`, ...args }),
-});
+export const showDataTable = {
+  meta,
+  tool: tool({
+    description: meta.description,
+    inputSchema: zodSchema(
+      z.object({
+        columns: z.array(columnSchema),
+        data: z.array(z.record(z.string(), z.union([JsonPrimitive, z.array(JsonPrimitive)]))),
+        rowIdKey: z.string().optional(),
+        defaultSort: z
+          .object({
+            by: z.string().optional(),
+            direction: z.enum(["asc", "desc"]).optional(),
+          })
+          .optional(),
+        emptyMessage: z.string().optional(),
+        maxHeight: z.string().optional(),
+        locale: z.string().optional(),
+      }),
+    ),
+    execute: async (args) => ({ id: `table-${Date.now()}`, ...args }),
+  }),
+};
