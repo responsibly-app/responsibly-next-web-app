@@ -138,7 +138,7 @@ export const ThreadLoading: FC = () => {
       <div className="flex flex-col items-center gap-4 px-8 py-6">
 
         <div className="relative">
-          <Loader2Icon className="size-8 animate-spin text-primary" />
+          <Loader2Icon className="size-8 animate-spin text-muted-foreground" />
           <div className="absolute inset-0 rounded-full" />
         </div>
 
