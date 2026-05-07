@@ -51,12 +51,21 @@ import {
   RefreshCwIcon,
   SquareIcon,
 } from "lucide-react";
-import { type FC, type ReactNode, Component } from "react";
+import { type FC, type ReactNode, Component, useCallback } from "react";
 import { authClient } from "@/lib/auth/auth-client";
+import { CHAT_ATTACHMENT_ACCEPT } from "@/components/assistant-ui/modules/attachment-adapter";
+import { toast } from "sonner";
 // import "@assistant-ui/react-markdown/styles/dot.css";
 import { ComposerQuotePreview, QuoteBlock, SelectionToolbar } from "@/components/assistant-ui/quote";
 
 const ENABLE_QUOTE_CONTEXT = false; // set to false to disable quote context injection and rendering
+
+function isFileTypeAccepted(mimeType: string): boolean {
+  return CHAT_ATTACHMENT_ACCEPT.split(",").some((accepted) => {
+    const t = accepted.trim();
+    return t.endsWith("/*") ? mimeType.startsWith(t.slice(0, -1)) : mimeType === t;
+  });
+}
 
 export const Thread: FC = () => {
   return (
@@ -197,6 +206,17 @@ const ThreadSuggestionItem: FC = () => {
 };
 
 const Composer: FC = () => {
+  const handlePaste = useCallback((e: React.ClipboardEvent) => {
+    const files = Array.from(e.clipboardData?.files ?? []);
+    if (files.length === 0) return;
+    const invalid = files.filter((f) => !isFileTypeAccepted(f.type));
+    if (invalid.length === 0) return;
+    toast.error("File format not supported", {
+      description: "Supported formats: JPEG, PNG, GIF, WebP, PDF, TXT, Markdown, CSV.",
+    });
+    if (invalid.length === files.length) e.preventDefault();
+  }, []);
+
   return (
     <ComposerPrimitive.Root className="aui-composer-root relative flex w-full flex-col">
       {ENABLE_QUOTE_CONTEXT && <ComposerQuotePreview />}
@@ -212,6 +232,7 @@ const Composer: FC = () => {
             rows={1}
             autoFocus
             aria-label="Message input"
+            onPaste={handlePaste}
           />
           <ComposerAction />
         </div>

@@ -25,6 +25,7 @@ import docIcon from "@/images/file-icons/doc.svg";
 import txtIcon from "@/images/file-icons/txt.svg";
 import jsonIcon from "@/images/file-icons/json.svg";
 import { fetchChunksForSource } from "@/supabase/utils/knowledge";
+// https://www.untitledui.com/resources/file-icons
 
 const extractDomain = (url: string): string => {
   try {
