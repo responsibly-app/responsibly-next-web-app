@@ -57,6 +57,7 @@ export const AddMessageInputSchema = z.object({
 const MessagePartSchema = z.object({
   type: z.string(),
   text: z.string().optional(),
+  filename: z.string().optional(),
 });
 
 const TitleMessageSchema = z.object({

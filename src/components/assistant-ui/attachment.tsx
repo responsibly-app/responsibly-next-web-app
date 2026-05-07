@@ -24,6 +24,38 @@ import {
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { TooltipIconButton } from "@/components/assistant-ui/tooltip-icon-button";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/supabase/client";
+
+const CHAT_ATTACH_PREFIX = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/chat-attachments/`;
+
+const useSignedAttachmentUrl = (publicUrl: string | undefined): string | undefined => {
+  const [signedUrl, setSignedUrl] = useState<string | undefined>(undefined);
+
+  useEffect(() => {
+    if (!publicUrl?.startsWith(CHAT_ATTACH_PREFIX)) {
+      setSignedUrl(undefined);
+      return;
+    }
+
+    let active = true;
+    const path = publicUrl.slice(CHAT_ATTACH_PREFIX.length);
+    supabase.storage
+      .from("chat-attachments")
+      .createSignedUrl(path, 3600)
+      .then(({ data }) => {
+        if (active) setSignedUrl(data?.signedUrl ?? publicUrl);
+      })
+      .catch(() => {
+        if (active) setSignedUrl(publicUrl);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [publicUrl]);
+
+  return signedUrl;
+};
 
 const useFileSrc = (file: File | undefined) => {
   const [src, setSrc] = useState<string | undefined>(undefined);
@@ -57,7 +89,10 @@ const useAttachmentSrc = () => {
     }),
   );
 
-  return useFileSrc(file) ?? src;
+  const fileSrc = useFileSrc(file);
+  const signedSrc = useSignedAttachmentUrl(src);
+
+  return fileSrc ?? signedSrc;
 };
 
 type AttachmentPreviewProps = {

@@ -12,7 +12,7 @@ import { buildSystemPrompt } from "./system-prompt";
 import { getRAGContext } from "./get-rag-context";
 import { getTools } from "./get-tools";
 import { trackUsage } from "./quota";
-import { deduplicateMessages, stripCallProviderMetadata } from "./message-utils";
+import { deduplicateMessages, stripCallProviderMetadata, withSignedAttachmentUrls } from "./message-utils";
 import { logLLMInput, logLLMStepOutput, logSelectedTools } from "./logger";
 
 const MAX_CONTEXT_MESSAGES = 30;
@@ -74,7 +74,9 @@ export async function createChatStream(session: Session, messages: UIMessage[]) 
       }
 
       const modelMessages = await convertToModelMessages(
-        stripCallProviderMetadata(deduplicateMessages(messages.slice(-MAX_CONTEXT_MESSAGES))),
+        await withSignedAttachmentUrls(
+          stripCallProviderMetadata(deduplicateMessages(messages.slice(-MAX_CONTEXT_MESSAGES))),
+        ),
       );
 
       logLLMInput(messages.length, modelMessages as Parameters<typeof logLLMInput>[1]);

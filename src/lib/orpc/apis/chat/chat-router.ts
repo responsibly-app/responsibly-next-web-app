@@ -151,14 +151,19 @@ export const chatRouter = {
         .where(and(eq(chatThread.id, input.id), eq(chatThread.userId, context.session.user.id)));
       if (!thread) throw new ORPCError("NOT_FOUND");
 
-      const firstUserText =
-        input.messages
-          .find((m) => m.role === "user")
-          ?.content.filter((p) => p.type === "text")
-          .map((p) => p.text ?? "")
-          .join(" ") ?? "";
+      const firstUserMessage = input.messages.find((m) => m.role === "user");
+      const firstUserText = firstUserMessage?.content
+        .filter((p) => p.type === "text")
+        .map((p) => p.text ?? "")
+        .join(" ") ?? "";
 
-      if (!firstUserText) return { title: "New Chat" };
+      if (!firstUserText) {
+        const firstFilename = firstUserMessage?.content
+          .find((p) => p.type !== "text" && p.filename)
+          ?.filename;
+        const title = firstFilename ? `File: ${firstFilename}` : "New Chat";
+        return { title };
+      }
 
       const { text: title } = await generateText({
         model: titleGenerationModel,

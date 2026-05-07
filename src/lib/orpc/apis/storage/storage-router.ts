@@ -2,7 +2,13 @@ import { ORPCError } from "@orpc/server";
 import { auth } from "@/lib/auth/auth";
 import { authed } from "@/lib/orpc/base";
 import { supabase } from "@/supabase/client";
-import { DeleteAvatarInputSchema, UploadAvatarInputSchema, UploadAvatarOutputSchema } from "./storage-schemas";
+import {
+    DeleteAvatarInputSchema,
+    UploadAvatarInputSchema,
+    UploadAvatarOutputSchema,
+    UploadChatAttachmentInputSchema,
+    UploadChatAttachmentOutputSchema,
+} from "./storage-schemas";
 
 export const storageRouter = {
     uploadAvatar: authed
@@ -29,6 +35,29 @@ export const storageRouter = {
             if (!status) throw new ORPCError("INTERNAL_SERVER_ERROR", { message: "Failed to update user image" });
 
             return { publicUrl };
+        }),
+
+    uploadChatAttachment: authed
+        .route({ method: "POST", path: "/storage/chat-attachment/upload", summary: "Upload chat attachment", tags: ["Storage"] })
+        .input(UploadChatAttachmentInputSchema)
+        .output(UploadChatAttachmentOutputSchema)
+        .handler(async ({ input, context }) => {
+            const { file } = input;
+            const userId = context.session.user.id;
+            const ext = (file as File).name?.includes(".")
+                ? (file as File).name.split(".").pop()
+                : "bin";
+            const path = `${userId}/${crypto.randomUUID()}.${ext}`;
+
+            const { error } = await supabase.storage.from("chat-attachments").upload(path, file, {
+                upsert: false,
+                contentType: file.type || "application/octet-stream",
+            });
+
+            if (error) throw new ORPCError("INTERNAL_SERVER_ERROR", { message: error.message });
+
+            const { data } = supabase.storage.from("chat-attachments").getPublicUrl(path);
+            return { publicUrl: data.publicUrl };
         }),
 
     deleteAvatar: authed
