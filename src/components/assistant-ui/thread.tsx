@@ -254,7 +254,7 @@ const AssistantMessage: FC = () => {
                 }
                 case "group-tool":
                   return (
-                    <ToolGroupRoot defaultOpen={true}>
+                    <ToolGroupRoot defaultOpen={true} variant="outline" className="mb-5">
                       <ToolGroupTrigger
                         count={part.indices.length}
                         active={part.status.type === "running"}
@@ -287,6 +287,21 @@ const AssistantMessage: FC = () => {
         <AssistantActionBar />
       </div>
     </MessagePrimitive.Root>
+  );
+};
+
+const MessageDate: FC = () => {
+  const createdAt = useAuiState((s) => s.message.createdAt);
+  if (!createdAt) return null;
+  const formatted = new Intl.DateTimeFormat(undefined, {
+    dateStyle: "medium",
+    timeStyle: "short",
+    timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+  }).format(createdAt);
+  return (
+    <div className="px-2 py-1.5 text-xs text-muted-foreground select-text">
+      {formatted}
+    </div>
   );
 };
 
@@ -326,6 +341,7 @@ const AssistantActionBar: FC = () => {
           align="start"
           className="aui-action-bar-more-content z-50 min-w-32 overflow-hidden rounded-md border bg-popover p-1 text-popover-foreground shadow-md"
         >
+          <MessageDate />
           <ActionBarPrimitive.ExportMarkdown asChild>
             <ActionBarMorePrimitive.Item className="aui-action-bar-more-item flex cursor-pointer select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground">
               <DownloadIcon className="size-4" />
