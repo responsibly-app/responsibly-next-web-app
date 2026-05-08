@@ -16,10 +16,6 @@ import { deduplicateMessages, stripCallProviderMetadata, withSignedAttachmentUrl
 import { logLLMInput, logLLMStepOutput, logSelectedTools } from "./logger";
 
 const MAX_CONTEXT_MESSAGES = 30;
-const MIN_THINKING_LENGTH = 5;
-const PERFORM_PLANNING = false;
-
-const PLANNING_SYSTEM = `You are a thoughtful planning assistant. Given a user request and the available tools, briefly think through how to best help them — what information to look up, what to compute, and in what order. Be natural and concise: 2–4 sentences, no headers or bullet points.`;
 
 export async function createChatStream(session: Session, messages: UIMessage[]) {
   const lastUserText =
@@ -39,40 +35,8 @@ export async function createChatStream(session: Session, messages: UIMessage[]) 
 
   logSelectedTools(Object.keys(tools));
 
-  const toolNames = Object.keys(tools);
-  const shouldThink =
-    PERFORM_PLANNING && toolNames.length > 0 && lastUserText.trim().length >= MIN_THINKING_LENGTH;
-
   const stream = createUIMessageStream({
     execute: async ({ writer }) => {
-      if (shouldThink) {
-        const reasoningId = "plan-0";
-        writer.write({ type: "reasoning-start", id: reasoningId });
-
-        const planStream = streamText({
-          model: chatModel,
-          system: PLANNING_SYSTEM,
-          messages: [
-            {
-              role: "user",
-              content: `User request: ${lastUserText}\n\nAvailable tools: ${toolNames.join(", ")}`,
-            },
-          ],
-          maxOutputTokens: 250,
-          onFinish: async ({ usage }) => {
-            await trackUsage(session.user.id, usage.inputTokens ?? 0, usage.outputTokens ?? 0);
-          },
-        });
-
-        for await (const chunk of planStream.fullStream) {
-          if (chunk.type === "text-delta") {
-            writer.write({ type: "reasoning-delta", id: reasoningId, delta: chunk.text });
-          }
-        }
-
-        writer.write({ type: "reasoning-end", id: reasoningId });
-      }
-
       const modelMessages = await convertToModelMessages(
         await withSignedAttachmentUrls(
           stripCallProviderMetadata(deduplicateMessages(messages.slice(-MAX_CONTEXT_MESSAGES))),
@@ -87,6 +51,9 @@ export async function createChatStream(session: Session, messages: UIMessage[]) 
         messages: modelMessages,
         tools,
         stopWhen: stepCountIs(15),
+        providerOptions: {
+          azure: { reasoningEffort: "low" },
+        },
         // onFinish: async ({ usage: tokenUsage }) => {
         //   await trackUsage(session.user.id, tokenUsage.inputTokens ?? 0, tokenUsage.outputTokens ?? 0);
         // },
