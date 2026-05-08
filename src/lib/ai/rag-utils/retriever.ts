@@ -1,5 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
-import { embedOne } from "./embedder";
+import { embedBatch, embedOne } from "./embedder";
 import type { RetrievedChunk } from "./types";
 
 const SIMILARITY_THRESHOLD = 0.3;
@@ -32,6 +32,37 @@ export async function retrieveChunks(
   }
 
   return (data ?? []) as RetrievedChunk[];
+}
+
+export async function retrieveChunksMultiQuery(
+  queries: string[],
+  metadataFilter: Record<string, unknown> = {}
+): Promise<RetrievedChunk[]> {
+  const supabase = supabaseClient();
+  const embeddings = await embedBatch(queries);
+
+  const results = await Promise.all(
+    embeddings.map((embedding) =>
+      supabase.rpc("match_chunks", {
+        query_embedding: embedding,
+        match_count: TOP_K,
+        match_threshold: SIMILARITY_THRESHOLD,
+        filter_metadata: metadataFilter,
+      })
+    )
+  );
+
+  const seen = new Set<string>();
+  const merged: RetrievedChunk[] = [];
+  for (const { data } of results) {
+    for (const chunk of (data ?? []) as RetrievedChunk[]) {
+      if (!seen.has(chunk.id)) {
+        seen.add(chunk.id);
+        merged.push(chunk);
+      }
+    }
+  }
+  return merged;
 }
 
 export function buildContextBlock(chunks: RetrievedChunk[]): string {
