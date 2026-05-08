@@ -3,17 +3,46 @@
 import type { AttachmentAdapter, Attachment, PendingAttachment, CompleteAttachment } from "@assistant-ui/react";
 import { orpc } from "@/lib/orpc/orpc-client";
 import { mimeTypeToAttachmentType } from "@/lib/utils/image";
+import { toast } from "sonner";
+
+export const CHAT_ATTACHMENT_ACCEPT = "image/jpeg,image/png,image/gif,image/webp,text/plain,text/markdown,text/csv,application/pdf";
+export const CHAT_ATTACHMENT_MAX = 5;
+
+export function isFileTypeAccepted(mimeType: string): boolean {
+  return CHAT_ATTACHMENT_ACCEPT.split(",").some((accepted) => {
+    const t = accepted.trim();
+    return t.endsWith("/*") ? mimeType.startsWith(t.slice(0, -1)) : mimeType === t;
+  });
+}
 
 export class SupabaseChatAttachmentAdapter implements AttachmentAdapter {
-  accept = "image/*,text/plain,text/markdown,text/csv,application/pdf";
+  accept = CHAT_ATTACHMENT_ACCEPT;
 
   // Uploaded URLs for attachments that finished uploading before send
   private uploadedUrls = new Map<string, string>();
   // Fallback: files that failed to pre-upload, retried on send
   private pendingFiles = new Map<string, File>();
+  // Tracks active attachment keys (name:size) to prevent duplicates
+  private activeFileKeys = new Map<string, string>();
 
   async *add({ file }: { file: File }): AsyncGenerator<PendingAttachment, void> {
+    if (this.activeFileKeys.size >= CHAT_ATTACHMENT_MAX) {
+      toast.error("Attachment limit reached", {
+        description: `You can attach a maximum of ${CHAT_ATTACHMENT_MAX} files per message.`,
+      });
+      return;
+    }
+
+    const fileKey = `${file.name}:${file.size}`;
+    if ([...this.activeFileKeys.values()].includes(fileKey)) {
+      toast.error("Already attached", {
+        description: `"${file.name}" is already in your attachments.`,
+      });
+      return;
+    }
+
     const id = crypto.randomUUID();
+    this.activeFileKeys.set(id, fileKey);
     const type = mimeTypeToAttachmentType(file.type);
     const base = { id, type, name: file.name, contentType: file.type, file };
 
@@ -30,11 +59,12 @@ export class SupabaseChatAttachmentAdapter implements AttachmentAdapter {
   }
 
   async remove(attachment: Attachment): Promise<void> {
+    this.activeFileKeys.delete(attachment.id);
     this.pendingFiles.delete(attachment.id);
     const publicUrl = this.uploadedUrls.get(attachment.id);
     if (publicUrl) {
       this.uploadedUrls.delete(attachment.id);
-      orpc.storage.deleteChatAttachment({ publicUrl }).catch(() => {});
+      orpc.storage.deleteChatAttachment({ publicUrl }).catch(() => { });
     }
   }
 

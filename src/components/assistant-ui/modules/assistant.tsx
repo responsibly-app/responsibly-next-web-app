@@ -18,7 +18,7 @@ import { DevToolsModal } from "@assistant-ui/react-devtools";
 import { useEffect, useRef } from "react";
 import { useRuntime } from "./runtime";
 import { toolkit } from "./toolkit";
-import { ThreadInitLoadingProvider } from "./thread-init-loading";
+import { ThreadInitLoadingProvider } from "./hooks/thread-init-loading";
 
 function ThreadUrlSync({ initialThreadId }: { initialThreadId?: string }) {
   const remoteId = useAuiState((s) => s.threadListItem.remoteId);
@@ -45,10 +45,10 @@ interface AssistantProps {
 
 export const Assistant = ({ initialThreadId }: AssistantProps = {}) => {
   const runtime = useRuntime({ initialThreadId });
-    const aui = useAui({
-      suggestions: Suggestions(["What's the weather?", "Show my top agents as a bar chart"]),
-      tools: Tools({ toolkit })
-    });
+  const aui = useAui({
+    suggestions: Suggestions(["What's the weather?", "Show my top agents as a bar chart"]),
+    tools: Tools({ toolkit })
+  });
 
   return (
     <AssistantRuntimeProvider runtime={runtime} aui={aui}>

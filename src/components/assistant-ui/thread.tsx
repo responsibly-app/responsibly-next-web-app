@@ -30,17 +30,11 @@ import {
   ComposerPrimitive,
   ErrorPrimitive,
   MessagePrimitive,
-  SuggestionPrimitive,
   ThreadPrimitive,
   useAuiState,
-  useVoiceControls,
-  useVoiceState,
 } from "@assistant-ui/react";
-import { Loader2Icon, LoaderIcon, MicIcon, PhoneIcon, PhoneOffIcon, Square } from "lucide-react";
-import { useThreadInitLoading } from "@/components/assistant-ui/modules/thread-init-loading";
+import { useThreadInitLoading } from "~/src/components/assistant-ui/modules/hooks/thread-init-loading";
 import {
-  ArrowDownIcon,
-  ArrowUpIcon,
   CheckIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
@@ -49,12 +43,15 @@ import {
   MoreHorizontalIcon,
   PencilIcon,
   RefreshCwIcon,
-  SquareIcon,
 } from "lucide-react";
-import { type FC, type ReactNode, Component } from "react";
-import { authClient } from "@/lib/auth/auth-client";
-// import "@assistant-ui/react-markdown/styles/dot.css";
+import { type FC, type ReactNode, Component, useCallback } from "react";
+import { isFileTypeAccepted } from "@/components/assistant-ui/modules/adapters/attachment-adapter";
+import { toast } from "sonner";
 import { ComposerQuotePreview, QuoteBlock, SelectionToolbar } from "@/components/assistant-ui/quote";
+import { ComposerDictationToggle, ComposerSendMessageAction, ComposerVoiceToggle } from "./modules/thread/composer-actions";
+import { ThreadLoadingSkeleton } from "./modules/thread/thread-loading";
+import { ThreadWelcome } from "./modules/thread/thread-welcome";
+import { ThinkingIndicator, ThreadScrollToBottom } from "./modules/thread/thread-utils";
 
 const ENABLE_QUOTE_CONTEXT = false; // set to false to disable quote context injection and rendering
 
@@ -112,91 +109,24 @@ const ThreadMessage: FC = () => {
   return <AssistantMessage />;
 };
 
-const ThreadScrollToBottom: FC = () => {
-  return (
-    <ThreadPrimitive.ScrollToBottom asChild>
-      <TooltipIconButton
-        tooltip="Scroll to bottom"
-        variant="outline"
-        className="aui-thread-scroll-to-bottom absolute -top-12 z-10 self-center rounded-full p-4 disabled:invisible border-border bg-card/50 hover:bg-accent/80 backdrop-blur-[2px] shadow-[0_2px_4px_rgba(0,0,0,0.1),0_4px_8px_rgba(0,0,0,0.08)]"
-      >
-        <ArrowDownIcon />
-      </TooltipIconButton>
-    </ThreadPrimitive.ScrollToBottom>
-  );
-};
-
 const ThreadEmptyContent: FC = () => {
   const isLoading = useThreadInitLoading();
-  if (isLoading) return <ThreadLoading />;
+  if (isLoading) return <ThreadLoadingSkeleton />;
   return <ThreadWelcome />;
 };
 
-export const ThreadLoading: FC = () => {
-  return (
-    <div className="flex h-full w-full items-center justify-center bg-background">
-      <div className="flex flex-col items-center gap-4 px-8 py-6">
-
-        <div className="relative">
-          <Loader2Icon className="size-8 animate-spin text-muted-foreground" />
-          <div className="absolute inset-0 rounded-full" />
-        </div>
-
-        <div className="flex flex-col items-center gap-1 text-center">
-          <p className="text-sm font-medium">Loading your chat</p>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-const ThreadWelcome: FC = () => {
-  const { data: session } = authClient.useSession();
-  const firstName = session?.user?.name?.split(" ")[0];
-  return (
-    <div className="aui-thread-welcome-root my-auto flex grow flex-col">
-      <div className="aui-thread-welcome-center flex w-full grow flex-col items-center justify-center">
-        <div className="aui-thread-welcome-message flex size-full flex-col justify-center px-4">
-          <h1 className="aui-thread-welcome-message-inner fade-in slide-in-from-bottom-1 animate-in fill-mode-both font-semibold text-2xl duration-200">
-            {firstName ? `Hello, ${firstName}!` : "Hello there!"}
-          </h1>
-          <p className="aui-thread-welcome-message-inner fade-in slide-in-from-bottom-1 animate-in fill-mode-both text-muted-foreground text-xl delay-75 duration-200">
-            How can I help you today?
-          </p>
-        </div>
-      </div>
-      <ThreadSuggestions />
-    </div>
-  );
-};
-
-const ThreadSuggestions: FC = () => {
-  return (
-    <div className="aui-thread-welcome-suggestions grid w-full @md:grid-cols-2 gap-2 pb-4">
-      <ThreadPrimitive.Suggestions>
-        {() => <ThreadSuggestionItem />}
-      </ThreadPrimitive.Suggestions>
-    </div>
-  );
-};
-
-const ThreadSuggestionItem: FC = () => {
-  return (
-    <div className="aui-thread-welcome-suggestion-display fade-in slide-in-from-bottom-2 @md:nth-[n+3]:block nth-[n+3]:hidden animate-in fill-mode-both duration-200">
-      <SuggestionPrimitive.Trigger send asChild>
-        <Button
-          variant="ghost"
-          className="aui-thread-welcome-suggestion h-auto w-full @md:flex-col flex-wrap items-start justify-start gap-1 rounded-3xl border border-border bg-background px-4 py-3 text-start text-sm transition-colors hover:bg-muted"
-        >
-          <SuggestionPrimitive.Title className="aui-thread-welcome-suggestion-text-1 font-medium" />
-          <SuggestionPrimitive.Description className="aui-thread-welcome-suggestion-text-2 text-muted-foreground empty:hidden" />
-        </Button>
-      </SuggestionPrimitive.Trigger>
-    </div>
-  );
-};
-
 const Composer: FC = () => {
+  const handlePaste = useCallback((e: React.ClipboardEvent) => {
+    const files = Array.from(e.clipboardData?.files ?? []);
+    if (files.length === 0) return;
+    const invalid = files.filter((f) => !isFileTypeAccepted(f.type));
+    if (invalid.length === 0) return;
+    toast.error("File format not supported", {
+      description: "Supported formats: JPEG, PNG, GIF, WebP, PDF, TXT, Markdown, CSV.",
+    });
+    if (invalid.length === files.length) e.preventDefault();
+  }, []);
+
   return (
     <ComposerPrimitive.Root className="aui-composer-root relative flex w-full flex-col">
       {ENABLE_QUOTE_CONTEXT && <ComposerQuotePreview />}
@@ -212,6 +142,7 @@ const Composer: FC = () => {
             rows={1}
             autoFocus
             aria-label="Message input"
+            onPaste={handlePaste}
           />
           <ComposerAction />
         </div>
@@ -219,62 +150,6 @@ const Composer: FC = () => {
     </ComposerPrimitive.Root>
   );
 };
-
-function ComposerVoiceToggle() {
-  const voiceState = useVoiceState();
-  const { connect, disconnect } = useVoiceControls();
-  const isActive =
-    voiceState?.status.type === "running" ||
-    voiceState?.status.type === "starting";
-
-  return (
-    <AuiIf condition={(s) => s.thread.capabilities.voice}>
-      <button
-        type="button"
-        onClick={() => (isActive ? disconnect() : connect())}
-        aria-label={isActive ? "End voice" : "Start voice"}
-      >
-        {isActive ? <PhoneOffIcon className="size-5" /> : <PhoneIcon className="size-5" />}
-      </button>
-    </AuiIf>
-  );
-}
-
-function ComposerDictationToggle() {
-  return (
-    <div>
-      {/* Dictation Button - Show when NOT dictating */}
-      <ComposerPrimitive.If dictation={false}>
-        <ComposerPrimitive.Dictate asChild>
-          <TooltipIconButton
-            tooltip="Voice input"
-            side="top"
-            variant="ghost"
-            className="aui-composer-dictate size-8 rounded-full p-1"
-            aria-label="Start voice input"
-          >
-            <MicIcon className="size-5" />
-          </TooltipIconButton>
-        </ComposerPrimitive.Dictate>
-      </ComposerPrimitive.If>
-
-      {/* Stop Dictation Button - Show when dictating */}
-      <ComposerPrimitive.If dictation>
-        <ComposerPrimitive.StopDictation asChild>
-          <TooltipIconButton
-            tooltip="Stop dictation"
-            side="top"
-            variant="default"
-            className="aui-composer-stop-dictation size-8 rounded-full p-1"
-            aria-label="Stop voice input"
-          >
-            <Square className="size-4 animate-pulse fill-current" />
-          </TooltipIconButton>
-        </ComposerPrimitive.StopDictation>
-      </ComposerPrimitive.If>
-    </div>
-  );
-}
 
 const ComposerAction: FC = () => {
   return (
@@ -287,34 +162,7 @@ const ComposerAction: FC = () => {
         <ComposerVoiceToggle />
       </div>
 
-      <AuiIf condition={(s) => !s.thread.isRunning}>
-        <ComposerPrimitive.Send asChild>
-          <TooltipIconButton
-            tooltip="Send message"
-            side="bottom"
-            type="button"
-            variant="default"
-            size="icon"
-            className="aui-composer-send size-8 rounded-full"
-            aria-label="Send message"
-          >
-            <ArrowUpIcon className="aui-composer-send-icon size-4" />
-          </TooltipIconButton>
-        </ComposerPrimitive.Send>
-      </AuiIf>
-      <AuiIf condition={(s) => s.thread.isRunning}>
-        <ComposerPrimitive.Cancel asChild>
-          <Button
-            type="button"
-            variant="default"
-            size="icon"
-            className="aui-composer-cancel size-8 rounded-full"
-            aria-label="Stop generating"
-          >
-            <SquareIcon className="aui-composer-cancel-icon size-3 fill-current" />
-          </Button>
-        </ComposerPrimitive.Cancel>
-      </AuiIf>
+      <ComposerSendMessageAction />
     </div>
   );
 };
@@ -328,17 +176,6 @@ const MessageError: FC = () => {
     </MessagePrimitive.Error>
   );
 };
-
-const ThinkingIndicator: FC = () => {
-  return (
-    <AuiIf condition={(s) => s.thread.isRunning && s.message.content.length === 0}>
-      <div className="flex items-center gap-2 text-muted-foreground">
-        <LoaderIcon className="size-4 animate-spin" />
-        <span className="text-sm">Thinking...</span>
-      </div>
-    </AuiIf>
-  );
-}
 
 class MessagePartErrorBoundary extends Component<
   { children: ReactNode },

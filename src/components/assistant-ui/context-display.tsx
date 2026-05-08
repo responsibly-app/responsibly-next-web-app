@@ -18,7 +18,7 @@ import {
 import {
   useThreadTotalTokenUsage,
   type ThreadTokenUsage,
-} from "@/components/assistant-ui/modules/use-thread-token-usage";
+} from "~/src/components/assistant-ui/modules/hooks/use-thread-token-usage";
 
 const formatTokenCount = (tokens: number): string => {
   if (tokens >= 1_000_000) return `${(tokens / 1_000_000).toFixed(1)}M`;
