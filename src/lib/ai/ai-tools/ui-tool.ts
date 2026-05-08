@@ -4,9 +4,11 @@ import { showDataTable } from "@/components/assistant-ui/tools/data-table/show-d
 import { askQuestionFlow } from "@/components/assistant-ui/tools/question-flow/ask-question-flow.server";
 import { previewLink } from "@/components/assistant-ui/tools/link/preview-link.server";
 import { getWeather } from "@/components/assistant-ui/tools/weather/get-weather.server";
+import { generateFile } from "@/components/assistant-ui/tools/generate-file/generate-file.server";
+import type { Session } from "@/lib/orpc/context";
 // import { showPlan } from "@/components/assistant-ui/tools/plan/plan.server";
 
-const uiToolDefs = [
+const staticUIToolDefs = [
   showChart,
   requestApproval,
   showDataTable,
@@ -16,12 +18,18 @@ const uiToolDefs = [
   // showPlan,
 ] as const;
 
-export const uiToolMeta = uiToolDefs.map((t) => t.meta);
+export const uiToolMeta = [
+  ...staticUIToolDefs.map((t) => t.meta),
+  generateFile.meta,
+];
 
-type UITools = {
-  [T in (typeof uiToolDefs)[number] as T["meta"]["name"]]: T["tool"];
+type StaticUITools = {
+  [T in (typeof staticUIToolDefs)[number] as T["meta"]["name"]]: T["tool"];
 };
 
-export function createUITools(): UITools {
-  return Object.fromEntries(uiToolDefs.map((t) => [t.meta.name, t.tool])) as UITools;
+export function createUITools(session: Session): StaticUITools & { generate_file: ReturnType<typeof generateFile.create> } {
+  return {
+    ...Object.fromEntries(staticUIToolDefs.map((t) => [t.meta.name, t.tool])) as StaticUITools,
+    generate_file: generateFile.create(session),
+  };
 }

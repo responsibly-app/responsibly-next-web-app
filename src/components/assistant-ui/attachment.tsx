@@ -1,7 +1,6 @@
 "use client";
 
 import { type PropsWithChildren, useEffect, useState, type FC } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { XIcon, PlusIcon, FileText } from "lucide-react";
 import {
   AttachmentPrimitive,
@@ -25,30 +24,7 @@ import {
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { TooltipIconButton } from "@/components/assistant-ui/tooltip-icon-button";
 import { cn } from "@/lib/utils";
-import { supabase } from "@/supabase/client";
-
-const CHAT_ATTACH_PREFIX = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/chat-attachments/`;
-const SIGNED_URL_TTL_S = 3600;
-
-const useSignedAttachmentUrl = (publicUrl: string | undefined): string | undefined => {
-  const isChatAttachment = publicUrl?.startsWith(CHAT_ATTACH_PREFIX) ?? false;
-
-  const { data } = useQuery({
-    queryKey: ["signed-attachment-url", publicUrl],
-    enabled: isChatAttachment,
-    staleTime: (SIGNED_URL_TTL_S - 60) * 1000,
-    gcTime: SIGNED_URL_TTL_S * 1000,
-    queryFn: async () => {
-      const path = publicUrl!.slice(CHAT_ATTACH_PREFIX.length);
-      const { data } = await supabase.storage
-        .from("chat-attachments")
-        .createSignedUrl(path, SIGNED_URL_TTL_S);
-      return data?.signedUrl ?? publicUrl!;
-    },
-  });
-
-  return data;
-};
+import { useSignedBucketUrl } from "@/supabase/hooks/use-signed-url";
 
 const useFileSrc = (file: File | undefined) => {
   const [src, setSrc] = useState<string | undefined>(undefined);
@@ -83,7 +59,7 @@ const useAttachmentSrc = () => {
   );
 
   const fileSrc = useFileSrc(file);
-  const signedSrc = useSignedAttachmentUrl(src);
+  const signedSrc = useSignedBucketUrl(src);
 
   return fileSrc ?? signedSrc;
 };
