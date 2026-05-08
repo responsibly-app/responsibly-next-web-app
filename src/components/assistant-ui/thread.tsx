@@ -49,6 +49,7 @@ import { ThinkingIndicator, ThreadScrollToBottom } from "./modules/thread/thread
 import { AssistantCopy, AssistantMore, AssistantReload, AssistantSpeakToggle } from "./modules/thread/assistant-actions";
 
 const ENABLE_QUOTE_CONTEXT = false; // set to false to disable quote context injection and rendering
+const MODEL_CONTEXT_WINDOW = 400_000; // 400k tokens ~= 300 pages of text
 
 export const Thread: FC = () => {
   return (
@@ -152,8 +153,8 @@ const ComposerAction: FC = () => {
       <div className="flex items-center gap-1">
         <ComposerAddAttachment />
         <ComposerDictationToggle />
-        {/* <ContextDisplay.Ring modelContextWindow={1_047_576} side="top" /> */}
-        <ContextDisplay.Text modelContextWindow={1_047_576} side="top" />
+        <ContextDisplay.Ring modelContextWindow={MODEL_CONTEXT_WINDOW} side="top" />
+        <ContextDisplay.Text modelContextWindow={MODEL_CONTEXT_WINDOW} side="top" />
         <ComposerVoiceToggle />
       </div>
 
