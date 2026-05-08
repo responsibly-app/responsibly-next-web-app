@@ -12,7 +12,10 @@ function supabaseClient() {
   );
 }
 
-export async function retrieveChunks(query: string): Promise<RetrievedChunk[]> {
+export async function retrieveChunks(
+  query: string,
+  metadataFilter: Record<string, unknown> = {}
+): Promise<RetrievedChunk[]> {
   const embedding = await embedOne(query);
 
   const supabase = supabaseClient();
@@ -20,6 +23,7 @@ export async function retrieveChunks(query: string): Promise<RetrievedChunk[]> {
     query_embedding: embedding,
     match_count: TOP_K,
     match_threshold: SIMILARITY_THRESHOLD,
+    filter_metadata: metadataFilter,
   });
 
   if (error) {

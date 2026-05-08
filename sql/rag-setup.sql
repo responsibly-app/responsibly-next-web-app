@@ -26,10 +26,13 @@ create table if not exists knowledge_chunks (
 );
 
 -- 4. Similarity search function called at query time
+-- Uses negative inner product (<#>) since OpenAI embeddings are normalized —
+-- faster than cosine distance and equivalent for unit vectors.
 create or replace function match_chunks(
   query_embedding  vector(1536),
   match_count      int     default 5,
-  match_threshold  float   default 0.7
+  match_threshold  float   default 0.7,
+  filter_metadata  jsonb   default '{}'
 )
 returns table (
   id          uuid,
@@ -42,17 +45,18 @@ language sql stable as $$
   select
     kc.id,
     kc.content,
-    ks.storage_path        as source_path,
-    kc.metadata->>'topic'  as topic,
-    1 - (kc.embedding <=> query_embedding) as similarity
+    ks.storage_path               as source_path,
+    kc.metadata->>'topic'         as topic,
+    -(kc.embedding <#> query_embedding) as similarity
   from knowledge_chunks kc
   join knowledge_sources ks on ks.id = kc.source_id
-  where 1 - (kc.embedding <=> query_embedding) > match_threshold
-  order by kc.embedding <=> query_embedding
+  where (filter_metadata = '{}' or kc.metadata @> filter_metadata)
+    and kc.embedding <#> query_embedding < -match_threshold
+  order by kc.embedding <#> query_embedding asc
   limit match_count;
 $$;
 
--- 5. HNSW index for fast approximate search (works at any dataset size, no retraining needed)
+-- 5. HNSW index using inner-product ops (matches the <#> operator above)
 create index if not exists knowledge_chunks_embedding_idx
   on knowledge_chunks
-  using hnsw (embedding vector_cosine_ops);
+  using hnsw (embedding vector_ip_ops);
