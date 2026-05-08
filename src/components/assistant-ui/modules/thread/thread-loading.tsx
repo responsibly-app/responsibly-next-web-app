@@ -21,14 +21,15 @@ export const ThreadLoadingSpinner: FC = () => {
 };
 
 export const ThreadLoadingSkeleton: FC = () => {
+    
     return (
         <div className="flex flex-col gap-y-8 w-full flex-1 py-4 px-2">
             {/* Assistant message */}
-            <div className="flex flex-col gap-2.5">
+            {/* <div className="flex flex-col gap-2.5">
                 <Skeleton className="h-3.5 w-3/4" />
                 <Skeleton className="h-3.5 w-full" />
                 <Skeleton className="h-3.5 w-2/3" />
-            </div>
+            </div> */}
             {/* User message */}
             <div className="grid grid-cols-[minmax(72px,1fr)_auto]">
                 <div className="col-start-2">
