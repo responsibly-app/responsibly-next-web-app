@@ -1,6 +1,5 @@
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { THREAD_LIST_BATCH_SIZE, threadListPaginationState } from "@/components/assistant-ui/modules/adapters";
 import {
   ThreadListItemMorePrimitive,
   ThreadListItemPrimitive,
@@ -18,6 +17,7 @@ import {
   TrashIcon,
 } from "lucide-react";
 import { type FC, useEffect, useRef, useState } from "react";
+import { THREAD_LIST_BATCH_SIZE, threadListPaginationState } from "./modules/adapters/thread-list-adapter";
 
 const BATCH_SIZE = THREAD_LIST_BATCH_SIZE;
 

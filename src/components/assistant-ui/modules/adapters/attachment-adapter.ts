@@ -8,6 +8,13 @@ import { toast } from "sonner";
 export const CHAT_ATTACHMENT_ACCEPT = "image/jpeg,image/png,image/gif,image/webp,text/plain,text/markdown,text/csv,application/pdf";
 export const CHAT_ATTACHMENT_MAX = 5;
 
+export function isFileTypeAccepted(mimeType: string): boolean {
+  return CHAT_ATTACHMENT_ACCEPT.split(",").some((accepted) => {
+    const t = accepted.trim();
+    return t.endsWith("/*") ? mimeType.startsWith(t.slice(0, -1)) : mimeType === t;
+  });
+}
+
 export class SupabaseChatAttachmentAdapter implements AttachmentAdapter {
   accept = CHAT_ATTACHMENT_ACCEPT;
 
@@ -57,7 +64,7 @@ export class SupabaseChatAttachmentAdapter implements AttachmentAdapter {
     const publicUrl = this.uploadedUrls.get(attachment.id);
     if (publicUrl) {
       this.uploadedUrls.delete(attachment.id);
-      orpc.storage.deleteChatAttachment({ publicUrl }).catch(() => {});
+      orpc.storage.deleteChatAttachment({ publicUrl }).catch(() => { });
     }
   }
 

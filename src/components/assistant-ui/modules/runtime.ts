@@ -6,10 +6,11 @@ import {
     AssistantChatTransport,
     useChatRuntime,
 } from "@assistant-ui/react-ai-sdk";
-import { threadListAdapter, useHistoryAdapter } from "./adapters";
+import { useHistoryAdapter } from "./adapters/thread-history-adapter";
 import { lastAssistantMessageIsCompleteWithToolCalls } from "ai";
 import { useState } from "react";
-import { SupabaseChatAttachmentAdapter } from "./attachment-adapter";
+import { SupabaseChatAttachmentAdapter } from "./adapters/attachment-adapter";
+import { threadListAdapter } from "./adapters/thread-list-adapter";
 
 interface RuntimeProps {
     initialThreadId?: string;

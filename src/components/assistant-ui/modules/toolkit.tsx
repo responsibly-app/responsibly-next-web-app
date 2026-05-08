@@ -1,13 +1,13 @@
 "use client";
 
 import { type Toolkit } from "@assistant-ui/react";
-import { getWeatherTool } from "~/src/components/assistant-ui/tools/weather/get-weather";
-import { previewLinkTool } from "~/src/components/assistant-ui/tools/link/preview-link";
-import { showChartTool } from "../tools/chart/show-chart";
-import { requestApprovalTool } from "../tools/approval-card/request-approval";
-import { showDataTableTool } from "../tools/data-table/show-data-table";
-import { askQuestionFlowTool } from "../tools/question-flow/ask-question-flow";
-import { showPlanTool } from "../tools/plan/plan";
+import { getWeatherTool } from "@/components/assistant-ui/tools/weather/get-weather";
+import { previewLinkTool } from "@/components/assistant-ui/tools/link/preview-link";
+import { showChartTool } from "@/components/assistant-ui/tools/chart/show-chart";
+import { requestApprovalTool } from "@/components/assistant-ui/tools/approval-card/request-approval";
+import { showDataTableTool } from "@/components/assistant-ui/tools/data-table/show-data-table";
+import { askQuestionFlowTool } from "@/components/assistant-ui/tools/question-flow/ask-question-flow";
+import { showPlanTool } from "@/components/assistant-ui/tools/plan/plan";
 
 export const toolkit: Toolkit = {
   get_weather: getWeatherTool,
