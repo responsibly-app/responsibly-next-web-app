@@ -72,7 +72,14 @@ function GeneratedFileCard({
 export const generateFileTool: Toolkit["generate_file"] = {
   type: "backend",
   render: ({ result }) => {
-    if (!result) return null;
+    if (!result) {
+      return (
+        <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
+          <LoaderCircleIcon className="size-3.5 animate-spin" />
+          Generating file…
+        </span>
+      );
+    }
     const r = result as GenerateFileResult;
     if (r.error) {
       return <p className="text-sm text-destructive">{r.error}</p>;

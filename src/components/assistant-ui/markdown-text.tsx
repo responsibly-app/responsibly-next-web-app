@@ -141,14 +141,14 @@ const defaultComponents = memoizeMarkdownComponents({
     />
   ),
   a: ({ className, href, ...props }) => {
-    const signedUrl = useSignedBucketUrl(href);
+    // const signedUrl = useSignedBucketUrl(href);
     return (
       <a
         className={cn(
           "aui-md-a text-primary underline underline-offset-2 hover:text-primary/80",
           className,
         )}
-        href={signedUrl ?? href}
+        href={href}
         target="_blank"
         rel="noopener noreferrer"
         {...props}
