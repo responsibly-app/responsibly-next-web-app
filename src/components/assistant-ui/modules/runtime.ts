@@ -11,6 +11,7 @@ import { lastAssistantMessageIsCompleteWithToolCalls } from "ai";
 import { useState } from "react";
 import { SupabaseChatAttachmentAdapter } from "./adapters/attachment-adapter";
 import { threadListAdapter } from "./adapters/thread-list-adapter";
+import { speechAdapter } from "./adapters/speech-adapter";
 
 interface RuntimeProps {
     initialThreadId?: string;
@@ -28,6 +29,7 @@ export function useRuntime({ initialThreadId }: RuntimeProps) {
                 adapters: {
                     history,
                     attachments: attachmentAdapter,
+                    speech: speechAdapter,
                     dictation: new WebSpeechDictationAdapter({
                         language: "en-US",
                         continuous: true,
