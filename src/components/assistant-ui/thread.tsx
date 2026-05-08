@@ -169,9 +169,9 @@ export function AssistantActionBar() {
       autohide="not-last"
       className="aui-assistant-action-bar-root col-start-3 row-start-2 -ms-1 flex gap-1 text-muted-foreground"
     >
-      <AssistantSpeakToggle />
       <AssistantCopy />
       <AssistantReload />
+      <AssistantSpeakToggle />
       <AssistantMore />
     </ActionBarPrimitive.Root>
   );
