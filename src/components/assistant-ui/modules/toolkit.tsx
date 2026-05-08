@@ -8,6 +8,7 @@ import { requestApprovalTool } from "@/components/assistant-ui/tools/approval-ca
 import { showDataTableTool } from "@/components/assistant-ui/tools/data-table/show-data-table";
 import { askQuestionFlowTool } from "@/components/assistant-ui/tools/question-flow/ask-question-flow";
 import { showPlanTool } from "@/components/assistant-ui/tools/plan/plan";
+import { generateFileTool } from "@/components/assistant-ui/tools/generate-file/generate-file";
 
 export const toolkit: Toolkit = {
   get_weather: getWeatherTool,
@@ -17,4 +18,5 @@ export const toolkit: Toolkit = {
   show_data_table: showDataTableTool,
   ask_question_flow: askQuestionFlowTool,
   show_plan: showPlanTool,
+  generate_file: generateFileTool,
 };

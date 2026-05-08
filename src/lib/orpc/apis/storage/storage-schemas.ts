@@ -15,9 +15,9 @@ export const UploadChatAttachmentInputSchema = z.object({
 });
 
 export const UploadChatAttachmentOutputSchema = z.object({
-    publicUrl: z.string(),
+    path: z.string(),
 });
 
 export const DeleteChatAttachmentInputSchema = z.object({
-    publicUrl: z.string(),
+    path: z.string(),
 });

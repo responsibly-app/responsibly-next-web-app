@@ -16,6 +16,7 @@ import { TooltipIconButton } from "@/components/assistant-ui/tooltip-icon-button
 import { cn } from "@/lib/utils";
 import { SyntaxHighlighter } from "./shiki-highlighter";
 import { MermaidDiagram } from "./mermaid-diagram";
+import { useSignedBucketUrl } from "@/supabase/hooks/use-signed-url";
 
 
 const MarkdownTextImpl = () => {
@@ -139,15 +140,21 @@ const defaultComponents = memoizeMarkdownComponents({
       {...props}
     />
   ),
-  a: ({ className, ...props }) => (
-    <a
-      className={cn(
-        "aui-md-a text-primary underline underline-offset-2 hover:text-primary/80",
-        className,
-      )}
-      {...props}
-    />
-  ),
+  a: ({ className, href, ...props }) => {
+    // const signedUrl = useSignedBucketUrl(href);
+    return (
+      <a
+        className={cn(
+          "aui-md-a text-primary underline underline-offset-2 hover:text-primary/80",
+          className,
+        )}
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+        {...props}
+      />
+    );
+  },
   blockquote: ({ className, ...props }) => (
     <blockquote
       className={cn(

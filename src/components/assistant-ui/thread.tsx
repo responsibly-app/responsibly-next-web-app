@@ -23,7 +23,6 @@ import { TooltipIconButton } from "@/components/assistant-ui/tooltip-icon-button
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import {
-  ActionBarMorePrimitive,
   ActionBarPrimitive,
   AuiIf,
   BranchPickerPrimitive,
@@ -35,14 +34,9 @@ import {
 } from "@assistant-ui/react";
 import { useThreadInitLoading } from "~/src/components/assistant-ui/modules/hooks/thread-init-loading";
 import {
-  CheckIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
-  CopyIcon,
-  DownloadIcon,
-  MoreHorizontalIcon,
   PencilIcon,
-  RefreshCwIcon,
 } from "lucide-react";
 import { type FC, type ReactNode, Component, useCallback } from "react";
 import { isFileTypeAccepted } from "@/components/assistant-ui/modules/adapters/attachment-adapter";
@@ -52,8 +46,10 @@ import { ComposerDictationToggle, ComposerSendMessageAction, ComposerVoiceToggle
 import { ThreadLoadingSkeleton } from "./modules/thread/thread-loading";
 import { ThreadWelcome } from "./modules/thread/thread-welcome";
 import { ThinkingIndicator, ThreadScrollToBottom } from "./modules/thread/thread-utils";
+import { AssistantCopy, AssistantMore, AssistantReload, AssistantSpeakToggle } from "./modules/thread/assistant-actions";
 
 const ENABLE_QUOTE_CONTEXT = false; // set to false to disable quote context injection and rendering
+const MODEL_CONTEXT_WINDOW = 400_000; // 400k tokens ~= 300 pages of text
 
 export const Thread: FC = () => {
   return (
@@ -157,8 +153,8 @@ const ComposerAction: FC = () => {
       <div className="flex items-center gap-1">
         <ComposerAddAttachment />
         <ComposerDictationToggle />
-        {/* <ContextDisplay.Ring modelContextWindow={1_047_576} side="top" /> */}
-        <ContextDisplay.Text modelContextWindow={1_047_576} side="top" />
+        <ContextDisplay.Ring modelContextWindow={MODEL_CONTEXT_WINDOW} side="top" />
+        <ContextDisplay.Text modelContextWindow={MODEL_CONTEXT_WINDOW} side="top" />
         <ComposerVoiceToggle />
       </div>
 
@@ -166,6 +162,37 @@ const ComposerAction: FC = () => {
     </div>
   );
 };
+
+export function AssistantActionBar() {
+  return (
+    <ActionBarPrimitive.Root
+      hideWhenRunning
+      autohide="not-last"
+      className="aui-assistant-action-bar-root col-start-3 row-start-2 -ms-1 flex gap-1 text-muted-foreground"
+    >
+      <AssistantCopy />
+      <AssistantReload />
+      <AssistantSpeakToggle />
+      <AssistantMore />
+    </ActionBarPrimitive.Root>
+  );
+}
+
+export function UserActionBar() {
+  return (
+    <ActionBarPrimitive.Root
+      hideWhenRunning
+      autohide="not-last"
+      className="aui-user-action-bar-root flex flex-col items-end"
+    >
+      <ActionBarPrimitive.Edit asChild>
+        <TooltipIconButton tooltip="Edit" className="aui-user-action-edit p-4">
+          <PencilIcon />
+        </TooltipIconButton>
+      </ActionBarPrimitive.Edit>
+    </ActionBarPrimitive.Root>
+  );
+}
 
 const MessageError: FC = () => {
   return (
@@ -254,7 +281,7 @@ const AssistantMessage: FC = () => {
                 }
                 case "group-tool":
                   return (
-                    <ToolGroupRoot defaultOpen={true}>
+                    <ToolGroupRoot defaultOpen={true} variant="outline" className="my-3">
                       <ToolGroupTrigger
                         count={part.indices.length}
                         active={part.status.type === "running"}
@@ -290,54 +317,6 @@ const AssistantMessage: FC = () => {
   );
 };
 
-const AssistantActionBar: FC = () => {
-  return (
-    <ActionBarPrimitive.Root
-      hideWhenRunning
-      autohide="not-last"
-      className="aui-assistant-action-bar-root col-start-3 row-start-2 -ms-1 flex gap-1 text-muted-foreground"
-    >
-      <ActionBarPrimitive.Copy asChild>
-        <TooltipIconButton tooltip="Copy">
-          <AuiIf condition={(s) => s.message.isCopied}>
-            <CheckIcon />
-          </AuiIf>
-          <AuiIf condition={(s) => !s.message.isCopied}>
-            <CopyIcon />
-          </AuiIf>
-        </TooltipIconButton>
-      </ActionBarPrimitive.Copy>
-      <ActionBarPrimitive.Reload asChild>
-        <TooltipIconButton tooltip="Refresh">
-          <RefreshCwIcon />
-        </TooltipIconButton>
-      </ActionBarPrimitive.Reload>
-      <ActionBarMorePrimitive.Root>
-        <ActionBarMorePrimitive.Trigger asChild>
-          <TooltipIconButton
-            tooltip="More"
-            className="data-[state=open]:bg-accent"
-          >
-            <MoreHorizontalIcon />
-          </TooltipIconButton>
-        </ActionBarMorePrimitive.Trigger>
-        <ActionBarMorePrimitive.Content
-          side="bottom"
-          align="start"
-          className="aui-action-bar-more-content z-50 min-w-32 overflow-hidden rounded-md border bg-popover p-1 text-popover-foreground shadow-md"
-        >
-          <ActionBarPrimitive.ExportMarkdown asChild>
-            <ActionBarMorePrimitive.Item className="aui-action-bar-more-item flex cursor-pointer select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground">
-              <DownloadIcon className="size-4" />
-              Export as Markdown
-            </ActionBarMorePrimitive.Item>
-          </ActionBarPrimitive.ExportMarkdown>
-        </ActionBarMorePrimitive.Content>
-      </ActionBarMorePrimitive.Root>
-    </ActionBarPrimitive.Root>
-  );
-};
-
 const UserMessage: FC = () => {
   return (
     <MessagePrimitive.Root
@@ -364,21 +343,6 @@ const UserMessage: FC = () => {
   );
 };
 
-const UserActionBar: FC = () => {
-  return (
-    <ActionBarPrimitive.Root
-      hideWhenRunning
-      autohide="not-last"
-      className="aui-user-action-bar-root flex flex-col items-end"
-    >
-      <ActionBarPrimitive.Edit asChild>
-        <TooltipIconButton tooltip="Edit" className="aui-user-action-edit p-4">
-          <PencilIcon />
-        </TooltipIconButton>
-      </ActionBarPrimitive.Edit>
-    </ActionBarPrimitive.Root>
-  );
-};
 
 const EditComposer: FC = () => {
   return (

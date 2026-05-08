@@ -5,7 +5,6 @@ import { ORPCError } from "@orpc/server";
 import { authed } from "@/lib/orpc/base";
 import { generateText } from "ai";
 import { titleGenerationModel } from "@/lib/ai/models";
-import { INPUT_TOKEN_QUOTA, OUTPUT_TOKEN_QUOTA } from "~/src/lib/ai/quota";
 import {
   AddMessageInputSchema,
   CreateThreadOutputSchema,
@@ -197,9 +196,6 @@ export const chatRouter = {
       return {
         inputTokens,
         outputTokens,
-        totalTokens: inputTokens + outputTokens,
-        inputQuota: INPUT_TOKEN_QUOTA,
-        outputQuota: OUTPUT_TOKEN_QUOTA,
         month,
       };
     }),

@@ -2,23 +2,23 @@ import type { UIMessage } from "ai";
 import { logDedup } from "./logger";
 import { supabase } from "@/supabase/client";
 
-const CHAT_ATTACH_PUBLIC_PREFIX = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/chat-attachments/`;
+const CHAT_ATTACH_BUCKET = "chat-attachments";
 
-// Scans all messages for public chat-attachment URLs and replaces them with
+// Scans all messages for storage paths (bucket/objectPath) and replaces them with
 // short-lived signed URLs (1h TTL) so the model can access private storage objects.
+// Uses a lookbehind on `"` so only bare paths are matched, not paths inside signed URLs.
 export async function withSignedAttachmentUrls(messages: UIMessage[]): Promise<UIMessage[]> {
   const json = JSON.stringify(messages);
-  const escaped = CHAT_ATTACH_PUBLIC_PREFIX.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  const matches = json.match(new RegExp(`${escaped}[^"]+`, "g"));
-  const urls = [...new Set(matches ?? [])];
+  const regex = new RegExp(`(?<=")(${CHAT_ATTACH_BUCKET}\\/[^"]+)`, "g");
+  const paths = [...new Set([...json.matchAll(regex)].map((m) => m[1]))];
 
-  if (urls.length === 0) return messages;
+  if (paths.length === 0) return messages;
 
   const replacements = await Promise.all(
-    urls.map(async (url) => {
-      const path = url.slice(CHAT_ATTACH_PUBLIC_PREFIX.length);
-      const { data } = await supabase.storage.from("chat-attachments").createSignedUrl(path, 3600);
-      return { original: url, signed: data?.signedUrl ?? url };
+    paths.map(async (fullPath) => {
+      const objectPath = fullPath.slice(`${CHAT_ATTACH_BUCKET}/`.length);
+      const { data } = await supabase.storage.from(CHAT_ATTACH_BUCKET).createSignedUrl(objectPath, 3600);
+      return { original: fullPath, signed: data?.signedUrl ?? fullPath };
     }),
   );
 

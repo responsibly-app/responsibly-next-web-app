@@ -48,17 +48,16 @@ export const storageRouter = {
             const ext = (file as File).name?.includes(".")
                 ? (file as File).name.split(".").pop()
                 : "bin";
-            const path = `${userId}/${crypto.randomUUID()}.${ext}`;
+            const objectPath = `${userId}/${crypto.randomUUID()}.${ext}`;
 
-            const { error } = await supabase.storage.from("chat-attachments").upload(path, file, {
+            const { error } = await supabase.storage.from("chat-attachments").upload(objectPath, file, {
                 upsert: false,
                 contentType: file.type || "application/octet-stream",
             });
 
             if (error) throw new ORPCError("INTERNAL_SERVER_ERROR", { message: error.message });
 
-            const { data } = supabase.storage.from("chat-attachments").getPublicUrl(path);
-            return { publicUrl: data.publicUrl };
+            return { path: `chat-attachments/${objectPath}` };
         }),
 
     deleteChatAttachment: authed
@@ -66,15 +65,13 @@ export const storageRouter = {
         .input(DeleteChatAttachmentInputSchema)
         .handler(async ({ input, context }) => {
             const userId = context.session.user.id;
-            // Extract the storage path from the public URL: everything after "/chat-attachments/"
-            const marker = "/chat-attachments/";
-            const markerIndex = input.publicUrl.indexOf(marker);
-            if (markerIndex === -1) throw new ORPCError("BAD_REQUEST", { message: "Invalid attachment URL" });
-            const path = input.publicUrl.slice(markerIndex + marker.length).split("?")[0];
-            // Ensure the file belongs to this user
-            if (!path.startsWith(`${userId}/`)) throw new ORPCError("FORBIDDEN", { message: "Not authorized to delete this attachment" });
+            const slashIndex = input.path.indexOf("/");
+            if (slashIndex === -1) throw new ORPCError("BAD_REQUEST", { message: "Invalid attachment path" });
+            const bucket = input.path.slice(0, slashIndex);
+            const objectPath = input.path.slice(slashIndex + 1);
+            if (!objectPath.startsWith(`${userId}/`)) throw new ORPCError("FORBIDDEN", { message: "Not authorized to delete this attachment" });
 
-            const { error } = await supabase.storage.from("chat-attachments").remove([path]);
+            const { error } = await supabase.storage.from(bucket).remove([objectPath]);
             if (error) throw new ORPCError("INTERNAL_SERVER_ERROR", { message: error.message });
         }),
 

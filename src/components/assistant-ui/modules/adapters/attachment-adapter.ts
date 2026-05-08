@@ -18,8 +18,8 @@ export function isFileTypeAccepted(mimeType: string): boolean {
 export class SupabaseChatAttachmentAdapter implements AttachmentAdapter {
   accept = CHAT_ATTACHMENT_ACCEPT;
 
-  // Uploaded URLs for attachments that finished uploading before send
-  private uploadedUrls = new Map<string, string>();
+  // Storage paths for attachments that finished uploading before send
+  private uploadedPaths = new Map<string, string>();
   // Fallback: files that failed to pre-upload, retried on send
   private pendingFiles = new Map<string, File>();
   // Tracks active attachment keys (name:size) to prevent duplicates
@@ -49,8 +49,8 @@ export class SupabaseChatAttachmentAdapter implements AttachmentAdapter {
     yield { ...base, status: { type: "running", reason: "uploading", progress: 0 } };
 
     try {
-      const { publicUrl } = await orpc.storage.uploadChatAttachment({ file });
-      this.uploadedUrls.set(id, publicUrl);
+      const { path } = await orpc.storage.uploadChatAttachment({ file });
+      this.uploadedPaths.set(id, path);
     } catch {
       this.pendingFiles.set(id, file);
     }
@@ -61,30 +61,30 @@ export class SupabaseChatAttachmentAdapter implements AttachmentAdapter {
   async remove(attachment: Attachment): Promise<void> {
     this.activeFileKeys.delete(attachment.id);
     this.pendingFiles.delete(attachment.id);
-    const publicUrl = this.uploadedUrls.get(attachment.id);
-    if (publicUrl) {
-      this.uploadedUrls.delete(attachment.id);
-      orpc.storage.deleteChatAttachment({ publicUrl }).catch(() => { });
+    const path = this.uploadedPaths.get(attachment.id);
+    if (path) {
+      this.uploadedPaths.delete(attachment.id);
+      orpc.storage.deleteChatAttachment({ path }).catch(() => { });
     }
   }
 
   async send(attachment: PendingAttachment): Promise<CompleteAttachment> {
-    let publicUrl = this.uploadedUrls.get(attachment.id);
+    let path = this.uploadedPaths.get(attachment.id);
 
-    if (!publicUrl) {
+    if (!path) {
       const file = this.pendingFiles.get(attachment.id);
       if (!file) throw new Error("Attachment file not found");
       const result = await orpc.storage.uploadChatAttachment({ file });
-      publicUrl = result.publicUrl;
+      path = result.path;
       this.pendingFiles.delete(attachment.id);
     } else {
-      this.uploadedUrls.delete(attachment.id);
+      this.uploadedPaths.delete(attachment.id);
     }
 
     const content: CompleteAttachment["content"] =
       attachment.type === "image"
-        ? [{ type: "image", image: publicUrl, filename: attachment.name }]
-        : [{ type: "file", data: publicUrl, mimeType: attachment.contentType ?? "", filename: attachment.name }];
+        ? [{ type: "image", image: path, filename: attachment.name }]
+        : [{ type: "file", data: path, mimeType: attachment.contentType ?? "", filename: attachment.name }];
 
     return { ...attachment, status: { type: "complete" }, content };
   }

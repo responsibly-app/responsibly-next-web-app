@@ -19,7 +19,7 @@ export async function getTools(session: Session, messages: UIMessage[]): Promise
     .slice(0, 600);
 
   const selectedToolNames = await discoverToolNames(toolSelectionQuery);
-  const allTools: ToolSet = { ...createAgentTools(session), ...createUITools() };
+  const allTools: ToolSet = { ...createAgentTools(session), ...createUITools(session) };
   const resolvedToolNames = [...new Set([...selectedToolNames, ...ALWAYS_INCLUDE])];
   return Object.fromEntries(
     resolvedToolNames
