@@ -46,6 +46,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
         >
           <NextTopLoader color="var(--primary)" showSpinner={false} />
           <Toaster
+            closeButton={true}
             icons={{
               success: <CheckCircle2 className="size-4 text-emerald-500" />,
               info: <Info className="size-4 text-blue-500" />,
