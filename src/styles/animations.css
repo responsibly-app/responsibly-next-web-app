@@ -18,3 +18,30 @@
 .soft-pulse {
   animation: pulse 1.5s ease-in-out infinite;
 }
+
+@keyframes file-gen-scan {
+  0% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  80% {
+    opacity: 1;
+  }
+  92% {
+    transform: translateY(2500%);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 0;
+  }
+}
+
+@keyframes file-gen-shimmer {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(300%);
+  }
+}

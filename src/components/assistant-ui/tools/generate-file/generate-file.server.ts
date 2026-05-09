@@ -49,7 +49,7 @@ export const generateFile = {
           content: z
             .string()
             .optional()
-            .describe("For txt or pre-serialized content: raw text"),
+            .describe("Raw text content — use for txt, html, or pre-serialized csv/json strings"),
         }),
       ),
       execute: async ({ filename, format, rows, content }) => {
@@ -58,7 +58,7 @@ export const generateFile = {
 
         switch (format) {
           case "csv":
-            fileContent = buildCsv((rows ?? []) as Record<string, unknown>[]);
+            fileContent = content ?? buildCsv((rows ?? []) as Record<string, unknown>[]);
             mimeType = "text/csv";
             break;
           case "json":
