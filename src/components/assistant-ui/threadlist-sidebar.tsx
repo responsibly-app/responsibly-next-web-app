@@ -24,7 +24,7 @@ export function ThreadListSidebar({
         <div className="flex h-15 items-center px-2">
           <SidebarMenu>
             <SidebarMenuItem>
-              <SidebarMenuButton size="lg" asChild>
+              <SidebarMenuButton size="lg" className="hover:bg-transparent hover:text-muted-foreground" asChild>
                 <Link href={routes.dashboard.root()}>
                   <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
                     {/* <MessagesSquare className="size-4" /> */}
