@@ -1,57 +1,99 @@
 import { db } from "@/lib/db";
 import { chatTokenUsage } from "@/lib/db/schema/chat-schema";
+import type { LanguageModelUsage } from "ai";
 import { and, eq, sql } from "drizzle-orm";
+import {
+  DAILY_INPUT_QUOTA,
+  DAILY_OUTPUT_QUOTA,
+  FALLBACK_DAILY_INPUT_QUOTA,
+  FALLBACK_DAILY_OUTPUT_QUOTA,
+  type ModelTier,
+} from "./quota-constants";
 
-export const INPUT_TOKEN_QUOTA = 1_000_000;
-export const OUTPUT_TOKEN_QUOTA = 1_000_000;
+export { DAILY_INPUT_QUOTA, DAILY_OUTPUT_QUOTA, FALLBACK_DAILY_INPUT_QUOTA, FALLBACK_DAILY_OUTPUT_QUOTA };
+export type { ModelTier };
 
-function currentMonth() {
-  const now = new Date();
-  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+export function currentDate() {
+  return new Date().toISOString().slice(0, 10); // "YYYY-MM-DD"
 }
 
-export async function checkQuota(userId: string): Promise<Response | null> {
-  const month = currentMonth();
-  const [usage] = await db
+export function currentMonthStart() {
+  return currentDate().slice(0, 7) + "-01"; // "YYYY-MM-01"
+}
+
+function effectiveOutput(row: { outputTokens: number; reasoningTokens: number } | undefined) {
+  return (row?.outputTokens ?? 0) + (row?.reasoningTokens ?? 0);
+}
+
+export async function resolveModelTier(userId: string): Promise<ModelTier | null> {
+  const today = currentDate();
+  const rows = await db
     .select()
     .from(chatTokenUsage)
-    .where(and(eq(chatTokenUsage.userId, userId), eq(chatTokenUsage.month, month)));
+    .where(and(eq(chatTokenUsage.userId, userId), eq(chatTokenUsage.date, today)));
 
-  const usedInput = usage?.inputTokens ?? 0;
-  const usedOutput = usage?.outputTokens ?? 0;
+  const primary = rows.find((r) => r.modelTier === "primary");
+  const fallback = rows.find((r) => r.modelTier === "fallback");
 
-  if (usedInput >= INPUT_TOKEN_QUOTA || usedOutput >= OUTPUT_TOKEN_QUOTA) {
-    return new Response(
-      `Monthly token quota exceeded. You've used ${usedInput.toLocaleString()}/${INPUT_TOKEN_QUOTA.toLocaleString()} input tokens and ${usedOutput.toLocaleString()}/${OUTPUT_TOKEN_QUOTA.toLocaleString()} output tokens this month.`,
-      { status: 429 },
-    );
-  }
+  const primaryExhausted =
+    (primary?.inputTokens ?? 0) >= DAILY_INPUT_QUOTA ||
+    effectiveOutput(primary) >= DAILY_OUTPUT_QUOTA;
+
+  if (!primaryExhausted) return "primary";
+
+  const fallbackExhausted =
+    (fallback?.inputTokens ?? 0) >= FALLBACK_DAILY_INPUT_QUOTA ||
+    effectiveOutput(fallback) >= FALLBACK_DAILY_OUTPUT_QUOTA;
+
+  if (!fallbackExhausted) return "fallback";
 
   return null;
 }
 
 export async function trackUsage(
   userId: string,
-  inputTokens: number,
-  outputTokens: number,
+  usage: LanguageModelUsage,
+  tier: ModelTier,
 ): Promise<void> {
+  const inputTokens = usage.inputTokens ?? 0;
+  const outputTokens = usage.outputTokens ?? 0;
   if (inputTokens === 0 && outputTokens === 0) return;
 
-  const month = currentMonth();
+  const date = currentDate();
+  const totalTokens = usage.totalTokens ?? inputTokens + outputTokens;
+  const reasoningTokens = usage.outputTokenDetails?.reasoningTokens ?? 0;
+  const cacheReadTokens = usage.inputTokenDetails?.cacheReadTokens ?? 0;
+  const cacheWriteTokens = usage.inputTokenDetails?.cacheWriteTokens ?? 0;
+  const noCacheInputTokens = usage.inputTokenDetails?.noCacheTokens ?? 0;
+  const textOutputTokens = usage.outputTokenDetails?.textTokens ?? 0;
+
   await db
     .insert(chatTokenUsage)
     .values({
       id: crypto.randomUUID(),
       userId,
-      month,
+      date,
+      modelTier: tier,
       inputTokens,
       outputTokens,
+      totalTokens,
+      reasoningTokens,
+      cacheReadTokens,
+      cacheWriteTokens,
+      noCacheInputTokens,
+      textOutputTokens,
     })
     .onConflictDoUpdate({
-      target: [chatTokenUsage.userId, chatTokenUsage.month],
+      target: [chatTokenUsage.userId, chatTokenUsage.date, chatTokenUsage.modelTier],
       set: {
         inputTokens: sql`${chatTokenUsage.inputTokens} + ${inputTokens}`,
         outputTokens: sql`${chatTokenUsage.outputTokens} + ${outputTokens}`,
+        totalTokens: sql`${chatTokenUsage.totalTokens} + ${totalTokens}`,
+        reasoningTokens: sql`${chatTokenUsage.reasoningTokens} + ${reasoningTokens}`,
+        cacheReadTokens: sql`${chatTokenUsage.cacheReadTokens} + ${cacheReadTokens}`,
+        cacheWriteTokens: sql`${chatTokenUsage.cacheWriteTokens} + ${cacheWriteTokens}`,
+        noCacheInputTokens: sql`${chatTokenUsage.noCacheInputTokens} + ${noCacheInputTokens}`,
+        textOutputTokens: sql`${chatTokenUsage.textOutputTokens} + ${textOutputTokens}`,
         updatedAt: new Date(),
       },
     });

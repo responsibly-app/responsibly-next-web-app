@@ -1,10 +1,11 @@
-import { and, asc, desc, eq } from "drizzle-orm";
+import { and, asc, desc, eq, gte, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { chatMessage, chatThread, chatTokenUsage } from "@/lib/db/schema/chat-schema";
 import { ORPCError } from "@orpc/server";
 import { authed } from "@/lib/orpc/base";
 import { generateText } from "ai";
 import { titleGenerationModel } from "@/lib/ai/models";
+import { currentDate, currentMonthStart } from "@/lib/ai/quota";
 import {
   AddMessageInputSchema,
   CreateThreadOutputSchema,
@@ -21,10 +22,6 @@ import {
   UpdateThreadInputSchema,
 } from "./chat-schemas";
 
-function currentMonth() {
-  const now = new Date();
-  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
-}
 
 export const chatRouter = {
   listThreads: authed
@@ -184,19 +181,47 @@ export const chatRouter = {
     .route({ method: "GET", path: "/chat/token-usage", summary: "Get token usage", tags: ["Chat"] })
     .output(TokenUsageOutputSchema)
     .handler(async ({ context }) => {
-      const month = currentMonth();
-      const [usage] = await db
+      const today = currentDate();
+      const monthStart = currentMonthStart();
+      const userId = context.session.user.id;
+
+      const rows = await db
         .select()
         .from(chatTokenUsage)
-        .where(and(eq(chatTokenUsage.userId, context.session.user.id), eq(chatTokenUsage.month, month)));
+        .where(and(eq(chatTokenUsage.userId, userId), gte(chatTokenUsage.date, monthStart)));
 
-      const inputTokens = usage?.inputTokens ?? 0;
-      const outputTokens = usage?.outputTokens ?? 0;
+      const zero = { inputTokens: 0, outputTokens: 0, totalTokens: 0, reasoningTokens: 0, cacheReadTokens: 0, cacheWriteTokens: 0, noCacheInputTokens: 0, textOutputTokens: 0 };
+
+      function pickTier(subset: typeof rows) {
+        return subset.reduce(
+          (acc, r) => ({
+            inputTokens: acc.inputTokens + r.inputTokens,
+            outputTokens: acc.outputTokens + r.outputTokens,
+            totalTokens: acc.totalTokens + r.totalTokens,
+            reasoningTokens: acc.reasoningTokens + r.reasoningTokens,
+            cacheReadTokens: acc.cacheReadTokens + r.cacheReadTokens,
+            cacheWriteTokens: acc.cacheWriteTokens + r.cacheWriteTokens,
+            noCacheInputTokens: acc.noCacheInputTokens + r.noCacheInputTokens,
+            textOutputTokens: acc.textOutputTokens + r.textOutputTokens,
+          }),
+          { ...zero },
+        );
+      }
+
+      const todayRows = rows.filter((r) => r.date === today);
+      const monthRows = rows;
 
       return {
-        inputTokens,
-        outputTokens,
-        month,
+        today: {
+          date: today,
+          primary: pickTier(todayRows.filter((r) => r.modelTier === "primary")),
+          fallback: pickTier(todayRows.filter((r) => r.modelTier === "fallback")),
+        },
+        month: {
+          period: monthStart.slice(0, 7),
+          primary: pickTier(monthRows.filter((r) => r.modelTier === "primary")),
+          fallback: pickTier(monthRows.filter((r) => r.modelTier === "fallback")),
+        },
       };
     }),
 };

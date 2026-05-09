@@ -7,21 +7,17 @@ import {
   stepCountIs,
   streamText,
 } from "ai";
-import { chatModel } from "./models";
+import { primaryChatModel, fallbackChatModel } from "./models";
 import { buildSystemPrompt } from "./system-prompt";
 import { getRAGContext } from "./get-rag-context";
 import { getTools } from "./get-tools";
-import { trackUsage } from "./quota";
+import { trackUsage, type ModelTier } from "./quota";
 import { deduplicateMessages, stripCallProviderMetadata, withSignedAttachmentUrls } from "./message-utils";
 import { logLLMInput, logLLMStepOutput, logSelectedTools } from "./logger";
 
 const MAX_CONTEXT_MESSAGES = 30;
-const MIN_THINKING_LENGTH = 5;
-const PERFORM_PLANNING = false;
 
-const PLANNING_SYSTEM = `You are a thoughtful planning assistant. Given a user request and the available tools, briefly think through how to best help them — what information to look up, what to compute, and in what order. Be natural and concise: 2–4 sentences, no headers or bullet points.`;
-
-export async function createChatStream(session: Session, messages: UIMessage[]) {
+export async function createChatStream(session: Session, messages: UIMessage[], tier: ModelTier) {
   const lastUserText =
     messages
       .filter((m) => m.role === "user")
@@ -36,43 +32,12 @@ export async function createChatStream(session: Session, messages: UIMessage[]) 
   ]);
 
   const systemPrompt = buildSystemPrompt(session, contextBlock);
+  const model = tier === "primary" ? primaryChatModel : fallbackChatModel;
 
   logSelectedTools(Object.keys(tools));
 
-  const toolNames = Object.keys(tools);
-  const shouldThink =
-    PERFORM_PLANNING && toolNames.length > 0 && lastUserText.trim().length >= MIN_THINKING_LENGTH;
-
   const stream = createUIMessageStream({
     execute: async ({ writer }) => {
-      if (shouldThink) {
-        const reasoningId = "plan-0";
-        writer.write({ type: "reasoning-start", id: reasoningId });
-
-        const planStream = streamText({
-          model: chatModel,
-          system: PLANNING_SYSTEM,
-          messages: [
-            {
-              role: "user",
-              content: `User request: ${lastUserText}\n\nAvailable tools: ${toolNames.join(", ")}`,
-            },
-          ],
-          maxOutputTokens: 250,
-          onFinish: async ({ usage }) => {
-            await trackUsage(session.user.id, usage.inputTokens ?? 0, usage.outputTokens ?? 0);
-          },
-        });
-
-        for await (const chunk of planStream.fullStream) {
-          if (chunk.type === "text-delta") {
-            writer.write({ type: "reasoning-delta", id: reasoningId, delta: chunk.text });
-          }
-        }
-
-        writer.write({ type: "reasoning-end", id: reasoningId });
-      }
-
       const modelMessages = await convertToModelMessages(
         await withSignedAttachmentUrls(
           stripCallProviderMetadata(deduplicateMessages(messages.slice(-MAX_CONTEXT_MESSAGES))),
@@ -82,18 +47,18 @@ export async function createChatStream(session: Session, messages: UIMessage[]) 
       logLLMInput(messages.length, modelMessages as Parameters<typeof logLLMInput>[1]);
 
       const result = streamText({
-        model: chatModel,
+        model,
         system: systemPrompt,
         messages: modelMessages,
         tools,
         stopWhen: stepCountIs(15),
-        // onFinish: async ({ usage: tokenUsage }) => {
-        //   await trackUsage(session.user.id, tokenUsage.inputTokens ?? 0, tokenUsage.outputTokens ?? 0);
-        // },
+        providerOptions: {
+          azure: { reasoningEffort: "low" },
+        },
         onStepFinish: async (step) => {
-          await trackUsage(session.user.id, step.usage.inputTokens ?? 0, step.usage.outputTokens ?? 0);
+          await trackUsage(session.user.id, step.usage, tier);
           logLLMStepOutput(step, step.stepNumber);
-        }
+        },
       });
 
       const ragSources = ragChunks.length > 0
@@ -120,6 +85,7 @@ export async function createChatStream(session: Session, messages: UIMessage[]) 
                 usage: (part as any).totalUsage,
                 custom: {
                   usage: (part as any).totalUsage,
+                  modelTier: tier,
                   ...(ragSources ? { sources: ragSources } : {}),
                 },
               };
