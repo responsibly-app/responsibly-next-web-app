@@ -1,5 +1,5 @@
 import * as React from "react";
-import { MessagesSquare, SquarePen } from "lucide-react";
+import { LayoutDashboardIcon, MessagesSquare, SquarePen } from "lucide-react";
 import Link from "next/link";
 import {
   Sidebar,
@@ -13,6 +13,7 @@ import {
 import { ThreadList } from "@/components/assistant-ui/thread-list";
 import ENVConfig from "@/config";
 import { ThreadListPrimitive } from "@assistant-ui/react";
+import { routes } from "@/routes";
 
 export function ThreadListSidebar({
   ...props
@@ -24,11 +25,12 @@ export function ThreadListSidebar({
           <SidebarMenu>
             <SidebarMenuItem>
               <SidebarMenuButton size="lg" asChild>
-                <Link href="/">
+                <Link href={routes.dashboard.root()}>
                   <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-                    <MessagesSquare className="size-4" />
+                    {/* <MessagesSquare className="size-4" /> */}
+                    <LayoutDashboardIcon className="size-4" />
                   </div>
-                  <span className="font-semibold">{ENVConfig.app_name}</span>
+                  <span className="font-semibold">{"Dashboard"}</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
