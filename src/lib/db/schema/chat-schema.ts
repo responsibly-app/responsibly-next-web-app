@@ -41,16 +41,23 @@ export const chatTokenUsage = pgTable(
     userId: text("user_id")
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
-    month: text("month").notNull(), // "YYYY-MM" format
+    date: text("date").notNull(), // "YYYY-MM-DD"
+    modelTier: text("model_tier").notNull().default("primary"), // "primary" | "fallback"
     inputTokens: integer("input_tokens").default(0).notNull(),
     outputTokens: integer("output_tokens").default(0).notNull(),
+    totalTokens: integer("total_tokens").default(0).notNull(),
+    reasoningTokens: integer("reasoning_tokens").default(0).notNull(),
+    cacheReadTokens: integer("cache_read_tokens").default(0).notNull(),
+    cacheWriteTokens: integer("cache_write_tokens").default(0).notNull(),
+    noCacheInputTokens: integer("no_cache_input_tokens").default(0).notNull(),
+    textOutputTokens: integer("text_output_tokens").default(0).notNull(),
     updatedAt: timestamp("updated_at")
       .defaultNow()
       .$onUpdate(() => new Date())
       .notNull(),
   },
   (table) => [
-    uniqueIndex("chat_token_usage_user_month_uidx").on(table.userId, table.month),
+    uniqueIndex("chat_token_usage_user_date_tier_uidx").on(table.userId, table.date, table.modelTier),
     index("chat_token_usage_user_id_idx").on(table.userId),
   ],
 );

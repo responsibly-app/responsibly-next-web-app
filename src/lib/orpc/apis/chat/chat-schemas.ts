@@ -74,8 +74,26 @@ export const GenerateTitleOutputSchema = z.object({
   title: z.string(),
 });
 
-export const TokenUsageOutputSchema = z.object({
+const TierUsageSchema = z.object({
   inputTokens: z.number(),
   outputTokens: z.number(),
-  month: z.string(),
+  totalTokens: z.number(),
+  reasoningTokens: z.number(),
+  cacheReadTokens: z.number(),
+  cacheWriteTokens: z.number(),
+  noCacheInputTokens: z.number(),
+  textOutputTokens: z.number(),
+});
+
+export const TokenUsageOutputSchema = z.object({
+  today: z.object({
+    date: z.string(),
+    primary: TierUsageSchema,
+    fallback: TierUsageSchema,
+  }),
+  month: z.object({
+    period: z.string(), // "YYYY-MM"
+    primary: TierUsageSchema,
+    fallback: TierUsageSchema,
+  }),
 });

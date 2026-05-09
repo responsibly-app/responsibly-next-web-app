@@ -7,17 +7,17 @@ import {
   stepCountIs,
   streamText,
 } from "ai";
-import { chatModel } from "./models";
+import { primaryChatModel, fallbackChatModel } from "./models";
 import { buildSystemPrompt } from "./system-prompt";
 import { getRAGContext } from "./get-rag-context";
 import { getTools } from "./get-tools";
-import { trackUsage } from "./quota";
+import { trackUsage, type ModelTier } from "./quota";
 import { deduplicateMessages, stripCallProviderMetadata, withSignedAttachmentUrls } from "./message-utils";
 import { logLLMInput, logLLMStepOutput, logSelectedTools } from "./logger";
 
 const MAX_CONTEXT_MESSAGES = 30;
 
-export async function createChatStream(session: Session, messages: UIMessage[]) {
+export async function createChatStream(session: Session, messages: UIMessage[], tier: ModelTier) {
   const lastUserText =
     messages
       .filter((m) => m.role === "user")
@@ -32,6 +32,7 @@ export async function createChatStream(session: Session, messages: UIMessage[]) 
   ]);
 
   const systemPrompt = buildSystemPrompt(session, contextBlock);
+  const model = tier === "primary" ? primaryChatModel : fallbackChatModel;
 
   logSelectedTools(Object.keys(tools));
 
@@ -46,7 +47,7 @@ export async function createChatStream(session: Session, messages: UIMessage[]) 
       logLLMInput(messages.length, modelMessages as Parameters<typeof logLLMInput>[1]);
 
       const result = streamText({
-        model: chatModel,
+        model,
         system: systemPrompt,
         messages: modelMessages,
         tools,
@@ -54,13 +55,10 @@ export async function createChatStream(session: Session, messages: UIMessage[]) 
         providerOptions: {
           azure: { reasoningEffort: "low" },
         },
-        // onFinish: async ({ usage: tokenUsage }) => {
-        //   await trackUsage(session.user.id, tokenUsage.inputTokens ?? 0, tokenUsage.outputTokens ?? 0);
-        // },
         onStepFinish: async (step) => {
-          await trackUsage(session.user.id, step.usage.inputTokens ?? 0, step.usage.outputTokens ?? 0);
+          await trackUsage(session.user.id, step.usage, tier);
           logLLMStepOutput(step, step.stepNumber);
-        }
+        },
       });
 
       const ragSources = ragChunks.length > 0
@@ -87,6 +85,7 @@ export async function createChatStream(session: Session, messages: UIMessage[]) 
                 usage: (part as any).totalUsage,
                 custom: {
                   usage: (part as any).totalUsage,
+                  modelTier: tier,
                   ...(ragSources ? { sources: ragSources } : {}),
                 },
               };

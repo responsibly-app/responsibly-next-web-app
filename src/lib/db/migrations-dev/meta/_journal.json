@@ -64,6 +64,20 @@
       "when": 1777919684068,
       "tag": "0008_smooth_luke_cage",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1778278270677,
+      "tag": "0009_cuddly_loa",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1778280074350,
+      "tag": "0010_clever_namora",
+      "breakpoints": true
     }
   ]
 }
