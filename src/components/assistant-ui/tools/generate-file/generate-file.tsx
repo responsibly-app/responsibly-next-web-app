@@ -10,6 +10,7 @@ import {
 } from "@/components/assistant-ui/file";
 import { useSignedBucketUrl } from "@/supabase/hooks/use-signed-url";
 import { cn } from "@/lib/utils";
+import { FileGenerationAnimation } from "./file-generation-animation";
 
 type GenerateFileResult = {
   filename: string;
@@ -73,12 +74,7 @@ export const generateFileTool: Toolkit["generate_file"] = {
   type: "backend",
   render: ({ result }) => {
     if (!result) {
-      return (
-        <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
-          <LoaderCircleIcon className="size-3.5 animate-spin" />
-          Generating file…
-        </span>
-      );
+      return <FileGenerationAnimation />;
     }
     const r = result as GenerateFileResult;
     if (r.error) {

@@ -10,8 +10,8 @@ export const ThinkingIndicator: FC = () => {
     return (
         <AuiIf condition={(s) => s.thread.isRunning && s.message.content.length === 0}>
             <div className="flex items-center gap-2 text-muted-foreground">
-                <LoaderIcon className="size-4 animate-spin" />
-                <span className="text-sm">Thinking...</span>
+                {/* <LoaderIcon className="size-4 animate-spin" /> */}
+                <span className="text-sm shimmer">Thinking...</span>
             </div>
         </AuiIf>
     );
