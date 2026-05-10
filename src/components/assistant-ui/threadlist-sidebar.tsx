@@ -9,6 +9,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarRail,
+  useSidebar,
 } from "@/components/ui/sidebar";
 import { ThreadList } from "@/components/assistant-ui/thread-list";
 import ENVConfig from "@/config";
@@ -18,6 +19,8 @@ import { routes } from "@/routes";
 export function ThreadListSidebar({
   ...props
 }: React.ComponentProps<typeof Sidebar>) {
+  const { isMobile, setOpenMobile } = useSidebar();
+
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader className="aui-sidebar-header p-0">
@@ -41,7 +44,7 @@ export function ThreadListSidebar({
         <SidebarMenu>
           <SidebarMenuItem>
             <ThreadListPrimitive.New asChild>
-              <SidebarMenuButton>
+              <SidebarMenuButton onClick={() => { if (isMobile) setOpenMobile(false); }}>
                 <SquarePen className="size-4" />
                 <span>New Chat</span>
               </SidebarMenuButton>
