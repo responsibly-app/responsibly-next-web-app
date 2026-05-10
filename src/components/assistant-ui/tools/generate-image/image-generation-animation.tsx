@@ -151,7 +151,7 @@ export function ImageGenerationAnimation() {
           </span> */}
           <span
             className={cn(
-              "text-muted-foreground shimmer text-sm font-medium transition-opacity duration-200",
+              "text-muted-foreground shimmer text-sm transition-opacity duration-200",
               msgVisible ? "opacity-100" : "opacity-0",
             )}
           >

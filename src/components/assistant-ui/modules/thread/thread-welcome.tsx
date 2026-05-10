@@ -2,6 +2,8 @@ import { type FC } from "react";
 import { authClient } from "@/lib/auth/auth-client";
 import { SuggestionPrimitive, ThreadPrimitive } from "@assistant-ui/react";
 import { Button } from "@/components/ui/button";
+// import { FileGenerationAnimation } from "../../tools/generate-file/file-generation-animation";
+// import { ImageGenerationAnimation } from "../../tools/generate-image/image-generation-animation";
 
 export const ThreadWelcome: FC = () => {
     const { data: session } = authClient.useSession();
@@ -18,6 +20,8 @@ export const ThreadWelcome: FC = () => {
                     </p>
                 </div>
             </div>
+            {/* <ImageGenerationAnimation /> */}
+            {/* <FileGenerationAnimation /> */}
             <ThreadSuggestions />
         </div>
     );
