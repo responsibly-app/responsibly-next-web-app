@@ -9,6 +9,7 @@ import { showDataTableTool } from "@/components/assistant-ui/tools/data-table/sh
 import { askQuestionFlowTool } from "@/components/assistant-ui/tools/question-flow/ask-question-flow";
 import { showPlanTool } from "@/components/assistant-ui/tools/plan/plan";
 import { generateFileTool } from "@/components/assistant-ui/tools/generate-file/generate-file";
+import { generateImageTool } from "@/components/assistant-ui/tools/generate-image/generate-image";
 
 export const toolkit: Toolkit = {
   get_weather: getWeatherTool,
@@ -19,4 +20,5 @@ export const toolkit: Toolkit = {
   ask_question_flow: askQuestionFlowTool,
   show_plan: showPlanTool,
   generate_file: generateFileTool,
+  generate_image: generateImageTool,
 };

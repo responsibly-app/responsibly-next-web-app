@@ -20,6 +20,20 @@ import { useRuntime } from "./runtime";
 import { toolkit } from "./toolkit";
 import { ThreadInitLoadingProvider } from "./hooks/thread-init-loading";
 
+function ThreadInitializer({ initialThreadId }: { initialThreadId?: string }) {
+  const aui = useAui();
+  const isThreadListLoading = useAuiState((s) => s.threads.isLoading);
+  const initialized = useRef(false);
+
+  useEffect(() => {
+    if (!initialThreadId || initialized.current || isThreadListLoading) return;
+    initialized.current = true;
+    void aui.threads().switchToThread(initialThreadId);
+  }, [isThreadListLoading, initialThreadId, aui]);
+
+  return null;
+}
+
 function ThreadUrlSync({ initialThreadId }: { initialThreadId?: string }) {
   const remoteId = useAuiState((s) => s.threadListItem.remoteId);
   const hasLoadedInitial = useRef(false);
@@ -52,6 +66,7 @@ export const Assistant = ({ initialThreadId }: AssistantProps = {}) => {
 
   return (
     <AssistantRuntimeProvider runtime={runtime} aui={aui}>
+      <ThreadInitializer initialThreadId={initialThreadId} />
       <ThreadInitLoadingProvider initialThreadId={initialThreadId}>
         <ThreadUrlSync initialThreadId={initialThreadId} />
         <DevToolsModal />

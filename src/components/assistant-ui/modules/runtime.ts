@@ -13,11 +13,7 @@ import { SupabaseChatAttachmentAdapter } from "./adapters/attachment-adapter";
 import { threadListAdapter } from "./adapters/thread-list-adapter";
 import { speechAdapter } from "./adapters/speech-adapter";
 
-interface RuntimeProps {
-    initialThreadId?: string;
-}
-
-export function useRuntime({ initialThreadId }: RuntimeProps) {
+export function useRuntime(_props?: { initialThreadId?: string }) {
     return useRemoteThreadListRuntime({
         runtimeHook: function RuntimeHook() {
             const history = useHistoryAdapter();
@@ -39,6 +35,5 @@ export function useRuntime({ initialThreadId }: RuntimeProps) {
             });
         },
         adapter: threadListAdapter,
-        threadId: initialThreadId,
     });
 }

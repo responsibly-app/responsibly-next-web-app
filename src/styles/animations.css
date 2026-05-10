@@ -45,3 +45,21 @@
     transform: translateX(300%);
   }
 }
+
+@keyframes image-gen-cell {
+  0%, 100% {
+    opacity: 0.18;
+  }
+  50% {
+    opacity: 0.65;
+  }
+}
+
+@keyframes image-gen-sweep {
+  0% {
+    transform: translateX(-120%) skewX(-8deg);
+  }
+  100% {
+    transform: translateX(250%) skewX(-8deg);
+  }
+}
