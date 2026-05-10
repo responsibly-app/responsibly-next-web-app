@@ -102,7 +102,7 @@ const AttachmentPreviewDialog: FC<AttachmentPreviewDialogProps> = ({ src, childr
         <DialogTitle className="aui-sr-only sr-only">
           Image Attachment Preview
         </DialogTitle>
-        <div className="aui-attachment-preview relative mx-auto flex max-h-[80dvh] w-full items-center justify-center overflow-hidden bg-background">
+        <div className="aui-attachment-preview relative mx-auto flex max-h-[80dvh] w-full items-center justify-center overflow-hidden bg-background rounded-2xl">
           <AttachmentPreview src={src} />
         </div>
       </DialogContent>

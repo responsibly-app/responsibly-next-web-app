@@ -28,13 +28,19 @@ export const generateImage = {
       inputSchema: zodSchema(
         z.object({
           prompt: z.string().describe("The prompt to generate the image from"),
+          name: z
+            .string()
+            .optional()
+            .describe(
+              "A short descriptive filename for the image without extension (e.g. 'sunset-over-mountains'). Use kebab-case.",
+            ),
           size: z
             .enum(["1024x1024", "1024x1536", "1536x1024"])
             .optional()
             .describe("Image dimensions. Default: 1024x1024"),
         }),
       ),
-      execute: async ({ prompt, size = "1024x1024" }) => {
+      execute: async ({ prompt, name, size = "1024x1024" }) => {
         let imageBytes: Uint8Array;
         let mimeType: string;
 
@@ -67,6 +73,7 @@ export const generateImage = {
 
         return {
           prompt,
+          name: name ?? null,
           publicUrl: urlData.publicUrl,
           _instructions:
             "Image generated. Do not describe or embed the image in your response — it is shown automatically in the UI.",
