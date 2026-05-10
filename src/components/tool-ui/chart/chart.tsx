@@ -156,22 +156,24 @@ export const Chart = memo(function Chart({
   );
 
   return (
-    <Card
-      className={cn("w-full min-w-80", className)}
-      data-tool-ui-id={id}
-      data-slot="chart"
-    >
-      {(title || description) && (
-        <CardHeader>
-          {title && <CardTitle className="text-pretty">{title}</CardTitle>}
-          {description && (
-            <CardDescription className="text-pretty">
-              {description}
-            </CardDescription>
-          )}
-        </CardHeader>
-      )}
-      <CardContent>{chartContent}</CardContent>
-    </Card>
+    <div className="w-full p-px overflow-auto">
+      <Card
+        className={cn("w-full min-w-80", className)}
+        data-tool-ui-id={id}
+        data-slot="chart"
+      >
+        {(title || description) && (
+          <CardHeader>
+            {title && <CardTitle className="text-pretty">{title}</CardTitle>}
+            {description && (
+              <CardDescription className="text-pretty">
+                {description}
+              </CardDescription>
+            )}
+          </CardHeader>
+        )}
+        <CardContent>{chartContent}</CardContent>
+      </Card>
+    </div>
   );
 });

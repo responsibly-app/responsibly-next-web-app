@@ -125,6 +125,7 @@ function ToolGroupTrigger({
       <span
         data-slot="tool-group-trigger-label"
         className={cn(
+          "text-primary",
           "aui-tool-group-trigger-label-wrapper relative inline-block text-start font-medium leading-none",
           "group-data-[variant=outline]/tool-group-root:grow",
           "group-data-[variant=muted]/tool-group-root:grow",
