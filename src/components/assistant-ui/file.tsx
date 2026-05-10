@@ -19,7 +19,7 @@ const fileVariants = cva(
   {
     variants: {
       variant: {
-        outline: "border border-border hover:bg-muted/50",
+        outline: "border border-border bg-muted hover:bg-muted/50",
         ghost: "hover:bg-muted/50",
         muted: "bg-muted/50 hover:bg-muted/70",
       },
@@ -27,6 +27,7 @@ const fileVariants = cva(
         sm: "px-2.5 py-1.5 text-xs",
         default: "px-3 py-2 text-sm",
         lg: "px-4 py-3 text-base",
+        "semi-lg": "px-4 py-3 text-sm",
       },
     },
     defaultVariants: {
@@ -116,7 +117,7 @@ function FileIconDisplay({
       className={cn("shrink-0 text-muted-foreground", className)}
       {...props}
     >
-      {children ?? <IconComponent className="size-5" />}
+      {children ?? <IconComponent className="size-5 text-primary" />}
     </span>
   );
 }
@@ -194,7 +195,7 @@ const FileImpl: FileMessagePartComponent = ({ filename, data, mimeType }) => {
     <FileRoot>
       <FileIconDisplay mimeType={mimeType} />
       <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-        <FileName>{filename}</FileName>
+        <FileName title={filename}>{filename}</FileName>
         <FileSize bytes={bytes} className="text-xs" />
       </div>
       <FileDownload

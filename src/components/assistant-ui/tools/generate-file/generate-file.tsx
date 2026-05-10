@@ -29,10 +29,10 @@ function GeneratedFileCard({
   const signedUrl = useSignedBucketUrl(publicUrl);
 
   return (
-    <FileRoot>
+    <FileRoot variant="outline" size="semi-lg" className="max-w-100">
       <FileIconDisplay mimeType={mimeType} />
       <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-        <FileName>{filename}</FileName>
+        <FileName title={filename}>{filename}</FileName>
         <FileSize bytes={sizeBytes} className="text-xs" />
       </div>
       {signedUrl === undefined ? (
@@ -54,6 +54,7 @@ function GeneratedFileCard({
           className={cn(
             "shrink-0 rounded-md p-1 text-muted-foreground transition-colors",
             "hover:bg-accent hover:text-accent-foreground",
+            "cursor-pointer",
           )}
         >
           <DownloadIcon className="size-4" />
