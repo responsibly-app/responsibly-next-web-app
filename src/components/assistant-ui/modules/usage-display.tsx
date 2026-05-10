@@ -11,7 +11,7 @@ import {
   FALLBACK_DAILY_INPUT_QUOTA,
   FALLBACK_DAILY_OUTPUT_QUOTA,
 } from "@/lib/ai/quota-constants";
-import { useEffect, useRef, type FC } from "react";
+import { useEffect, useRef, useState, type FC } from "react";
 import { toast } from "sonner";
 
 const PRIMARY_TOTAL_QUOTA = DAILY_INPUT_QUOTA + DAILY_OUTPUT_QUOTA;
@@ -58,6 +58,7 @@ type UsageDisplayProps = {
 const UsageDisplay: FC<UsageDisplayProps> = ({ className, side = "bottom" }) => {
   const { data: usage } = useTokenUsage();
   useInvalidateUsageOnRunEnd();
+  const [open, setOpen] = useState(false);
 
   const onFallback = usage
     ? usage.today.primary.inputTokens >= DAILY_INPUT_QUOTA ||
@@ -104,12 +105,13 @@ const UsageDisplay: FC<UsageDisplayProps> = ({ className, side = "bottom" }) => 
   const resetLabel = hUntil > 0 ? `${hUntil}h ${mUntil}m` : `${mUntil}m`;
 
   return (
-    <Tooltip>
+    <Tooltip open={open} onOpenChange={setOpen}>
       <TooltipTrigger asChild>
         <button
           type="button"
           data-slot="usage-display-trigger"
           aria-label="Token usage"
+          onClick={() => setOpen((v) => !v)}
           className={cn(
             "inline-flex items-center gap-1.5 rounded-md px-2 py-1 transition-colors",
             className,

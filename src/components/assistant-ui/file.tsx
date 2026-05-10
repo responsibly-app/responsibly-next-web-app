@@ -15,11 +15,11 @@ import type { FileMessagePartComponent } from "@assistant-ui/react";
 import { cn } from "@/lib/utils";
 
 const fileVariants = cva(
-  "aui-file-root inline-flex items-center gap-3 rounded-lg transition-colors",
+  "aui-file-root inline-flex items-center gap-3 rounded-xl transition-colors",
   {
     variants: {
       variant: {
-        outline: "border border-border bg-muted hover:bg-muted/50",
+        outline: "border border-border bg-muted/70 hover:bg-muted/50",
         ghost: "hover:bg-muted/50",
         muted: "bg-muted/50 hover:bg-muted/70",
       },
