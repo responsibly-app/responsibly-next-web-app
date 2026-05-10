@@ -225,7 +225,7 @@ function RAGSourceBadge({ path, chunkIds }: RAGSourceItem) {
   return (
     <Popover open={isOpen} onOpenChange={handleOpenChange}>
       <PopoverTrigger asChild>{badge}</PopoverTrigger>
-      <PopoverContent side="top" align="start" className="w-lg p-0 gap-0">
+      <PopoverContent side="top" align="start" className="w-[90vw] sm:w-120 p-0 gap-0">
         <div className="border-b px-3 py-2 flex items-center justify-between gap-2">
           <p className="text-xs font-medium text-muted-foreground truncate flex-1">
             {filename}
