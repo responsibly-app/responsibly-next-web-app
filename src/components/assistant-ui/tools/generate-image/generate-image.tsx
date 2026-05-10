@@ -30,8 +30,8 @@ function GeneratedImageCard({ prompt, name, publicUrl }: GenerateImageResult) {
   const downloadFilename = name ? `${name}.png` : "generated-image.png";
 
   return (
-    <div className="flex flex-col gap-2.5 w-72">
-      <div className="relative w-full aspect-square rounded-xl overflow-hidden bg-muted border border-border/40">
+    <div className="flex flex-col gap-2.5 w-full">
+      <div className="relative w-72 aspect-square rounded-xl overflow-hidden bg-muted border border-border/40">
         {signedUrl ? (
           <>
             <Dialog>
@@ -84,7 +84,7 @@ function GeneratedImageCard({ prompt, name, publicUrl }: GenerateImageResult) {
             <ChevronRightIcon className="size-3 transition-transform group-data-[state=open]:rotate-90" />
             Prompt
           </CollapsibleTrigger>
-          <CollapsibleContent className="text-xs text-muted-foreground/70 leading-relaxed px-0.5 pt-1">
+          <CollapsibleContent className="text-xs text-muted-foreground/80 leading-relaxed px-0.5 pt-1">
             {prompt}
           </CollapsibleContent>
         </Collapsible>
