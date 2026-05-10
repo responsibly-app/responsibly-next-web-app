@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useSidebar } from "@/components/ui/sidebar";
 import {
   ThreadListItemMorePrimitive,
   ThreadListItemPrimitive,
@@ -103,6 +104,7 @@ const ThreadListSkeleton: FC = () => {
 
 const ThreadListItem: FC = () => {
   const [isRenaming, setIsRenaming] = useState(false);
+  const { isMobile, setOpenMobile } = useSidebar();
 
   return (
     <ThreadListItemPrimitive.Root className="aui-thread-list-item group flex h-9 items-center gap-2 rounded-lg transition-colors hover:bg-sidebar-accent/80 focus-visible:bg-sidebar-accent/80 focus-visible:outline-none data-active:bg-sidebar-accent">
@@ -110,7 +112,10 @@ const ThreadListItem: FC = () => {
         <ThreadListItemRenameInput onDone={() => setIsRenaming(false)} />
       ) : (
         <>
-          <ThreadListItemPrimitive.Trigger className="aui-thread-list-item-trigger flex h-full min-w-0 flex-1 items-center px-3 text-start text-sm">
+          <ThreadListItemPrimitive.Trigger
+            className="aui-thread-list-item-trigger flex h-full min-w-0 flex-1 items-center px-3 text-start text-sm"
+            onClick={() => { if (isMobile) setOpenMobile(false); }}
+          >
             <span className="aui-thread-list-item-title min-w-0 flex-1 truncate">
               <ThreadListItemPrimitive.Title fallback="New Chat" />
             </span>
