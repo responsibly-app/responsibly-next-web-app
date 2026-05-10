@@ -19,7 +19,7 @@ const fileVariants = cva(
   {
     variants: {
       variant: {
-        outline: "border border-border bg-muted hover:bg-muted/50",
+        outline: "border border-border bg-muted/70 hover:bg-muted/50",
         ghost: "hover:bg-muted/50",
         muted: "bg-muted/50 hover:bg-muted/70",
       },
