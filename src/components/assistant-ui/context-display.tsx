@@ -221,7 +221,7 @@ function ContextDisplayContent({
     >
       <div className="grid min-w-40 gap-1.5 text-xs">
         <div className="flex items-center justify-between gap-4">
-          <span className="text-muted-foreground">Usage</span>
+          <span className="text-muted-foreground">Context usage</span>
           <span className="font-mono tabular-nums">{Math.round(percent)}%</span>
         </div>
         {usage?.inputTokens !== undefined && (

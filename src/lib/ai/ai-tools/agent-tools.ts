@@ -1,43 +1,19 @@
 import type { Session } from "@/lib/orpc/context";
 import { createServerCaller } from "@/lib/orpc/server-caller";
-import { getMyProfile, listMyOrganizations } from "./tools/profile-tools";
-import {
-  listUpcomingEvents,
-  listEventsForOrg,
-  getEvent,
-  createEvent,
-  deleteEvent,
-  getEventAttendance,
-  getEventAttendanceLeaderboard,
-  rsvpEvent,
-} from "./tools/event-tools";
-import { getMyPoints, getOrgLeaderboard, addPoint } from "./tools/points-tools";
-import { getMyAmas, addAma } from "./tools/ama-tools";
-import { getInviteHistory, logInvites } from "./tools/invite-tools";
+import { profileTools } from "./tools/profile-tools";
+import { eventTools } from "./tools/event-tools";
+import { pointsTools } from "./tools/points-tools";
+import { amaTools } from "./tools/ama-tools";
+import { inviteTools } from "./tools/invite-tools";
+import { calendlyTools } from "./tools/calendly-tools";
 
 const toolDefs = [
-  // Profile
-  getMyProfile,
-  listMyOrganizations,
-  // Events
-  listUpcomingEvents,
-  listEventsForOrg,
-  getEvent,
-  createEvent,
-  deleteEvent,
-  getEventAttendance,
-  getEventAttendanceLeaderboard,
-  rsvpEvent,
-  // Points
-  getMyPoints,
-  getOrgLeaderboard,
-  addPoint,
-  // AMAs
-  getMyAmas,
-  addAma,
-  // Invites
-  getInviteHistory,
-  logInvites,
+  ...profileTools,
+  ...eventTools,
+  ...pointsTools,
+  ...amaTools,
+  ...inviteTools,
+  ...calendlyTools,
 ] as const;
 
 export const agentToolMeta = toolDefs.map((t) => t.meta);

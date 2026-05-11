@@ -89,3 +89,41 @@ export const ListEventTypesInputSchema = z.object({
     count: z.number().int().min(1).max(100).optional().default(20),
     page_token: z.string().optional(),
 });
+
+export const EventUuidSchema = z.object({
+    eventUuid: z.string().describe("Calendly scheduled event UUID"),
+});
+
+export const CalendlyInviteeSchema = z.object({
+    uri: z.string(),
+    email: z.string().email(),
+    name: z.string(),
+    status: z.enum(["active", "canceled"]),
+    timezone: z.string(),
+    created_at: z.string(),
+    updated_at: z.string(),
+    event: z.string(),
+    cancel_url: z.string(),
+    reschedule_url: z.string(),
+    rescheduled: z.boolean(),
+    old_invitee: z.string().nullable(),
+    new_invitee: z.string().nullable(),
+    text_reminder_number: z.string().nullable(),
+    no_show: z.object({ uri: z.string(), created_at: z.string() }).nullable(),
+    questions_and_answers: z.array(
+        z.object({ question: z.string(), answer: z.string(), position: z.number() })
+    ),
+});
+
+export const CalendlyInviteesResponseSchema = z.object({
+    collection: z.array(CalendlyInviteeSchema),
+    pagination: CalendlyPaginationSchema,
+});
+
+export const ListEventInviteesInputSchema = z.object({
+    eventUuid: z.string().describe("Calendly scheduled event UUID"),
+    count: z.number().int().min(1).max(100).optional().default(20),
+    status: z.enum(["active", "canceled"]).optional(),
+    sort: z.string().optional().describe("e.g. 'created_at:desc'"),
+    page_token: z.string().optional(),
+});

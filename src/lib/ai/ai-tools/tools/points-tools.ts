@@ -1,5 +1,6 @@
 import { tool, zodSchema } from "ai";
 import { z } from "zod";
+import { encode } from "@toon-format/toon";
 import type { ServerCaller } from "@/lib/orpc/server-caller";
 
 export const getMyPoints = {
@@ -16,7 +17,7 @@ export const getMyPoints = {
       execute: async () => {
         const items = await caller.personal.points.list();
         const total = items.reduce((sum, i) => sum + i.amount, 0);
-        return { total, items };
+        return encode({ total, items });
       },
     });
   },
@@ -41,7 +42,7 @@ export const getOrgLeaderboard = {
       ),
       execute: async ({ organizationId }) => {
         try {
-          return await caller.personal.points.getOrgLeaderboard({ organizationId });
+          return encode(await caller.personal.points.getOrgLeaderboard({ organizationId }));
         } catch {
           return { error: "You are not a member of this organization." };
         }
@@ -69,7 +70,7 @@ export const addPoint = {
       ),
       execute: async ({ description, amount, date }) => {
         try {
-          return await caller.personal.points.add({ description, amount, date });
+          return encode(await caller.personal.points.add({ description, amount, date }));
         } catch (err: any) {
           return { error: err?.message ?? "Failed to add point entry." };
         }
@@ -77,3 +78,5 @@ export const addPoint = {
     });
   },
 };
+
+export const pointsTools = [getMyPoints, getOrgLeaderboard, addPoint] as const;

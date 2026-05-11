@@ -96,6 +96,30 @@ export interface CalendlyScheduledEventsResponse {
   pagination: CalendlyPagination;
 }
 
+export interface CalendlyInvitee {
+  uri: string;
+  email: string;
+  name: string;
+  status: "active" | "canceled";
+  timezone: string;
+  created_at: string;
+  updated_at: string;
+  event: string;
+  cancel_url: string;
+  reschedule_url: string;
+  rescheduled: boolean;
+  old_invitee: string | null;
+  new_invitee: string | null;
+  text_reminder_number: string | null;
+  no_show: { uri: string; created_at: string } | null;
+  questions_and_answers: Array<{ question: string; answer: string; position: number }>;
+}
+
+export interface CalendlyInviteesResponse {
+  collection: CalendlyInvitee[];
+  pagination: CalendlyPagination;
+}
+
 // ---------------------------------------------------------------------------
 // Client
 // ---------------------------------------------------------------------------
@@ -168,6 +192,33 @@ export class CalendlyClient {
     if (params.sort) query.set("sort", params.sort);
     if (params.page_token) query.set("page_token", params.page_token);
     return this.request<CalendlyScheduledEventsResponse>(`/scheduled_events?${query}`);
+  }
+
+  /** Get a single scheduled event by UUID. */
+  async getScheduledEvent(eventUuid: string): Promise<CalendlyScheduledEvent> {
+    const res = await this.request<{ resource: CalendlyScheduledEvent }>(`/scheduled_events/${eventUuid}`);
+    return res.resource;
+  }
+
+  /** List invitees for a scheduled event. */
+  async listEventInvitees(
+    eventUuid: string,
+    params: {
+      count?: number;
+      status?: "active" | "canceled";
+      sort?: string;
+      page_token?: string;
+    } = {}
+  ): Promise<CalendlyInviteesResponse> {
+    const query = new URLSearchParams();
+    if (params.count) query.set("count", String(params.count));
+    if (params.status) query.set("status", params.status);
+    if (params.sort) query.set("sort", params.sort);
+    if (params.page_token) query.set("page_token", params.page_token);
+    const qs = query.toString();
+    return this.request<CalendlyInviteesResponse>(
+      `/scheduled_events/${eventUuid}/invitees${qs ? `?${qs}` : ""}`
+    );
   }
 }
 

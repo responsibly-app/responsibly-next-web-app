@@ -12,14 +12,18 @@ import remarkGfm from "remark-gfm";
 import { type FC, memo, useState } from "react";
 import { CheckIcon, CopyIcon } from "lucide-react";
 
+import { useAuiState } from "@assistant-ui/react";
 import { TooltipIconButton } from "@/components/assistant-ui/tooltip-icon-button";
 import { cn } from "@/lib/utils";
 import { SyntaxHighlighter } from "./shiki-highlighter";
 import { MermaidDiagram } from "./mermaid-diagram";
-import { useSignedBucketUrl } from "@/supabase/hooks/use-signed-url";
-
 
 const MarkdownTextImpl = () => {
+  // Guard against rendering outside a text/reasoning part context — can occur during
+  // streaming transitions when the store part type changes before React re-renders.
+  const partType = useAuiState((s) => (s as any).part?.type as string | undefined);
+  if (partType !== "text" && partType !== "reasoning") return null;
+
   return (
     <MarkdownTextPrimitive
       remarkPlugins={[remarkGfm]}

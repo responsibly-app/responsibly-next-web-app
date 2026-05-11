@@ -1,5 +1,6 @@
 import { tool, zodSchema } from "ai";
 import { z } from "zod";
+import { encode } from "@toon-format/toon";
 import type { ServerCaller } from "@/lib/orpc/server-caller";
 
 export const listUpcomingEvents = {
@@ -14,7 +15,7 @@ export const listUpcomingEvents = {
     return tool({
       description: listUpcomingEvents.meta.description,
       inputSchema: zodSchema(z.object({})),
-      execute: async () => caller.event.listAllUpcoming(),
+      execute: async () => encode(await caller.event.listAllUpcoming()),
     });
   },
 };
@@ -37,7 +38,7 @@ export const listEventsForOrg = {
       ),
       execute: async ({ organizationId }) => {
         try {
-          return await caller.event.list({ organizationId });
+          return encode(await caller.event.list({ organizationId }));
         } catch {
           return { error: "You are not a member of this organization." };
         }
@@ -64,7 +65,7 @@ export const getEvent = {
       ),
       execute: async ({ eventId }) => {
         try {
-          return await caller.event.getEvent({ eventId });
+          return encode(await caller.event.getEvent({ eventId }));
         } catch {
           return { error: "Event not found or you do not have access." };
         }
@@ -114,7 +115,7 @@ export const createEvent = {
       ),
       execute: async (input) => {
         try {
-          return await caller.event.create({ ...input, zoomOption: "none" });
+          return encode(await caller.event.create({ ...input, zoomOption: "none" }));
         } catch (err: any) {
           return {
             error: err?.message ?? "Failed to create event. You may not have the required role.",
@@ -144,7 +145,7 @@ export const deleteEvent = {
       ),
       execute: async ({ eventId, organizationId }) => {
         try {
-          return await caller.event.delete({ eventId, organizationId });
+          return encode(await caller.event.delete({ eventId, organizationId }));
         } catch (err: any) {
           return {
             error:
@@ -174,7 +175,7 @@ export const getEventAttendance = {
       ),
       execute: async ({ eventId }) => {
         try {
-          return await caller.event.getAttendance({ eventId });
+          return encode(await caller.event.getAttendance({ eventId }));
         } catch (err: any) {
           return { error: err?.message ?? "Failed to fetch attendance." };
         }
@@ -202,7 +203,7 @@ export const getEventAttendanceLeaderboard = {
       ),
       execute: async ({ organizationId }) => {
         try {
-          return await caller.event.getLeaderboard({ organizationId });
+          return encode(await caller.event.getLeaderboard({ organizationId }));
         } catch {
           return { error: "You are not a member of this organization." };
         }
@@ -229,7 +230,7 @@ export const rsvpEvent = {
       ),
       execute: async ({ eventId }) => {
         try {
-          return await caller.event.toggleRsvp({ eventId });
+          return encode(await caller.event.toggleRsvp({ eventId }));
         } catch (err: any) {
           return {
             error:
@@ -240,3 +241,14 @@ export const rsvpEvent = {
     });
   },
 };
+
+export const eventTools = [
+  listUpcomingEvents,
+  listEventsForOrg,
+  getEvent,
+  createEvent,
+  deleteEvent,
+  getEventAttendance,
+  getEventAttendanceLeaderboard,
+  rsvpEvent,
+] as const;

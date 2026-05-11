@@ -1,5 +1,6 @@
 import { tool, zodSchema } from "ai";
 import { z } from "zod";
+import { encode } from "@toon-format/toon";
 import type { ServerCaller } from "@/lib/orpc/server-caller";
 
 export const getInviteHistory = {
@@ -23,7 +24,13 @@ export const getInviteHistory = {
             .describe("Number of past days to include (default 90)"),
         }),
       ),
-      execute: async ({ days }) => caller.personal.invites.getHistory({ days }),
+      execute: async ({ days }) => {
+        const history = await caller.personal.invites.getHistory({ days });
+        const data = Array.isArray(history)
+          ? history.map(({ date, count }) => ({ date, count }))
+          : history;
+        return encode(data);
+      },
     });
   },
 };
@@ -46,11 +53,14 @@ export const logInvites = {
       ),
       execute: async ({ date, count }) => {
         try {
-          return await caller.personal.invites.log({ date, count });
+          const result = await caller.personal.invites.log({ date, count });
+          return encode(result);
         } catch (err: any) {
-          return { error: err?.message ?? "Failed to log invites." };
+          return encode({ error: err?.message ?? "Failed to log invites." });
         }
       },
     });
   },
 };
+
+export const inviteTools = [getInviteHistory, logInvites] as const;

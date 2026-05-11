@@ -28,7 +28,7 @@ export function FileGenerationAnimation() {
   }, []);
 
   return (
-    <div className="inline-flex items-start gap-3 rounded-xl border border-border bg-card px-4 py-3 w-64">
+    <div className="inline-flex items-start gap-3 rounded-xl border border-border bg-card px-4 py-3 max-w-100">
       {/* File icon with scan line */}
       <div className="relative shrink-0 flex items-center justify-center w-9 h-11 rounded-md border border-border bg-muted/60 overflow-hidden">
         <FileIcon className="size-5 text-primary" />
@@ -75,7 +75,7 @@ export function FileGenerationAnimation() {
         {/* Cycling status text */}
         <p
           className={cn(
-            "text-xs text-muted-foreground/80 transition-opacity",
+            "text-sm text-muted-foreground/80 transition-opacity",
             visible ? "opacity-100" : "opacity-0",
           )}
           style={{ transitionDuration: "200ms" }}

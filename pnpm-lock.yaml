@@ -74,6 +74,9 @@ importers:
       '@tanstack/react-query':
         specifier: ^5.90.21
         version: 5.96.1(react@19.2.3)
+      '@toon-format/toon':
+        specifier: ^2.2.0
+        version: 2.2.0
       '@types/qrcode':
         specifier: ^1.5.6
         version: 1.5.6
@@ -3175,6 +3178,9 @@ packages:
     resolution: {integrity: sha512-2X7KYK5KKWUKGeWCVcqxXAkYefJtrKB7tSKWgeG++b0H6BRHxQaLSSi8AxcgjmUnnosHuh9WsFZqvE16P1WCzA==}
     peerDependencies:
       react: ^18 || ^19
+
+  '@toon-format/toon@2.2.0':
+    resolution: {integrity: sha512-FMYqrlZnMN72YIT9KVt7Kxc41gat+RgMIzDmvRRPHw0J7pqW/FeBGDY/4BIWjT71Y+EdI9fCJip90uXuGuYhjw==}
 
   '@ts-morph/common@0.27.0':
     resolution: {integrity: sha512-Wf29UqxWDpc+i61k3oIOzcUfQt79PIT9y/MWfAGlrkjg6lBC1hwDECLXPVJAhWjiGbfBCxZd65F/LIZF3+jeJQ==}
@@ -10851,6 +10857,8 @@ snapshots:
     dependencies:
       '@tanstack/query-core': 5.96.1
       react: 19.2.3
+
+  '@toon-format/toon@2.2.0': {}
 
   '@ts-morph/common@0.27.0':
     dependencies:

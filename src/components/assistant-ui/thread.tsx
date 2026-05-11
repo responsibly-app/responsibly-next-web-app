@@ -209,14 +209,26 @@ class MessagePartErrorBoundary extends Component<
   { hasError: boolean }
 > {
   state = { hasError: false };
+  private _retries = 0;
 
   static getDerivedStateFromError() {
     return { hasError: true };
   }
 
   componentDidCatch() {
-    // Transient tapClientLookup out-of-bounds during thread reload — retry after state settles
-    setTimeout(() => this.setState({ hasError: false }), 0);
+    // Transient tapClientLookup out-of-bounds during streaming transitions — the 0ms
+    // timeout was too fast and caused an infinite retry loop. Use 100ms to give the
+    // store time to settle, and cap retries to prevent escalation past this boundary.
+    if (this._retries < 3) {
+      this._retries++;
+      setTimeout(() => this.setState({ hasError: false }), 100);
+    }
+  }
+
+  componentDidUpdate(_: unknown, prevState: { hasError: boolean }) {
+    if (prevState.hasError && !this.state.hasError) {
+      this._retries = 0;
+    }
   }
 
   render() {
@@ -294,7 +306,7 @@ const AssistantMessage: FC = () => {
                 case "reasoning":
                   return <Reasoning {...part} />;
                 case "tool-call":
-                  return part.toolUI ?? <ToolFallback {...part} />;
+                  return part.toolUI ?? <ToolFallback {...part} variant="ghost" />;
                 default:
                   return null;
               }
