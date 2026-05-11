@@ -19,20 +19,44 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
+import { cva, type VariantProps } from "class-variance-authority";
 
 const ANIMATION_DURATION = 200;
+
+const toolFallbackRootVariants = cva(
+  "aui-tool-fallback-root group/tool-fallback-root w-full rounded-xl py-3",
+  {
+    variants: {
+      variant: {
+        default: "border",
+        ghost: "border-transparent",
+      },
+      size: {
+        default: "py-1",
+        lg: "py-2",
+      },
+    },
+    defaultVariants: {
+      variant: "default",
+      size: "default",
+    },
+  },
+);
 
 export type ToolFallbackRootProps = Omit<
   React.ComponentProps<typeof Collapsible>,
   "open" | "onOpenChange"
-> & {
-  open?: boolean;
-  onOpenChange?: (open: boolean) => void;
-  defaultOpen?: boolean;
-};
+> &
+  VariantProps<typeof toolFallbackRootVariants> & {
+    open?: boolean;
+    onOpenChange?: (open: boolean) => void;
+    defaultOpen?: boolean;
+  };
 
 function ToolFallbackRoot({
   className,
+  variant,
+  size,
   open: controlledOpen,
   onOpenChange: controlledOnOpenChange,
   defaultOpen = false,
@@ -65,10 +89,7 @@ function ToolFallbackRoot({
       data-slot="tool-fallback-root"
       open={isOpen}
       onOpenChange={handleOpenChange}
-      className={cn(
-        "aui-tool-fallback-root group/tool-fallback-root w-full rounded-xl border py-3",
-        className,
-      )}
+      className={cn(toolFallbackRootVariants({ variant, size }), className)}
       style={
         {
           "--animation-duration": `${ANIMATION_DURATION}ms`,
@@ -90,15 +111,32 @@ const statusIconMap: Record<ToolStatus, React.ElementType> = {
   "requires-action": AlertCircleIcon,
 };
 
+const toolFallbackTriggerVariants = cva(
+  "aui-tool-fallback-trigger group/trigger flex max-w-full items-center gap-2 transition-colors",
+  {
+    variants: {
+      size: {
+        default: "px-4 text-sm",
+        lg: "px-5 text-sm",
+      },
+    },
+    defaultVariants: {
+      size: "default",
+    },
+  },
+);
+
 function ToolFallbackTrigger({
   toolName,
   status,
+  size,
   className,
   ...props
-}: React.ComponentProps<typeof CollapsibleTrigger> & {
-  toolName: string;
-  status?: ToolCallMessagePartStatus;
-}) {
+}: React.ComponentProps<typeof CollapsibleTrigger> &
+  VariantProps<typeof toolFallbackTriggerVariants> & {
+    toolName: string;
+    status?: ToolCallMessagePartStatus;
+  }) {
   const statusType = status?.type ?? "complete";
   const isRunning = statusType === "running";
   const isCancelled =
@@ -110,10 +148,7 @@ function ToolFallbackTrigger({
   return (
     <CollapsibleTrigger
       data-slot="tool-fallback-trigger"
-      className={cn(
-        "aui-tool-fallback-trigger group/trigger flex w-full items-center gap-2 px-4 text-sm transition-colors",
-        className,
-      )}
+      className={cn(toolFallbackTriggerVariants({ size }), className)}
       {...props}
     >
       <Icon
@@ -131,8 +166,8 @@ function ToolFallbackTrigger({
           isCancelled && "text-muted-foreground line-through",
         )}
       >
-        <span>
-          {label}: <b>{toolName}</b>
+        <span className="text-primary">
+          <span>{label}</span>: <b className="font-bold">{toolName}</b>
         </span>
         {isRunning && (
           <span
@@ -140,7 +175,9 @@ function ToolFallbackTrigger({
             data-slot="tool-fallback-trigger-shimmer"
             className="aui-tool-fallback-trigger-shimmer shimmer pointer-events-none absolute inset-0 motion-reduce:animate-none"
           >
-            {label}: <b>{toolName}</b>
+            <span className="text-primary">
+              <span>{label}</span>: <b className="font-bold">{toolName}</b>
+            </span>
           </span>
         )}
       </span>
@@ -178,7 +215,7 @@ function ToolFallbackContent({
       )}
       {...props}
     >
-      <div className="mt-3 flex flex-col gap-2 border-t pt-2">{children}</div>
+      <div className="mx-3 mt-2 flex flex-col gap-2 rounded-xl border px-3 py-2 text-xs">{children}</div>
     </CollapsibleContent>
   );
 }
@@ -268,20 +305,27 @@ function ToolFallbackError({
   );
 }
 
-const ToolFallbackImpl: ToolCallMessagePartComponent = ({
+type ToolFallbackImplProps = React.ComponentProps<ToolCallMessagePartComponent> &
+  VariantProps<typeof toolFallbackRootVariants>;
+
+const ToolFallbackImpl = ({
   toolName,
   argsText,
   result,
   status,
-}) => {
+  variant,
+  size,
+}: ToolFallbackImplProps) => {
   const isCancelled =
     status?.type === "incomplete" && status.reason === "cancelled";
 
   return (
     <ToolFallbackRoot
+      variant={variant}
+      size={size}
       className={cn(isCancelled && "border-muted-foreground/30 bg-muted/30")}
     >
-      <ToolFallbackTrigger toolName={toolName} status={status} />
+      <ToolFallbackTrigger toolName={toolName} status={status} size={size} />
       <ToolFallbackContent>
         <ToolFallbackError status={status} />
         <ToolFallbackArgs
@@ -294,16 +338,19 @@ const ToolFallbackImpl: ToolCallMessagePartComponent = ({
   );
 };
 
-const ToolFallback = memo(
-  ToolFallbackImpl,
-) as unknown as ToolCallMessagePartComponent & {
+type ToolFallbackComponent = ((
+  props: ToolFallbackImplProps,
+) => React.ReactElement | null) & {
   Root: typeof ToolFallbackRoot;
   Trigger: typeof ToolFallbackTrigger;
   Content: typeof ToolFallbackContent;
   Args: typeof ToolFallbackArgs;
   Result: typeof ToolFallbackResult;
   Error: typeof ToolFallbackError;
+  displayName?: string;
 };
+
+const ToolFallback = memo(ToolFallbackImpl) as unknown as ToolFallbackComponent;
 
 ToolFallback.displayName = "ToolFallback";
 ToolFallback.Root = ToolFallbackRoot;
