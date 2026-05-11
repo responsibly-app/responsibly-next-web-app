@@ -1,5 +1,6 @@
 import { tool, zodSchema } from "ai";
 import { z } from "zod";
+import { encode } from "@toon-format/toon";
 import type { ServerCaller } from "@/lib/orpc/server-caller";
 
 export const getMyAmas = {
@@ -13,7 +14,7 @@ export const getMyAmas = {
     return tool({
       description: getMyAmas.meta.description,
       inputSchema: zodSchema(z.object({})),
-      execute: async () => caller.personal.amas.list(),
+      execute: async () => encode(await caller.personal.amas.list()),
     });
   },
 };
@@ -37,7 +38,7 @@ export const addAma = {
       ),
       execute: async ({ recruitName, agentCode, date }) => {
         try {
-          return await caller.personal.amas.add({ recruitName, agentCode, date });
+          return encode(await caller.personal.amas.add({ recruitName, agentCode, date }));
         } catch (err: any) {
           return { error: err?.message ?? "Failed to add AMA entry." };
         }

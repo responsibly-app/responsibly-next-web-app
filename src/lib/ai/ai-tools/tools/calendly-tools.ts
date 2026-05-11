@@ -1,5 +1,6 @@
 import { tool, zodSchema } from "ai";
 import { z } from "zod";
+import { encode } from "@toon-format/toon";
 import type { ServerCaller } from "@/lib/orpc/server-caller";
 
 export const getCalendlyStatus = {
@@ -13,7 +14,7 @@ export const getCalendlyStatus = {
     return tool({
       description: getCalendlyStatus.meta.description,
       inputSchema: zodSchema(z.object({})),
-      execute: async () => caller.integrations.calendly.status(),
+      execute: async () => encode(await caller.integrations.calendly.status()),
     });
   },
 };
@@ -32,7 +33,7 @@ export const getCalendlyProfile = {
       inputSchema: zodSchema(z.object({})),
       execute: async () => {
         try {
-          return await caller.integrations.calendly.profile();
+          return encode(await caller.integrations.calendly.profile());
         } catch {
           return { error: "Calendly is not connected or profile could not be fetched." };
         }
@@ -60,7 +61,7 @@ export const listCalendlyEventTypes = {
       ),
       execute: async (input) => {
         try {
-          return await caller.integrations.calendly.eventTypes.list(input);
+          return encode(await caller.integrations.calendly.eventTypes.list(input));
         } catch (e) {
           const message = e instanceof Error ? e.message : String(e);
           return { error: `Failed to list Calendly event types: ${message}` };
@@ -93,7 +94,7 @@ export const listCalendlyScheduledEvents = {
       ),
       execute: async (input) => {
         try {
-          return await caller.integrations.calendly.scheduledEvents.list(input);
+          return encode(await caller.integrations.calendly.scheduledEvents.list(input));
         } catch (e) {
           const message = e instanceof Error ? e.message : String(e);
           return { error: `Failed to list scheduled events: ${message}` };
@@ -121,7 +122,7 @@ export const getCalendlyScheduledEvent = {
       ),
       execute: async ({ eventUuid }) => {
         try {
-          return await caller.integrations.calendly.scheduledEvents.get({ eventUuid });
+          return encode(await caller.integrations.calendly.scheduledEvents.get({ eventUuid }));
         } catch (e) {
           const message = e instanceof Error ? e.message : String(e);
           return { error: `Scheduled event not found: ${message}` };
@@ -152,7 +153,7 @@ export const listCalendlyEventInvitees = {
       ),
       execute: async (input) => {
         try {
-          return await caller.integrations.calendly.scheduledEvents.invitees(input);
+          return encode(await caller.integrations.calendly.scheduledEvents.invitees(input));
         } catch (e) {
           const message = e instanceof Error ? e.message : String(e);
           return { error: `Failed to list invitees: ${message}` };

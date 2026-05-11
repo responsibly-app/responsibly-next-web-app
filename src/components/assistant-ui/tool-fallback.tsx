@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
 import { cva, type VariantProps } from "class-variance-authority";
+import { decode } from "@toon-format/toon";
 
 const ANIMATION_DURATION = 200;
 
@@ -216,7 +217,7 @@ function ToolFallbackContent({
       )}
       {...props}
     >
-      <div className="mx-3 mt-2 flex flex-col gap-2 rounded-xl border px-3 py-2 text-xs">{children}</div>
+      <div className="mx-3 mt-2 flex flex-col gap-2 rounded-xl border px-3 py-2 text-xs max-h-100 overflow-y-auto">{children}</div>
     </CollapsibleContent>
   );
 }
@@ -263,7 +264,15 @@ function ToolFallbackResult({
     >
       <p className="aui-tool-fallback-result-header font-semibold">Result:</p>
       <pre className="aui-tool-fallback-result-content whitespace-pre-wrap">
-        {typeof result === "string" ? result : JSON.stringify(result, null, 2)}
+        {typeof result === "string"
+          ? (() => {
+            try {
+              return JSON.stringify(decode(result), null, 2);
+            } catch {
+              return result;
+            }
+          })()
+          : JSON.stringify(result, null, 2)}
       </pre>
     </div>
   );

@@ -1,5 +1,6 @@
 import { tool, zodSchema } from "ai";
 import { z } from "zod";
+import { encode } from "@toon-format/toon";
 import type { ServerCaller } from "@/lib/orpc/server-caller";
 
 export const getMyProfile = {
@@ -29,7 +30,13 @@ export const listMyOrganizations = {
     return tool({
       description: listMyOrganizations.meta.description,
       inputSchema: zodSchema(z.object({})),
-      execute: async () => caller.organization.listMine(),
+      execute: async () => {
+        const orgs = await caller.organization.listMine();
+        const data = Array.isArray(orgs)
+          ? orgs.map(({ id, name, role, slug }) => ({ id, name, role, slug }))
+          : orgs;
+        return encode(data);
+      },
     });
   },
 };
