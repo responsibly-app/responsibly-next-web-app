@@ -54,3 +54,5 @@ export const logInvites = {
     });
   },
 };
+
+export const inviteTools = [getInviteHistory, logInvites] as const;

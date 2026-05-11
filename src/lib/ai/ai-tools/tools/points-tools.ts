@@ -77,3 +77,5 @@ export const addPoint = {
     });
   },
 };
+
+export const pointsTools = [getMyPoints, getOrgLeaderboard, addPoint] as const;

@@ -33,3 +33,5 @@ export const listMyOrganizations = {
     });
   },
 };
+
+export const profileTools = [getMyProfile, listMyOrganizations] as const;

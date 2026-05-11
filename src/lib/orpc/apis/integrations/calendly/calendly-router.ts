@@ -2,9 +2,13 @@ import { authed, calendlyAuthed } from "@/lib/orpc/base";
 import { isCalendlyConnected } from "@/lib/sdks/calendly-client";
 import {
     CalendlyEventTypesResponseSchema,
+    CalendlyInviteesResponseSchema,
+    CalendlyScheduledEventSchema,
     CalendlyScheduledEventsResponseSchema,
     CalendlyStatusOutputSchema,
     CalendlyUserSchema,
+    EventUuidSchema,
+    ListEventInviteesInputSchema,
     ListEventTypesInputSchema,
     ListScheduledEventsInputSchema,
 } from "./calendly-schemas";
@@ -42,6 +46,21 @@ export const calendlyRouter = {
             .handler(async ({ context, input }) => {
                 const me = await context.calendly.getMe();
                 return context.calendly.listScheduledEvents(me.uri, input);
+            }),
+
+        get: calendlyAuthed
+            .route({ method: "GET", path: "/calendly/scheduled-events/{eventUuid}", summary: "Get a scheduled event by UUID", tags: ["Calendly"] })
+            .input(EventUuidSchema)
+            .output(CalendlyScheduledEventSchema)
+            .handler(async ({ context, input }) => context.calendly.getScheduledEvent(input.eventUuid)),
+
+        invitees: calendlyAuthed
+            .route({ method: "GET", path: "/calendly/scheduled-events/{eventUuid}/invitees", summary: "List invitees for a scheduled event", tags: ["Calendly"] })
+            .input(ListEventInviteesInputSchema)
+            .output(CalendlyInviteesResponseSchema)
+            .handler(async ({ context, input }) => {
+                const { eventUuid, ...params } = input;
+                return context.calendly.listEventInvitees(eventUuid, params);
             }),
     },
 };

@@ -2,8 +2,8 @@ import { ORPCError, os } from "@orpc/server";
 import { eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { user } from "@/lib/db/schema/better-auth-schema";
-import { getZoomClient, type ZoomClient } from "@/lib/sdks/zoom-client";
-import { getCalendlyClient, type CalendlyClient } from "@/lib/sdks/calendly-client";
+import { getZoomClientForUser, type ZoomClient } from "@/lib/sdks/zoom-client";
+import { getCalendlyClientForUser, type CalendlyClient } from "@/lib/sdks/calendly-client";
 import type { Context, Session } from "./context";
 
 export const pub = os.$context<Context>();
@@ -32,7 +32,7 @@ export const adminAuthed = authed.use(async ({ context, next }) => {
 });
 
 export const zoomAuthed = authed.use(async ({ context, next }) => {
-  const zoom = await getZoomClient(context.headers);
+  const zoom = await getZoomClientForUser(context.session.user.id);
   if (!zoom) {
     throw new ORPCError("PRECONDITION_FAILED", {
       message: "Zoom account not connected",
@@ -42,7 +42,7 @@ export const zoomAuthed = authed.use(async ({ context, next }) => {
 });
 
 export const calendlyAuthed = authed.use(async ({ context, next }) => {
-  const calendly = await getCalendlyClient(context.headers);
+  const calendly = await getCalendlyClientForUser(context.session.user.id);
   if (!calendly) {
     throw new ORPCError("PRECONDITION_FAILED", {
       message: "Calendly account not connected",

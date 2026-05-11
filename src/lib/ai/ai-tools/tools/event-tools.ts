@@ -240,3 +240,14 @@ export const rsvpEvent = {
     });
   },
 };
+
+export const eventTools = [
+  listUpcomingEvents,
+  listEventsForOrg,
+  getEvent,
+  createEvent,
+  deleteEvent,
+  getEventAttendance,
+  getEventAttendanceLeaderboard,
+  rsvpEvent,
+] as const;

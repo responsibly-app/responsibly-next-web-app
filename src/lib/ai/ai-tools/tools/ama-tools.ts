@@ -45,3 +45,5 @@ export const addAma = {
     });
   },
 };
+
+export const amaTools = [getMyAmas, addAma] as const;

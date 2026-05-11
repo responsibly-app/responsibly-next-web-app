@@ -91,6 +91,34 @@ export const CreateMeetingInputSchema = z.object({
     settings: ZoomMeetingSettingsSchema.optional(),
 });
 
+export const PastMeetingParticipantsInputSchema = z.object({
+    meetingId: z.string().describe("Past meeting UUID or ID"),
+    page_size: z.number().int().min(1).max(300).optional().default(30).describe("Number of records per page"),
+    next_page_token: z.string().optional().describe("Token for the next page of results"),
+});
+
+export const ZoomPastMeetingParticipantSchema = z.object({
+    id: z.string(),
+    name: z.string(),
+    user_id: z.string(),
+    registrant_id: z.string().optional(),
+    user_email: z.string(),
+    join_time: z.string(),
+    leave_time: z.string(),
+    duration: z.number().describe("Duration in seconds"),
+    status: z.string().optional(),
+    failover: z.boolean().optional(),
+    customer_key: z.string().optional(),
+});
+
+export const ZoomPastMeetingParticipantsResponseSchema = z.object({
+    page_count: z.number(),
+    page_size: z.number(),
+    total_records: z.number(),
+    next_page_token: z.string().optional(),
+    participants: z.array(ZoomPastMeetingParticipantSchema),
+});
+
 export const UpdateMeetingInputSchema = z.object({
     meetingId: z.string().describe("Zoom meeting ID"),
     topic: z.string().optional(),

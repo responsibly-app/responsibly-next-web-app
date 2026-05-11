@@ -11,9 +11,11 @@ import {
     CreateMeetingInputSchema,
     ListMeetingsInputSchema,
     MeetingIdSchema,
+    PastMeetingParticipantsInputSchema,
     UpdateMeetingInputSchema,
     ZoomMeetingSchema,
     ZoomMeetingsListSchema,
+    ZoomPastMeetingParticipantsResponseSchema,
     ZoomStatusOutputSchema,
     ZoomUserSchema,
 } from "./zoom-schemas";
@@ -66,6 +68,15 @@ export const zoomRouter = {
             .input(MeetingIdSchema)
             .output(z.void())
             .handler(async ({ context, input }) => context.zoom.deleteMeeting(input.meetingId)),
+
+        pastParticipants: zoomAuthed
+            .route({ method: "GET", path: "/zoom/past_meetings/{meetingId}/participants", summary: "List participants of a past meeting", tags: ["Zoom"] })
+            .input(PastMeetingParticipantsInputSchema)
+            .output(ZoomPastMeetingParticipantsResponseSchema)
+            .handler(async ({ context, input }) => {
+                const { meetingId, ...params } = input;
+                return context.zoom.getPastMeetingParticipants(meetingId, params);
+            }),
     },
 
     webhook: pub

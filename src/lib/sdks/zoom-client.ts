@@ -57,6 +57,28 @@ export interface ZoomRegistrant {
   start_time: string;
 }
 
+export interface ZoomPastMeetingParticipant {
+  id: string;
+  name: string;
+  user_id: string;
+  registrant_id?: string;
+  user_email: string;
+  join_time: string;
+  leave_time: string;
+  duration: number;
+  status?: string;
+  failover?: boolean;
+  customer_key?: string;
+}
+
+export interface ZoomPastMeetingParticipantsResponse {
+  page_count: number;
+  page_size: number;
+  total_records: number;
+  next_page_token?: string;
+  participants: ZoomPastMeetingParticipant[];
+}
+
 export interface CreateMeetingParams {
   topic: string;
   /** 1=instant, 2=scheduled, 3=recurring no fixed time, 8=recurring fixed time. Defaults to 2. */
@@ -171,6 +193,20 @@ export class ZoomClient {
       method: "PATCH",
       body: JSON.stringify(params),
     });
+  }
+
+  /** Get participants from a past (ended) meeting. */
+  getPastMeetingParticipants(
+    meetingId: string | number,
+    params: { page_size?: number; next_page_token?: string } = {}
+  ): Promise<ZoomPastMeetingParticipantsResponse> {
+    const query = new URLSearchParams();
+    if (params.page_size) query.set("page_size", String(params.page_size));
+    if (params.next_page_token) query.set("next_page_token", params.next_page_token);
+    const qs = query.toString();
+    return this.request<ZoomPastMeetingParticipantsResponse>(
+      `/past_meetings/${meetingId}/participants${qs ? `?${qs}` : ""}`
+    );
   }
 
   /** Delete a meeting. */
