@@ -62,6 +62,7 @@ export function deduplicateMessages(messages: UIMessage[]): UIMessage[] {
   });
 }
 
+
 // Azure Responses API assigns itemIds to function calls. Re-sending those IDs
 // in subsequent turns causes "Duplicate item" errors, so we strip them here.
 export function stripCallProviderMetadata(messages: UIMessage[]): UIMessage[] {
@@ -77,3 +78,20 @@ export function stripCallProviderMetadata(messages: UIMessage[]): UIMessage[] {
     }),
   }));
 }
+
+export function takeLastMessages(messages: UIMessage[], count: number): UIMessage[] {
+  return messages.slice(-count);
+}
+
+// Applies all message transformations in order before sending to the model.
+export async function prepareUiMessages(messages: UIMessage[], maxContextMessages: number) {
+  const uiMessages = await withSignedAttachmentUrls(
+    stripCallProviderMetadata(
+      deduplicateMessages(
+        takeLastMessages(messages, maxContextMessages),
+      ),
+    ),
+  );
+  return uiMessages;
+}
+

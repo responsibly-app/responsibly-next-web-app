@@ -162,11 +162,12 @@ function ToolFallbackTrigger({
       <span
         data-slot="tool-fallback-trigger-label"
         className={cn(
+          "text-muted-foreground",
           "aui-tool-fallback-trigger-label-wrapper relative inline-block grow text-start leading-none",
           isCancelled && "text-muted-foreground line-through",
         )}
       >
-        <span className="text-primary">
+        <span>
           <span>{label}</span>: <b className="font-bold">{toolName}</b>
         </span>
         {isRunning && (
@@ -175,7 +176,7 @@ function ToolFallbackTrigger({
             data-slot="tool-fallback-trigger-shimmer"
             className="aui-tool-fallback-trigger-shimmer shimmer pointer-events-none absolute inset-0 motion-reduce:animate-none"
           >
-            <span className="text-primary">
+            <span>
               <span>{label}</span>: <b className="font-bold">{toolName}</b>
             </span>
           </span>
