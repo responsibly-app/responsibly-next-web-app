@@ -10,7 +10,7 @@ import {
 } from "@assistant-ui/react-markdown";
 import remarkGfm from "remark-gfm";
 import { type FC, memo, useState } from "react";
-import { CheckIcon, CopyIcon } from "lucide-react";
+import { CheckIcon, CopyIcon, CodeXml } from "lucide-react";
 
 import { useAuiState } from "@assistant-ui/react";
 import { TooltipIconButton } from "@/components/assistant-ui/tooltip-icon-button";
@@ -48,8 +48,9 @@ const CodeHeader: FC<CodeHeaderProps> = ({ language, code }) => {
   };
 
   return (
-    <div className="aui-code-header-root mt-2.5 flex items-center justify-between rounded-t-lg border border-border/50 border-b-0 bg-muted/50 px-3 py-1.5 text-xs">
-      <span className="aui-code-header-language font-medium text-muted-foreground lowercase">
+    <div className="aui-code-header-root mt-2.5 flex items-center justify-between rounded-t-2xl border border-border/50 border-b-0 bg-muted/50 px-3 py-1.5 text-xs">
+      <span className="aui-code-header-language flex items-center gap-1.5 font-medium text-muted-foreground lowercase">
+        <CodeXml className="size-3.5" />
         {language}
       </span>
       <TooltipIconButton tooltip="Copy" onClick={onCopy}>
@@ -84,7 +85,7 @@ const defaultComponents = memoizeMarkdownComponents({
   h1: ({ className, ...props }) => (
     <h1
       className={cn(
-        "aui-md-h1 mb-2 scroll-m-20 font-semibold text-base first:mt-0 last:mb-0",
+        "aui-md-h1 mt-6 mb-2 scroll-m-20 text-[24px] font-bold tracking-tight leading-tight first:mt-0 last:mb-0",
         className,
       )}
       {...props}
@@ -93,7 +94,7 @@ const defaultComponents = memoizeMarkdownComponents({
   h2: ({ className, ...props }) => (
     <h2
       className={cn(
-        "aui-md-h2 mt-3 mb-1.5 scroll-m-20 font-semibold text-sm first:mt-0 last:mb-0",
+        "aui-md-h2 mt-6 mb-2 scroll-m-20 pb-1.5 text-[20px] font-semibold tracking-tight leading-tight first:mt-0 last:mb-0",
         className,
       )}
       {...props}
@@ -102,7 +103,7 @@ const defaultComponents = memoizeMarkdownComponents({
   h3: ({ className, ...props }) => (
     <h3
       className={cn(
-        "aui-md-h3 mt-2.5 mb-1 scroll-m-20 font-semibold text-sm first:mt-0 last:mb-0",
+        "aui-md-h3 mt-3 mb-2 scroll-m-20 text-lg font-semibold leading-snug first:mt-0 last:mb-0",
         className,
       )}
       {...props}
@@ -111,7 +112,7 @@ const defaultComponents = memoizeMarkdownComponents({
   h4: ({ className, ...props }) => (
     <h4
       className={cn(
-        "aui-md-h4 mt-2 mb-1 scroll-m-20 font-medium text-sm first:mt-0 last:mb-0",
+        "aui-md-h4 mt-2 mb-2 scroll-m-20 text-base font-semibold leading-snug first:mt-0 last:mb-0",
         className,
       )}
       {...props}
@@ -120,7 +121,7 @@ const defaultComponents = memoizeMarkdownComponents({
   h5: ({ className, ...props }) => (
     <h5
       className={cn(
-        "aui-md-h5 mt-2 mb-1 font-medium text-sm first:mt-0 last:mb-0",
+        "aui-md-h5 mt-2 mb-2 text-sm font-semibold leading-snug first:mt-0 last:mb-0",
         className,
       )}
       {...props}
@@ -129,7 +130,7 @@ const defaultComponents = memoizeMarkdownComponents({
   h6: ({ className, ...props }) => (
     <h6
       className={cn(
-        "aui-md-h6 mt-2 mb-1 font-medium text-sm first:mt-0 last:mb-0",
+        "aui-md-h6 mt-2 mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground leading-snug first:mt-0 last:mb-0",
         className,
       )}
       {...props}
@@ -188,12 +189,12 @@ const defaultComponents = memoizeMarkdownComponents({
   ),
   hr: ({ className, ...props }) => (
     <hr
-      className={cn("aui-md-hr my-2 border-muted-foreground/20", className)}
+      className={cn("aui-md-hr my-7 border-muted-foreground/20", className)}
       {...props}
     />
   ),
   table: ({ className, ...props }) => (
-    <div className="my-2 w-full overflow-x-auto overflow-y-auto max-h-120 rounded-lg">
+    <div className="my-5 w-full overflow-x-auto overflow-y-auto max-h-120 rounded-2xl">
       <table
         className={cn(
           "aui-md-table w-full border-separate border-spacing-0",
@@ -206,7 +207,7 @@ const defaultComponents = memoizeMarkdownComponents({
   th: ({ className, ...props }) => (
     <th
       className={cn(
-        "aui-md-th sticky top-0 bg-muted border-muted-foreground/20 border-s border-t last:border-e px-2 py-1 text-start font-medium shadow-[0_1px_0] shadow-muted-foreground/20 first:rounded-ss-lg last:rounded-se-lg [[align=center]]:text-center [[align=right]]:text-right",
+        "aui-md-th sticky top-0 bg-muted border-muted-foreground/20 border-s border-t last:border-e px-2 py-1 text-start font-medium shadow-[0_1px_0] shadow-muted-foreground/20 first:rounded-ss-2xl last:rounded-se-2xl [[align=center]]:text-center [[align=right]]:text-right",
         className,
       )}
       {...props}
@@ -224,7 +225,7 @@ const defaultComponents = memoizeMarkdownComponents({
   tr: ({ className, ...props }) => (
     <tr
       className={cn(
-        "aui-md-tr m-0 border-b p-0 first:border-t [&:last-child>td:first-child]:rounded-es-lg [&:last-child>td:last-child]:rounded-ee-lg",
+        "aui-md-tr m-0 border-b p-0 first:border-t [&:last-child>td:first-child]:rounded-es-2xl [&:last-child>td:last-child]:rounded-ee-2xl",
         className,
       )}
       {...props}
@@ -242,7 +243,7 @@ const defaultComponents = memoizeMarkdownComponents({
   pre: ({ className, ...props }) => (
     <pre
       className={cn(
-        "aui-md-pre overflow-x-auto rounded-t-none rounded-b-lg border border-border/50 border-t-0 bg-muted/30 p-3 text-xs leading-relaxed",
+        "aui-md-pre overflow-x-auto rounded-t-none rounded-b-2xl border border-border/50 border-t-0 bg-muted/30 p-3 text-xs leading-relaxed",
         className,
       )}
       {...props}
@@ -254,7 +255,7 @@ const defaultComponents = memoizeMarkdownComponents({
       <code
         className={cn(
           !isCodeBlock &&
-          "aui-md-inline-code rounded-md border border-border/50 bg-muted/50 px-1.5 py-0.5 font-mono text-[0.85rem]",
+          "aui-md-inline-code rounded-2xl border border-border/50 bg-muted/50 px-1.5 py-0.5 font-mono text-[0.85rem]",
           className,
         )}
         {...props}
