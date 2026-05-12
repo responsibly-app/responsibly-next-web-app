@@ -206,7 +206,7 @@ const defaultComponents = memoizeMarkdownComponents({
   th: ({ className, ...props }) => (
     <th
       className={cn(
-        "aui-md-th sticky top-0 z-10 bg-muted border-muted-foreground/20 border-s border-t last:border-e px-2 py-1 text-start font-medium shadow-[0_1px_0] shadow-muted-foreground/20 first:rounded-ss-lg last:rounded-se-lg [[align=center]]:text-center [[align=right]]:text-right",
+        "aui-md-th sticky top-0 bg-muted border-muted-foreground/20 border-s border-t last:border-e px-2 py-1 text-start font-medium shadow-[0_1px_0] shadow-muted-foreground/20 first:rounded-ss-lg last:rounded-se-lg [[align=center]]:text-center [[align=right]]:text-right",
         className,
       )}
       {...props}
