@@ -9,8 +9,8 @@ import {
   useIsMarkdownCodeBlock,
 } from "@assistant-ui/react-markdown";
 import remarkGfm from "remark-gfm";
-import { type FC, memo, useState } from "react";
-import { CheckIcon, CopyIcon, CodeXml } from "lucide-react";
+import { type FC, memo, useState, useRef, type ComponentPropsWithoutRef } from "react";
+import { CheckIcon, CopyIcon, CodeXml, Table2 } from "lucide-react";
 
 import { useAuiState } from "@assistant-ui/react";
 import { TooltipIconButton } from "@/components/assistant-ui/tooltip-icon-button";
@@ -48,7 +48,7 @@ const CodeHeader: FC<CodeHeaderProps> = ({ language, code }) => {
   };
 
   return (
-    <div className="aui-code-header-root mt-2.5 flex items-center justify-between rounded-t-2xl border border-border/50 border-b-0 bg-muted/50 px-3 py-1.5 text-xs">
+    <div className="aui-code-header-root mt-2.5 flex items-center justify-between rounded-t-2xl border-none border-border/50 border-b-0 bg-muted/50 px-3 py-1.5 text-xs">
       <span className="aui-code-header-language flex items-center gap-1.5 font-medium text-muted-foreground lowercase">
         <CodeXml className="size-3.5" />
         {language}
@@ -57,6 +57,45 @@ const CodeHeader: FC<CodeHeaderProps> = ({ language, code }) => {
         {!isCopied && <CopyIcon />}
         {isCopied && <CheckIcon />}
       </TooltipIconButton>
+    </div>
+  );
+};
+
+const TableWithCopy: FC<ComponentPropsWithoutRef<"table">> = ({ className, ...props }) => {
+  const { isCopied, copyToClipboard } = useCopyToClipboard();
+  const tableRef = useRef<HTMLTableElement>(null);
+
+  const onCopy = () => {
+    if (!tableRef.current || isCopied) return;
+    const rows = Array.from(tableRef.current.querySelectorAll("tr"));
+    const text = rows
+      .map((row) =>
+        Array.from(row.querySelectorAll("th, td"))
+          .map((cell) => cell.textContent?.trim() ?? "")
+          .join("\t"),
+      )
+      .join("\n");
+    copyToClipboard(text);
+  };
+
+  return (
+    <div className="my-5 rounded-2xl border border-border/50 overflow-hidden">
+      <div className="flex items-center justify-between bg-muted/50 px-3 py-1.5 text-xs border-b border-border/50">
+        <span className="flex items-center gap-1.5 font-medium text-muted-foreground lowercase">
+          <Table2 className="size-3.5" />
+          table
+        </span>
+        <TooltipIconButton tooltip="Copy" onClick={onCopy}>
+          {!isCopied ? <CopyIcon /> : <CheckIcon />}
+        </TooltipIconButton>
+      </div>
+      <div className="w-full overflow-x-auto overflow-y-auto max-h-120">
+        <table
+          ref={tableRef}
+          className={cn("aui-md-table w-full border-collapse", className)}
+          {...props}
+        />
+      </div>
     </div>
   );
 };
@@ -193,21 +232,11 @@ const defaultComponents = memoizeMarkdownComponents({
       {...props}
     />
   ),
-  table: ({ className, ...props }) => (
-    <div className="my-5 w-full overflow-x-auto overflow-y-auto max-h-120 rounded-2xl">
-      <table
-        className={cn(
-          "aui-md-table w-full border-separate border-spacing-0",
-          className,
-        )}
-        {...props}
-      />
-    </div>
-  ),
+  table: ({ className, ...props }) => <TableWithCopy className={className} {...props} />,
   th: ({ className, ...props }) => (
     <th
       className={cn(
-        "aui-md-th sticky top-0 bg-muted border-muted-foreground/20 border-s border-t last:border-e px-2 py-1 text-start font-medium shadow-[0_1px_0] shadow-muted-foreground/20 first:rounded-ss-2xl last:rounded-se-2xl [[align=center]]:text-center [[align=right]]:text-right",
+        "aui-md-th sticky top-0 bg-muted px-3 py-2 text-start text-sm font-bold text-foreground border-b border-r border-border/50 last:border-r-0 [[align=center]]:text-center [[align=right]]:text-right",
         className,
       )}
       {...props}
@@ -216,7 +245,7 @@ const defaultComponents = memoizeMarkdownComponents({
   td: ({ className, ...props }) => (
     <td
       className={cn(
-        "aui-md-td border-muted-foreground/20 border-s border-b px-2 py-1 text-start last:border-e [[align=center]]:text-center [[align=right]]:text-right",
+        "aui-md-td px-3 py-2 text-start border-b border-r border-border/50 last:border-r-0 [tr:last-child_&]:border-b-0 [[align=center]]:text-center [[align=right]]:text-right",
         className,
       )}
       {...props}
@@ -225,7 +254,7 @@ const defaultComponents = memoizeMarkdownComponents({
   tr: ({ className, ...props }) => (
     <tr
       className={cn(
-        "aui-md-tr m-0 border-b p-0 first:border-t [&:last-child>td:first-child]:rounded-es-2xl [&:last-child>td:last-child]:rounded-ee-2xl",
+        "aui-md-tr",
         className,
       )}
       {...props}
