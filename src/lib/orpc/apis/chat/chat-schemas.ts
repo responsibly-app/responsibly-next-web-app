@@ -38,6 +38,7 @@ export const MessageSchema = z.object({
   parent_id: z.string().nullable(),
   format: z.string(),
   content: z.record(z.unknown()),
+  createdAt: z.date(),
 });
 
 export const ListMessagesInputSchema = z.object({

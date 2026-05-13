@@ -20,14 +20,29 @@ export function useHistoryAdapter(): ThreadHistoryAdapter {
                 try {
                     const rows = await orpc.chat.listMessages({ threadId: remoteId });
                     return {
-                        messages: rows.map((row) =>
-                            fmt.decode({
+                        messages: rows.map((row) => {
+                            const item = fmt.decode({
                                 id: row.id,
                                 parent_id: row.parent_id,
                                 format: row.format,
                                 content: row.content as never,
-                            }),
-                        ),
+                            });
+                            const msg = item.message as any;
+                            const meta: Record<string, unknown> = msg.metadata ?? {};
+                            return {
+                                ...item,
+                                message: {
+                                    ...msg,
+                                    metadata: {
+                                        ...meta,
+                                        custom: {
+                                            ...((meta.custom as Record<string, unknown>) ?? {}),
+                                            _createdAt: row.createdAt.toISOString(),
+                                        },
+                                    },
+                                } as typeof item.message,
+                            };
+                        }),
                     };
                 } catch {
                     return { messages: [] };
