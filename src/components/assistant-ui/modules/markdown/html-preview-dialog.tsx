@@ -3,11 +3,6 @@
 import { useState } from "react";
 import { createPortal } from "react-dom";
 import { CodeXml, Eye, Maximize2, Minimize2, X } from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { TooltipIconButton } from "@/components/assistant-ui/tooltip-icon-button";
 
 type HtmlPreviewDialogProps = {
@@ -32,60 +27,66 @@ export function HtmlPreviewDialog({ code }: HtmlPreviewDialogProps) {
     />
   );
 
+  const header = (fullscreen: boolean) => (
+    <div className="flex items-center justify-between px-4 py-2.5 border-b border-border/50 bg-muted/50 shrink-0">
+      <span className="flex items-center gap-1.5 text-sm font-medium text-foreground">
+        <CodeXml className="size-3.5" />
+        HTML Preview
+      </span>
+      <div className="flex items-center gap-0.5">
+        {fullscreen ? (
+          <TooltipIconButton tooltip="Exit Fullscreen" onClick={() => setIsFullscreen(false)}>
+            <Minimize2 />
+          </TooltipIconButton>
+        ) : (
+          <TooltipIconButton tooltip="Fullscreen" onClick={() => setIsFullscreen(true)}>
+            <Maximize2 />
+          </TooltipIconButton>
+        )}
+        <TooltipIconButton tooltip="Close" onClick={handleClose}>
+          <X />
+        </TooltipIconButton>
+      </div>
+    </div>
+  );
+
   return (
     <>
       <TooltipIconButton tooltip="Preview" onClick={() => setOpen(true)}>
         <Eye />
       </TooltipIconButton>
 
-      {/* Normal dialog */}
-      <Dialog open={open && !isFullscreen} onOpenChange={(next) => { if (!next) handleClose(); }}>
-        <DialogContent
-          showCloseButton={false}
-          className="flex flex-col gap-0 p-0 overflow-hidden"
-          style={{ height: "80vh", maxWidth: "56rem" }}
-        >
-          <div className="flex items-center justify-between px-4 py-2.5 border-b border-border/50 bg-muted/50 shrink-0">
-            <DialogTitle className="flex items-center gap-1.5 text-sm font-medium text-foreground">
-              <CodeXml className="size-3.5" />
-              HTML Preview
-            </DialogTitle>
-            <div className="flex items-center gap-0.5">
-              <TooltipIconButton tooltip="Fullscreen" onClick={() => setIsFullscreen(true)}>
-                <Maximize2 />
-              </TooltipIconButton>
-              <TooltipIconButton tooltip="Close" onClick={handleClose}>
-                <X />
-              </TooltipIconButton>
-            </div>
-          </div>
-          {iframe}
-        </DialogContent>
-      </Dialog>
+      {open && createPortal(
+        <>
+          {/* Backdrop */}
+          {!isFullscreen && (
+            <div
+              className="fixed inset-0 z-50 bg-black/50"
+              onClick={handleClose}
+            />
+          )}
 
-      {/* Fullscreen portal — bypasses Dialog overlay and positioning entirely */}
-      {open && isFullscreen && createPortal(
-        <div
-          role="dialog"
-          aria-label="HTML Preview"
-          className="fixed inset-0 z-100 flex flex-col bg-background"
-        >
-          <div className="flex items-center justify-between px-4 py-2.5 border-b border-border/50 bg-muted/50 shrink-0">
-            <span className="flex items-center gap-1.5 text-sm font-medium text-foreground">
-              <CodeXml className="size-3.5" />
-              HTML Preview
-            </span>
-            <div className="flex items-center gap-0.5">
-              <TooltipIconButton tooltip="Exit Fullscreen" onClick={() => setIsFullscreen(false)}>
-                <Minimize2 />
-              </TooltipIconButton>
-              <TooltipIconButton tooltip="Close" onClick={handleClose}>
-                <X />
-              </TooltipIconButton>
-            </div>
+          {/* Panel */}
+          <div
+            role="dialog"
+            aria-label="HTML Preview"
+            className={
+              isFullscreen
+                ? "fixed inset-0 z-50 flex flex-col bg-background"
+                : "fixed z-50 flex flex-col bg-background rounded-2xl shadow-lg border border-border/50 overflow-hidden"
+            }
+            style={isFullscreen ? undefined : {
+              top: "50%",
+              left: "50%",
+              transform: "translate(-50%, -50%)",
+              height: "80vh",
+              width: "min(56rem, 90vw)",
+            }}
+          >
+            {header(isFullscreen)}
+            {iframe}
           </div>
-          {iframe}
-        </div>,
+        </>,
         document.body,
       )}
     </>
