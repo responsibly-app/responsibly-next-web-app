@@ -25,6 +25,7 @@ import docIcon from "@/images/file-icons/doc.svg";
 import txtIcon from "@/images/file-icons/txt.svg";
 import jsonIcon from "@/images/file-icons/json.svg";
 import { fetchChunksForSource } from "@/supabase/utils/knowledge";
+import { Skeleton } from "@/components/ui/skeleton";
 // https://www.untitledui.com/resources/file-icons
 
 const extractDomain = (url: string): string => {
@@ -245,8 +246,15 @@ function RAGSourceBadge({ path, chunkIds }: RAGSourceItem) {
         </div>
         <div className="max-h-80 overflow-y-auto px-3 py-2">
           {isLoading ? (
-            <div className="flex items-center justify-center py-4">
-              <Loader2Icon className="size-4 animate-spin text-muted-foreground" />
+            // <div className="flex items-center justify-center py-4">
+            //   <Loader2Icon className="size-4 animate-spin text-muted-foreground" />
+            // </div>
+            <div className="flex flex-col gap-2 py-2">
+              <Skeleton className="h-3 w-full" />
+              <Skeleton className="h-3 w-5/6" />
+              <Skeleton className="h-3 w-4/6" />
+              <Skeleton className="h-3 w-full" />
+              <Skeleton className="h-3 w-3/5" />
             </div>
           ) : (
             <p className="text-xs leading-relaxed whitespace-pre-wrap">{content}</p>
