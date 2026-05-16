@@ -1,7 +1,7 @@
 "use client";
 
 import { type PropsWithChildren, useEffect, useState, type FC } from "react";
-import { XIcon, PlusIcon, FileText } from "lucide-react";
+import { XIcon, PlusIcon, FileText, File, ImageIcon } from "lucide-react";
 import {
   AttachmentPrimitive,
   ComposerPrimitive,
@@ -46,22 +46,25 @@ const useFileSrc = (file: File | undefined) => {
   return src;
 };
 
-const useAttachmentSrc = () => {
-  const { file, src } = useAuiState(
-    useShallow((s): { file?: File; src?: string } => {
-      if (s.attachment.type !== "image") return {};
-      if (s.attachment.file) return { file: s.attachment.file };
-      const src = s.attachment.content?.filter((c) => c.type === "image")[0]
-        ?.image;
-      if (!src) return {};
-      return { src };
+const useAttachmentData = () => {
+  const { file, storedSrc, type } = useAuiState(
+    useShallow((s) => {
+      const type = s.attachment.type;
+      const file = s.attachment.file;
+      if (file) return { type, file };
+      const storedSrc =
+        type === "image"
+          ? (s.attachment.content?.find((c) => c.type === "image")?.image as string | undefined)
+          : (s.attachment.content?.find((c) => c.type === "file")?.data as string | undefined);
+      return { type, storedSrc };
     }),
   );
 
+  const isImage = type === "image";
   const fileSrc = useFileSrc(file);
-  const signedSrc = useSignedBucketUrl(src);
+  const signedSrc = useSignedBucketUrl(storedSrc);
 
-  return fileSrc ?? signedSrc;
+  return { src: fileSrc ?? signedSrc, isImage, type };
 };
 
 type AttachmentPreviewProps = {
@@ -85,34 +88,47 @@ const AttachmentPreview: FC<AttachmentPreviewProps> = ({ src }) => {
   );
 };
 
-type AttachmentPreviewDialogProps = PropsWithChildren<{ src?: string }>;
+type AttachmentInteractionProps = PropsWithChildren<{ isImage: boolean; src?: string }>;
 
-const AttachmentPreviewDialog: FC<AttachmentPreviewDialogProps> = ({ src, children }) => {
-  if (!src) return children;
+const AttachmentInteraction: FC<AttachmentInteractionProps> = ({ isImage, src, children }) => {
+  if (!src) return <>{children}</>;
+
+  if (isImage) {
+    return (
+      <Dialog>
+        <DialogTrigger
+          className="aui-attachment-preview-trigger cursor-pointer transition-colors hover:bg-accent/50"
+          asChild
+        >
+          {children}
+        </DialogTrigger>
+        <DialogContent className="aui-attachment-preview-dialog-content p-2 sm:max-w-3xl [&>button]:rounded-full [&>button]:bg-foreground/60 [&>button]:p-1 [&>button]:opacity-100 [&>button]:ring-0! [&_svg]:text-background [&>button]:hover:[&_svg]:text-destructive">
+          <DialogTitle className="aui-sr-only sr-only">Image Attachment Preview</DialogTitle>
+          <div className="aui-attachment-preview relative mx-auto flex max-h-[80dvh] w-full items-center justify-center overflow-hidden bg-background rounded-2xl">
+            <AttachmentPreview src={src} />
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   return (
-    <Dialog>
-      <DialogTrigger
-        className="aui-attachment-preview-trigger cursor-pointer transition-colors hover:bg-accent/50"
-        asChild
-      >
-        {children}
-      </DialogTrigger>
-      <DialogContent className="aui-attachment-preview-dialog-content p-2 sm:max-w-3xl [&>button]:rounded-full [&>button]:bg-foreground/60 [&>button]:p-1 [&>button]:opacity-100 [&>button]:ring-0! [&_svg]:text-background [&>button]:hover:[&_svg]:text-destructive">
-        <DialogTitle className="aui-sr-only sr-only">
-          Image Attachment Preview
-        </DialogTitle>
-        <div className="aui-attachment-preview relative mx-auto flex max-h-[80dvh] w-full items-center justify-center overflow-hidden bg-background rounded-2xl">
-          <AttachmentPreview src={src} />
-        </div>
-      </DialogContent>
-    </Dialog>
+    <a href={src} target="_blank" rel="noopener noreferrer" className="contents">
+      {children}
+    </a>
   );
 };
 
-type AttachmentThumbProps = { src?: string };
+const attachmentFallbackIcon = {
+  image: ImageIcon,
+  document: FileText,
+  file: FileText,
+} as const;
 
-const AttachmentThumb: FC<AttachmentThumbProps> = ({ src }) => {
+type AttachmentThumbProps = { src?: string; type: string };
+
+const AttachmentThumb: FC<AttachmentThumbProps> = ({ src, type }) => {
+  const FallbackIcon = attachmentFallbackIcon[type as keyof typeof attachmentFallbackIcon] ?? FileText;
   return (
     <Avatar className="aui-attachment-tile-avatar h-full w-full rounded-none">
       <AvatarImage
@@ -121,7 +137,7 @@ const AttachmentThumb: FC<AttachmentThumbProps> = ({ src }) => {
         className="aui-attachment-tile-image object-cover"
       />
       <AvatarFallback>
-        <FileText className="aui-attachment-tile-fallback-icon size-8 text-muted-foreground" />
+        <FallbackIcon className="aui-attachment-tile-fallback-icon size-8 text-muted-foreground" />
       </AvatarFallback>
     </Avatar>
   );
@@ -130,22 +146,16 @@ const AttachmentThumb: FC<AttachmentThumbProps> = ({ src }) => {
 const AttachmentUI: FC = () => {
   const aui = useAui();
   const isComposer = aui.attachment.source !== "message";
-  const src = useAttachmentSrc();
+  const { src, isImage, type } = useAttachmentData();
 
-  const isImage = useAuiState((s) => s.attachment.type === "image");
-  const typeLabel = useAuiState((s) => {
-    const type = s.attachment.type;
+  const typeLabel = (() => {
     switch (type) {
-      case "image":
-        return "Image";
-      case "document":
-        return "Document";
-      case "file":
-        return "File";
-      default:
-        return type;
+      case "image": return "Image";
+      case "document": return "Document";
+      case "file": return "File";
+      default: return type;
     }
-  });
+  })();
 
   return (
     <Tooltip>
@@ -155,7 +165,7 @@ const AttachmentUI: FC = () => {
           isImage && "aui-attachment-root-composer only:*:first:size-24",
         )}
       >
-        <AttachmentPreviewDialog src={src}>
+        <AttachmentInteraction isImage={isImage} src={src}>
           <TooltipTrigger asChild>
             <div
               className="aui-attachment-tile size-14 cursor-pointer overflow-hidden rounded-[calc(var(--composer-radius)-var(--composer-padding))] border bg-muted transition-opacity hover:opacity-75"
@@ -163,10 +173,10 @@ const AttachmentUI: FC = () => {
               tabIndex={0}
               aria-label={`${typeLabel} attachment`}
             >
-              <AttachmentThumb src={src} />
+              <AttachmentThumb src={isImage ? src : undefined} type={type} />
             </div>
           </TooltipTrigger>
-        </AttachmentPreviewDialog>
+        </AttachmentInteraction>
         {isComposer && <AttachmentRemove />}
       </AttachmentPrimitive.Root>
       <TooltipContent side="top">
