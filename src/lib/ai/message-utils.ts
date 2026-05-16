@@ -1,6 +1,8 @@
 import type { UIMessage } from "ai";
 import { logDedup } from "./logger";
 import { supabase } from "@/supabase/client";
+import { inlineTextFileParts } from "./file-parts";
+import { injectQuoteContext } from "@assistant-ui/react-ai-sdk";
 
 const CHAT_ATTACH_BUCKET = "chat-attachments";
 
@@ -85,10 +87,12 @@ export function takeLastMessages(messages: UIMessage[], count: number): UIMessag
 
 // Applies all message transformations in order before sending to the model.
 export async function prepareUiMessages(messages: UIMessage[], maxContextMessages: number) {
-  const uiMessages = await withSignedAttachmentUrls(
-    stripCallProviderMetadata(
-      deduplicateMessages(
-        takeLastMessages(messages, maxContextMessages),
+  const uiMessages = await inlineTextFileParts(
+    await withSignedAttachmentUrls(
+      stripCallProviderMetadata(
+        deduplicateMessages(
+          injectQuoteContext(takeLastMessages(messages, maxContextMessages)),
+        ),
       ),
     ),
   );

@@ -48,7 +48,7 @@ import { ThreadWelcome } from "./modules/thread/thread-welcome";
 import { ThinkingIndicator, ThreadScrollToBottom } from "./modules/thread/thread-utils";
 import { AssistantCopy, AssistantMore, AssistantReload, AssistantSpeakToggle } from "./modules/thread/assistant-actions";
 
-const ENABLE_QUOTE_CONTEXT = false; // set to false to disable quote context injection and rendering
+const ENABLE_QUOTE_CONTEXT = true; // set to false to disable quote context injection and rendering
 const MODEL_CONTEXT_WINDOW = 400_000; // 400k tokens ~= 300 pages of text
 
 export const Thread: FC = () => {
@@ -125,12 +125,12 @@ const Composer: FC = () => {
 
   return (
     <ComposerPrimitive.Root className="aui-composer-root relative flex w-full flex-col">
-      {ENABLE_QUOTE_CONTEXT && <ComposerQuotePreview />}
       <ComposerPrimitive.AttachmentDropzone asChild>
         <div
           data-slot="aui_composer-shell"
           className="flex w-full flex-col gap-2 rounded-(--composer-radius) border border-ring/50 bg-card/50 backdrop-blur-sm p-(--composer-padding) transition-shadow focus-within:border-ring/75 focus-within:ring-1 focus-within:ring-ring/20 data-[dragging=true]:border-ring data-[dragging=true]:border-dashed data-[dragging=true]:bg-accent/50"
         >
+          {ENABLE_QUOTE_CONTEXT && <ComposerQuotePreview />}
           <ComposerAttachments />
           <ComposerPrimitive.Input
             placeholder="Send a message..."
@@ -262,11 +262,6 @@ const AssistantMessage: FC = () => {
         className="wrap-break-word px-2 text-foreground leading-relaxed"
       >
         <MessagePartErrorBoundary>
-          {ENABLE_QUOTE_CONTEXT && (
-            <MessagePrimitive.Quote>
-              {(quote) => <QuoteBlock {...quote} />}
-            </MessagePrimitive.Quote>
-          )}
           <MessagePrimitive.GroupedParts
             groupBy={(part) => {
               if (part.type === "reasoning")
@@ -337,7 +332,11 @@ const UserMessage: FC = () => {
       data-role="user"
     >
       <UserMessageAttachments />
-
+      {ENABLE_QUOTE_CONTEXT && (
+        <MessagePrimitive.Quote>
+          {(quote) => <QuoteBlock {...quote} />}
+        </MessagePrimitive.Quote>
+      )}
       <div className="aui-user-message-content-wrapper relative col-start-2 min-w-0">
         <div className="aui-user-message-content wrap-break-word peer rounded-2xl bg-muted px-4 py-2.5 text-foreground empty:hidden">
           <MessagePrimitive.Parts />
