@@ -332,13 +332,14 @@ const UserMessage: FC = () => {
       data-role="user"
     >
       <UserMessageAttachments />
-      {ENABLE_QUOTE_CONTEXT && (
-        <MessagePrimitive.Quote>
-          {(quote) => <QuoteBlock {...quote} />}
-        </MessagePrimitive.Quote>
-      )}
+
       <div className="aui-user-message-content-wrapper relative col-start-2 min-w-0">
         <div className="aui-user-message-content wrap-break-word peer rounded-2xl bg-muted px-4 py-2.5 text-foreground empty:hidden">
+          {ENABLE_QUOTE_CONTEXT && (
+            <MessagePrimitive.Quote>
+              {(quote) => <QuoteBlock {...quote} />}
+            </MessagePrimitive.Quote>
+          )}
           <MessagePrimitive.Parts />
         </div>
         <div className="aui-user-action-bar-wrapper absolute inset-s-0 top-1/2 -translate-x-full -translate-y-1/2 pe-2 peer-empty:hidden rtl:translate-x-full">
