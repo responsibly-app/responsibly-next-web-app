@@ -3,7 +3,7 @@ import {
   ComposerAttachments,
   UserMessageAttachments,
 } from "@/components/assistant-ui/attachment";
-import { MarkdownText } from "@/components/assistant-ui/markdown-text";
+import { MarkdownText } from "~/src/components/assistant-ui/modules/markdown/markdown-text";
 import {
   Reasoning,
   ReasoningContent,

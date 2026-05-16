@@ -67,7 +67,7 @@ const nextConfig: NextConfig = {
               "font-src 'self' https:",
               "connect-src 'self' https:",
               // assistant-ui devtools panel
-              "frame-src 'self' https://devtools-frame.assistant-ui.com https://vercel.live",
+              "frame-src 'self' blob: https://devtools-frame.assistant-ui.com https://vercel.live",
               // REQUIRED for Zoom embedding
               "frame-ancestors 'self' https://*.zoom.us https://*.zoom.com",
               // prevents iframe injection attacks

@@ -17,6 +17,7 @@ import { TooltipIconButton } from "@/components/assistant-ui/tooltip-icon-button
 import { cn } from "@/lib/utils";
 import { SyntaxHighlighter } from "./shiki-highlighter";
 import { MermaidDiagram } from "./mermaid-diagram";
+import { HtmlPreviewDialog } from "./html-preview-dialog";
 
 const MarkdownTextImpl = () => {
   // Guard against rendering outside a text/reasoning part context — can occur during
@@ -40,11 +41,36 @@ const MarkdownTextImpl = () => {
 
 export const MarkdownText = memo(MarkdownTextImpl);
 
+const LANG_EXT: Record<string, string> = {
+  javascript: "js", typescript: "ts", jsx: "jsx", tsx: "tsx",
+  python: "py", ruby: "rb", go: "go", rust: "rs", java: "java",
+  kotlin: "kt", swift: "swift", c: "c", cpp: "cpp", csharp: "cs",
+  php: "php", html: "html", css: "css", scss: "scss", sass: "sass",
+  json: "json", yaml: "yaml", yml: "yml", toml: "toml", xml: "xml",
+  sql: "sql", sh: "sh", bash: "sh", shell: "sh", markdown: "md",
+  dockerfile: "Dockerfile", graphql: "graphql",
+};
+
 const CodeHeader: FC<CodeHeaderProps> = ({ language, code }) => {
   const { isCopied, copyToClipboard } = useCopyToClipboard();
+  const isHtml = language === "html";
+
   const onCopy = () => {
     if (!code || isCopied) return;
     copyToClipboard(code);
+  };
+
+  const onDownload = () => {
+    if (!code) return;
+    const ext = (language && LANG_EXT[language.toLowerCase()]) ?? language ?? "txt";
+    const filename = `code.${ext}`;
+    const blob = new Blob([code], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
   return (
@@ -53,10 +79,16 @@ const CodeHeader: FC<CodeHeaderProps> = ({ language, code }) => {
         <CodeXml className="size-3.5" />
         {language}
       </span>
-      <TooltipIconButton tooltip="Copy" onClick={onCopy}>
-        {!isCopied && <CopyIcon />}
-        {isCopied && <CheckIcon />}
-      </TooltipIconButton>
+      <div className="flex items-center gap-0.5">
+        {isHtml && <HtmlPreviewDialog code={code} />}
+        <TooltipIconButton tooltip="Download" onClick={onDownload}>
+          <DownloadIcon />
+        </TooltipIconButton>
+        <TooltipIconButton tooltip="Copy" onClick={onCopy}>
+          {!isCopied && <CopyIcon />}
+          {isCopied && <CheckIcon />}
+        </TooltipIconButton>
+      </div>
     </div>
   );
 };
@@ -97,8 +129,8 @@ const TableWithCopy: FC<ComponentPropsWithoutRef<"table">> = ({ className, ...pr
 
   return (
     <div className="my-5 rounded-2xl border border-border/50 overflow-hidden">
-      <div className="flex items-center justify-between bg-muted/50 px-3 py-1.5 text-xs border-b border-border/50">
-        <span className="flex items-center gap-1.5 font-medium text-foreground capitalize">
+      <div className="flex items-center justify-between bg-muted/50 px-4 py-2 text-sm border-border/50">
+        <span className="flex items-center gap-1.5 text-foreground capitalize">
           <Table2 className="size-3.5" />
           table
         </span>
@@ -258,7 +290,7 @@ const defaultComponents = memoizeMarkdownComponents({
   th: ({ className, ...props }) => (
     <th
       className={cn(
-        "aui-md-th sticky top-0 bg-muted px-3 py-2 text-start text-sm font-bold text-foreground border-b border-r border-border/50 last:border-r-0 [[align=center]]:text-center [[align=right]]:text-right",
+        "aui-md-th sticky top-0 bg-muted/50 backdrop-blur-xs px-4 py-2 text-start text-sm font-bold text-foreground border-b border-r-none border-border/50 border-b-border last:border-r-0 [[align=center]]:text-center [[align=right]]:text-right",
         className,
       )}
       {...props}
@@ -267,7 +299,7 @@ const defaultComponents = memoizeMarkdownComponents({
   td: ({ className, ...props }) => (
     <td
       className={cn(
-        "aui-md-td px-3 py-2 text-start border-b border-r border-border/50 last:border-r-0 [tr:last-child_&]:border-b-0 [[align=center]]:text-center [[align=right]]:text-right",
+        "aui-md-td px-4 py-2 bg-muted/50 text-start text-sm border-b border-r-none border-border/50 last:border-r-0 [tr:last-child_&]:pb-4 [tr:last-child_&]:border-b-0 [[align=center]]:text-center [[align=right]]:text-right",
         className,
       )}
       {...props}
