@@ -10,7 +10,7 @@ import {
 } from "@assistant-ui/react-markdown";
 import remarkGfm from "remark-gfm";
 import { type FC, memo, useState, useRef, type ComponentPropsWithoutRef } from "react";
-import { CheckIcon, CopyIcon, CodeXml, Table2 } from "lucide-react";
+import { CheckIcon, CopyIcon, CodeXml, Table2, DownloadIcon } from "lucide-react";
 
 import { useAuiState } from "@assistant-ui/react";
 import { TooltipIconButton } from "@/components/assistant-ui/tooltip-icon-button";
@@ -48,8 +48,8 @@ const CodeHeader: FC<CodeHeaderProps> = ({ language, code }) => {
   };
 
   return (
-    <div className="aui-code-header-root mt-2.5 flex items-center justify-between rounded-t-2xl border-none border-border/50 border-b-0 bg-muted/50 px-3 py-1.5 text-xs">
-      <span className="aui-code-header-language flex items-center gap-1.5 font-medium text-muted-foreground lowercase">
+    <div className="aui-code-header-root mt-2.5 flex items-center justify-between rounded-t-2xl border-none border-border/50 border-b-0 bg-muted/75 px-4 pt-3 text-sm">
+      <span className="aui-code-header-language flex items-center gap-1.5 font-medium text-foreground capitalize">
         <CodeXml className="size-3.5" />
         {language}
       </span>
@@ -65,29 +65,51 @@ const TableWithCopy: FC<ComponentPropsWithoutRef<"table">> = ({ className, ...pr
   const { isCopied, copyToClipboard } = useCopyToClipboard();
   const tableRef = useRef<HTMLTableElement>(null);
 
+  const getRows = () => {
+    if (!tableRef.current) return [];
+    return Array.from(tableRef.current.querySelectorAll("tr")).map((row) =>
+      Array.from(row.querySelectorAll("th, td")).map((cell) => cell.textContent?.trim() ?? ""),
+    );
+  };
+
   const onCopy = () => {
     if (!tableRef.current || isCopied) return;
-    const rows = Array.from(tableRef.current.querySelectorAll("tr"));
-    const text = rows
-      .map((row) =>
-        Array.from(row.querySelectorAll("th, td"))
-          .map((cell) => cell.textContent?.trim() ?? "")
-          .join("\t"),
-      )
+    const text = getRows()
+      .map((cells) => cells.join("\t"))
       .join("\n");
     copyToClipboard(text);
+  };
+
+  const onDownload = () => {
+    const rows = getRows();
+    if (!rows.length) return;
+    const csv = rows
+      .map((cells) => cells.map((c) => `"${c.replace(/"/g, '""')}"`).join(","))
+      .join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "table.csv";
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
   return (
     <div className="my-5 rounded-2xl border border-border/50 overflow-hidden">
       <div className="flex items-center justify-between bg-muted/50 px-3 py-1.5 text-xs border-b border-border/50">
-        <span className="flex items-center gap-1.5 font-medium text-muted-foreground lowercase">
+        <span className="flex items-center gap-1.5 font-medium text-foreground capitalize">
           <Table2 className="size-3.5" />
           table
         </span>
-        <TooltipIconButton tooltip="Copy" onClick={onCopy}>
-          {!isCopied ? <CopyIcon /> : <CheckIcon />}
-        </TooltipIconButton>
+        <div className="flex items-center gap-0.5">
+          <TooltipIconButton tooltip="Download CSV" onClick={onDownload}>
+            <DownloadIcon />
+          </TooltipIconButton>
+          <TooltipIconButton tooltip="Copy" onClick={onCopy}>
+            {!isCopied ? <CopyIcon /> : <CheckIcon />}
+          </TooltipIconButton>
+        </div>
       </div>
       <div className="w-full overflow-x-auto overflow-y-auto max-h-120">
         <table
