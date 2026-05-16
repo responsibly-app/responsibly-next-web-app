@@ -2,6 +2,9 @@ import { createAzure } from "@ai-sdk/azure";
 import { createOpenAI, OpenAILanguageModelResponsesOptions } from "@ai-sdk/openai";
 import { createAnthropic } from "@ai-sdk/anthropic";
 
+const BASE_URL = "https://als-litellm-cnfcftage7dgh9aa.canadacentral-01.azurewebsites.net";
+const API_KEY = process.env.MODEL_API_KEY!;
+
 interface ProviderConfig {
     models: {
         primaryChatModel: any,
@@ -38,8 +41,8 @@ const AzureConfig: ProviderConfig = {
 
 // ---------------------------------------------------------------------------------------
 const OpenAI = createOpenAI({
-    baseURL: "https://als-litellm-cnfcftage7dgh9aa.canadacentral-01.azurewebsites.net",
-    apiKey: process.env.MODEL_API_KEY!,
+    baseURL: BASE_URL,
+    apiKey: API_KEY,
 });
 
 const OpenAIConfig: ProviderConfig = {
@@ -64,8 +67,8 @@ const OpenAIConfig: ProviderConfig = {
 // ---------------------------------------------------------------------------------------
 
 const Anthropic = createAnthropic({
-    baseURL: "https://als-litellm-cnfcftage7dgh9aa.canadacentral-01.azurewebsites.net",
-    apiKey: process.env.MODEL_API_KEY!,
+    baseURL: BASE_URL,
+    apiKey: API_KEY,
 });
 
 const AnthropicConfig: ProviderConfig = {
