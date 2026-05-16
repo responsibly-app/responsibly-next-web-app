@@ -31,6 +31,7 @@
     "save-zoom-assets": "for asset in cover feature-1 feature-2 feature-3 feature-4; do curl -s \"http://localhost:3000/zoom-assets/$asset\" -o \"./documentation/integrations/zoom/zoom-assets/$asset.png\" && echo \"Saved $asset.png\"; done"
   },
   "dependencies": {
+    "@ai-sdk/anthropic": "^3.0.77",
     "@ai-sdk/azure": "^3.0.63",
     "@ai-sdk/google": "^3.0.31",
     "@ai-sdk/openai": "^3.0.34",
