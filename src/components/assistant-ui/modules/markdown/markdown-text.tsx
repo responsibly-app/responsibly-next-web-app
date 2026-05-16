@@ -299,7 +299,7 @@ const defaultComponents = memoizeMarkdownComponents({
   td: ({ className, ...props }) => (
     <td
       className={cn(
-        "aui-md-td px-4 py-2 bg-muted/50 text-start text-sm border-b border-r-none border-border/50 last:border-r-0 [tr:last-child_&]:pb-4 [tr:last-child_&]:border-b-0 [[align=center]]:text-center [[align=right]]:text-right",
+        "aui-md-td px-4 py-2 bg-muted/50 text-start text-sm border-b border-r-none border-border/50 last:border-r-0 [tr:last-child_&]:pb-3 [tr:last-child_&]:border-b-0 [[align=center]]:text-center [[align=right]]:text-right",
         className,
       )}
       {...props}
