@@ -4,12 +4,14 @@ import { useState } from "react";
 import { createPortal } from "react-dom";
 import { CodeXml, Eye, Maximize2, Minimize2, X } from "lucide-react";
 import { TooltipIconButton } from "@/components/assistant-ui/tooltip-icon-button";
+import { cn } from "@/lib/utils";
 
 type HtmlPreviewDialogProps = {
   code: string;
+  disabled?: boolean;
 };
 
-export function HtmlPreviewDialog({ code }: HtmlPreviewDialogProps) {
+export function HtmlPreviewDialog({ code, disabled = false }: HtmlPreviewDialogProps) {
   const [open, setOpen] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
 
@@ -52,9 +54,15 @@ export function HtmlPreviewDialog({ code }: HtmlPreviewDialogProps) {
 
   return (
     <>
-      <TooltipIconButton tooltip="Preview" onClick={() => setOpen(true)}>
-        <Eye />
-      </TooltipIconButton>
+      <span className={cn(disabled && "cursor-not-allowed")}>
+        <TooltipIconButton
+          tooltip="Preview"
+          onClick={() => setOpen(true)}
+          className={cn(disabled && "pointer-events-none opacity-50")}
+        >
+          <Eye />
+        </TooltipIconButton>
+      </span>
 
       {open && createPortal(
         <>

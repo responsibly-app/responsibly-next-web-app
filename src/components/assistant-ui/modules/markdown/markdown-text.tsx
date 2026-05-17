@@ -10,7 +10,7 @@ import {
 } from "@assistant-ui/react-markdown";
 import remarkGfm from "remark-gfm";
 import { type FC, memo, useState, useRef, type ComponentPropsWithoutRef } from "react";
-import { CheckIcon, CopyIcon, CodeXml, Table2, DownloadIcon } from "lucide-react";
+import { CheckIcon, CopyIcon, CodeXml, Table2, DownloadIcon, Loader2 } from "lucide-react";
 
 import { useAuiState } from "@assistant-ui/react";
 import { TooltipIconButton } from "@/components/assistant-ui/tooltip-icon-button";
@@ -43,9 +43,16 @@ const MarkdownTextImpl = () => {
 export const MarkdownText = memo(MarkdownTextImpl);
 
 
-const CodeHeader: FC<CodeHeaderProps> = ({ language, code }) => {
+const CodeHeader: FC<CodeHeaderProps> = ({ language, code, node }) => {
   const { isCopied, copyToClipboard } = useCopyToClipboard();
   const isHtml = language === "html";
+
+  const isStreaming = useAuiState((s) => {
+    if ((s as any).message?.status?.type !== "running") return false;
+    const text: string = (s as any).part?.text ?? "";
+    const endOffset = node?.position?.end?.offset;
+    return endOffset === undefined || endOffset >= text.length;
+  });
 
   const onCopy = () => {
     if (!code || isCopied) return;
@@ -66,16 +73,22 @@ const CodeHeader: FC<CodeHeaderProps> = ({ language, code }) => {
   };
 
   return (
-    <div className="aui-code-header-root mt-2.5 flex items-center justify-between rounded-t-2xl border-none border-border/50 border-b-0 bg-muted/75 px-4 pt-3 text-sm">
+    <div className="aui-code-header-root mt-2.5 flex items-center justify-between rounded-t-2xl border-none border-border/50 border-b-0 bg-muted/75 px-4 pt-3 pb-2 text-sm">
       <span className="aui-code-header-language flex items-center gap-1.5 font-medium text-foreground">
-        <CodeXml className="size-3.5" />
+        {isStreaming ? <Loader2 className="size-3.5 animate-spin" /> : <CodeXml className="size-3.5" />}
         {getLangLabel(language)}
       </span>
       <div className="flex items-center gap-0.5">
-        {isHtml && <HtmlPreviewDialog code={code} />}
-        <TooltipIconButton tooltip="Download" onClick={onDownload}>
-          <DownloadIcon />
-        </TooltipIconButton>
+        {isHtml && <HtmlPreviewDialog code={code} disabled={isStreaming} />}
+        <span className={cn(isStreaming && "cursor-not-allowed")}>
+          <TooltipIconButton
+            tooltip="Download"
+            onClick={onDownload}
+            className={cn(isStreaming && "pointer-events-none opacity-50")}
+          >
+            <DownloadIcon />
+          </TooltipIconButton>
+        </span>
         <TooltipIconButton tooltip="Copy" onClick={onCopy}>
           {!isCopied && <CopyIcon />}
           {isCopied && <CheckIcon />}
