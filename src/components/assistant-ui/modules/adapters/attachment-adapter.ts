@@ -4,6 +4,7 @@ import type { AttachmentAdapter, Attachment, PendingAttachment, CompleteAttachme
 import { orpc } from "@/lib/orpc/orpc-client";
 import { mimeTypeToAttachmentType } from "@/lib/utils/image";
 import { toast } from "sonner";
+import { formatFileSize } from "../../file";
 
 export const CHAT_ATTACHMENT_ACCEPT = "image/jpeg,image/png,image/gif,image/webp,text/plain,text/markdown,text/csv,application/pdf";
 export const CHAT_ATTACHMENT_MAX = 5;
@@ -35,8 +36,7 @@ export class SupabaseChatAttachmentAdapter implements AttachmentAdapter {
     }
 
     if (file.size > CHAT_ATTACHMENT_MAX_SIZE) {
-      toast.error("File too large", { description: `Each file must be ${CHAT_ATTACHMENT_MAX_SIZE / (1024 * 1024)} MB or smaller.` });
-      // throw new Error("File too large");
+      toast.error("File too large", { description: `${file.name} (${formatFileSize(file.size)}) — must be ${formatFileSize(CHAT_ATTACHMENT_MAX_SIZE)} or smaller.` });
       return;
     }
 

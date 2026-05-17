@@ -114,9 +114,12 @@ const ThreadEmptyContent: FC = () => {
 function warnInvalidFiles(files: File[]) {
   const wrongType = files.filter((f) => !isFileTypeAccepted(f.type));
   if (wrongType.length === 0) return;
-  toast.error("File format not supported", {
-    description: "Supported formats: JPEG, PNG, GIF, WebP, PDF, TXT, Markdown, CSV.",
-  });
+  for (const f of wrongType) {
+    const ext = f.name.split(".").pop()?.toUpperCase() ?? "unknown";
+    toast.error("File format not supported", {
+      description: `${f.name} (${ext}) — Supported formats: JPEG, PNG, GIF, WebP, PDF, TXT, Markdown, CSV.`,
+    });
+  }
 }
 
 const Composer: FC = () => {
