@@ -7,6 +7,7 @@ import { toast } from "sonner";
 
 export const CHAT_ATTACHMENT_ACCEPT = "image/jpeg,image/png,image/gif,image/webp,text/plain,text/markdown,text/csv,application/pdf";
 export const CHAT_ATTACHMENT_MAX = 5;
+export const CHAT_ATTACHMENT_MAX_SIZE = 5 * 1024 * 1024; // 5 MB
 
 export function isFileTypeAccepted(mimeType: string): boolean {
   return CHAT_ATTACHMENT_ACCEPT.split(",").some((accepted) => {
@@ -30,6 +31,12 @@ export class SupabaseChatAttachmentAdapter implements AttachmentAdapter {
       toast.error("Attachment limit reached", {
         description: `You can attach a maximum of ${CHAT_ATTACHMENT_MAX} files per message.`,
       });
+      return;
+    }
+
+    if (file.size > CHAT_ATTACHMENT_MAX_SIZE) {
+      toast.error("File too large", { description: `Each file must be ${CHAT_ATTACHMENT_MAX_SIZE / (1024 * 1024)} MB or smaller.` });
+      // throw new Error("File too large");
       return;
     }
 

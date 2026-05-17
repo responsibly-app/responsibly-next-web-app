@@ -73,8 +73,8 @@ function GeneratedFileCard({
 
 export const generateFileTool: Toolkit["generate_file"] = {
   type: "backend",
-  render: ({ result }) => {
-    if (!result) {
+  render: ({ args, status, result, interrupt, resume }) => {
+    if (status.type === "running") {
       return <FileGenerationAnimation />;
     }
     const r = result as GenerateFileResult;

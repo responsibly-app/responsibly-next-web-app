@@ -111,16 +111,23 @@ const ThreadEmptyContent: FC = () => {
   return <ThreadWelcome />;
 };
 
+function warnInvalidFiles(files: File[]) {
+  const wrongType = files.filter((f) => !isFileTypeAccepted(f.type));
+  if (wrongType.length === 0) return;
+  toast.error("File format not supported", {
+    description: "Supported formats: JPEG, PNG, GIF, WebP, PDF, TXT, Markdown, CSV.",
+  });
+}
+
 const Composer: FC = () => {
   const handlePaste = useCallback((e: React.ClipboardEvent) => {
     const files = Array.from(e.clipboardData?.files ?? []);
-    if (files.length === 0) return;
-    const invalid = files.filter((f) => !isFileTypeAccepted(f.type));
-    if (invalid.length === 0) return;
-    toast.error("File format not supported", {
-      description: "Supported formats: JPEG, PNG, GIF, WebP, PDF, TXT, Markdown, CSV.",
-    });
-    if (invalid.length === files.length) e.preventDefault();
+    if (files.length > 0) warnInvalidFiles(files);
+  }, []);
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    const files = Array.from(e.dataTransfer?.files ?? []);
+    if (files.length > 0) warnInvalidFiles(files);
   }, []);
 
   return (
@@ -129,6 +136,7 @@ const Composer: FC = () => {
         <div
           data-slot="aui_composer-shell"
           className="flex w-full flex-col gap-2 rounded-(--composer-radius) border border-ring/50 bg-card/50 backdrop-blur-sm p-(--composer-padding) transition-shadow focus-within:border-ring/75 focus-within:ring-1 focus-within:ring-ring/20 data-[dragging=true]:border-ring data-[dragging=true]:border-dashed data-[dragging=true]:bg-accent/50"
+          onDropCapture={handleDrop}
         >
           {ENABLE_QUOTE_CONTEXT && <ComposerQuotePreview />}
           <ComposerAttachments />
