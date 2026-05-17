@@ -18,6 +18,7 @@ import { cn } from "@/lib/utils";
 import { SyntaxHighlighter } from "./shiki-highlighter";
 import { MermaidDiagram } from "./mermaid-diagram";
 import { HtmlPreviewDialog } from "./html-preview-dialog";
+import { getLangLabel, getLangExt } from "./language-config";
 
 const MarkdownTextImpl = () => {
   // Guard against rendering outside a text/reasoning part context — can occur during
@@ -41,15 +42,6 @@ const MarkdownTextImpl = () => {
 
 export const MarkdownText = memo(MarkdownTextImpl);
 
-const LANG_EXT: Record<string, string> = {
-  javascript: "js", typescript: "ts", jsx: "jsx", tsx: "tsx",
-  python: "py", ruby: "rb", go: "go", rust: "rs", java: "java",
-  kotlin: "kt", swift: "swift", c: "c", cpp: "cpp", csharp: "cs",
-  php: "php", html: "html", css: "css", scss: "scss", sass: "sass",
-  json: "json", yaml: "yaml", yml: "yml", toml: "toml", xml: "xml",
-  sql: "sql", sh: "sh", bash: "sh", shell: "sh", markdown: "md",
-  dockerfile: "Dockerfile", graphql: "graphql",
-};
 
 const CodeHeader: FC<CodeHeaderProps> = ({ language, code }) => {
   const { isCopied, copyToClipboard } = useCopyToClipboard();
@@ -62,7 +54,7 @@ const CodeHeader: FC<CodeHeaderProps> = ({ language, code }) => {
 
   const onDownload = () => {
     if (!code) return;
-    const ext = (language && LANG_EXT[language.toLowerCase()]) ?? language ?? "txt";
+    const ext = getLangExt(language);
     const filename = `code.${ext}`;
     const blob = new Blob([code], { type: "text/plain;charset=utf-8" });
     const url = URL.createObjectURL(blob);
@@ -75,9 +67,9 @@ const CodeHeader: FC<CodeHeaderProps> = ({ language, code }) => {
 
   return (
     <div className="aui-code-header-root mt-2.5 flex items-center justify-between rounded-t-2xl border-none border-border/50 border-b-0 bg-muted/75 px-4 pt-3 text-sm">
-      <span className="aui-code-header-language flex items-center gap-1.5 font-medium text-foreground capitalize">
+      <span className="aui-code-header-language flex items-center gap-1.5 font-medium text-foreground">
         <CodeXml className="size-3.5" />
-        {language}
+        {getLangLabel(language)}
       </span>
       <div className="flex items-center gap-0.5">
         {isHtml && <HtmlPreviewDialog code={code} />}
