@@ -4,6 +4,7 @@ import "@assistant-ui/react-markdown/styles/dot.css";
 
 import {
   type CodeHeaderProps,
+  type SyntaxHighlighterProps,
   MarkdownTextPrimitive,
   unstable_memoizeMarkdownComponents as memoizeMarkdownComponents,
   useIsMarkdownCodeBlock,
@@ -73,7 +74,7 @@ const CodeHeader: FC<CodeHeaderProps> = ({ language, code, node }) => {
   };
 
   return (
-    <div className="aui-code-header-root mt-2.5 flex items-center justify-between rounded-t-2xl border-none border-border/50 border-b-0 bg-muted/75 px-4 pt-3 pb-2 text-sm">
+    <div className="aui-code-header-root sticky top-0 z-10 flex items-center justify-between rounded-t-2xl border-none border-border/50 border-b-0 bg-muted/75 px-4 pt-3 pb-2 text-sm backdrop-blur-sm">
       <span className="aui-code-header-language flex items-center gap-1.5 font-medium text-foreground">
         {isStreaming ? <Loader2 className="size-3.5 animate-spin" /> : <CodeXml className="size-3.5" />}
         {getLangLabel(language)}
@@ -97,6 +98,13 @@ const CodeHeader: FC<CodeHeaderProps> = ({ language, code, node }) => {
     </div>
   );
 };
+
+const CodeBlock: FC<SyntaxHighlighterProps> = ({ language, code, node }) => (
+  <div className="relative mt-2.5">
+    <CodeHeader language={language} code={code} node={node} />
+    <SyntaxHighlighter language={language} code={code} node={node} />
+  </div>
+);
 
 const TableWithCopy: FC<ComponentPropsWithoutRef<"table">> = ({ className, ...props }) => {
   const { isCopied, copyToClipboard } = useCopyToClipboard();
@@ -179,7 +187,7 @@ const useCopyToClipboard = ({
 };
 
 const defaultComponents = memoizeMarkdownComponents({
-  SyntaxHighlighter: SyntaxHighlighter,
+  SyntaxHighlighter: CodeBlock,
   h1: ({ className, ...props }) => (
     <h1
       className={cn(
@@ -350,5 +358,4 @@ const defaultComponents = memoizeMarkdownComponents({
       />
     );
   },
-  CodeHeader,
 });
