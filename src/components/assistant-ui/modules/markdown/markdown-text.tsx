@@ -156,7 +156,7 @@ const TableWithCopy: FC<ComponentPropsWithoutRef<"table">> = ({ className, ...pr
           </TooltipIconButton>
         </div>
       </div>
-      <div className="w-full overflow-x-auto">
+      <div className="w-full overflow-x-auto overflow-y-clip">
         <table
           ref={tableRef}
           className={cn("aui-md-table w-full border-collapse", className)}
