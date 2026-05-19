@@ -74,7 +74,7 @@ const CodeHeader: FC<CodeHeaderProps> = ({ language, code, node }) => {
   };
 
   return (
-    <div className="aui-code-header-root sticky top-0 z-10 flex items-center justify-between rounded-t-2xl border-none border-border/50 border-b-0 bg-muted/75 px-4 pt-3 pb-3 text-sm backdrop-blur-sm">
+    <div className="aui-code-header-root sticky top-0 z-10 flex items-center justify-between bg-muted/75 px-4 pt-3 pb-3 text-sm backdrop-blur-sm">
       <span className="aui-code-header-language flex items-center gap-1.5 font-medium text-foreground">
         {isStreaming ? <Loader2 className="size-3.5 animate-spin" /> : <CodeXml className="size-3.5" />}
         {getLangLabel(language)}
@@ -100,7 +100,7 @@ const CodeHeader: FC<CodeHeaderProps> = ({ language, code, node }) => {
 };
 
 const CodeBlock: FC<SyntaxHighlighterProps> = ({ language, code, node }) => (
-  <div className="relative mt-2.5">
+  <div className="relative mt-2.5 rounded-2xl overflow-clip">
     <CodeHeader language={language} code={code} node={node} />
     <SyntaxHighlighter language={language} code={code} node={node} />
   </div>
@@ -339,7 +339,7 @@ const defaultComponents = memoizeMarkdownComponents({
   pre: ({ className, ...props }) => (
     <pre
       className={cn(
-        "aui-md-pre overflow-x-auto rounded-t-none rounded-b-2xl border border-border/50 border-t-0 bg-muted/30 p-3 text-xs leading-relaxed",
+        "aui-md-pre overflow-x-auto bg-muted/30 p-3 text-xs leading-relaxed",
         className,
       )}
       {...props}
