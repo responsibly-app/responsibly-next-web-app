@@ -141,8 +141,8 @@ const TableWithCopy: FC<ComponentPropsWithoutRef<"table">> = ({ className, ...pr
   };
 
   return (
-    <div className="my-5 rounded-2xl border border-border/50 overflow-hidden">
-      <div className="flex items-center justify-between bg-muted/50 px-4 py-2 text-sm border-border/50">
+    <div className="my-5 rounded-2xl overflow-clip">
+      <div className="sticky top-0 z-20 flex items-center justify-between bg-muted/75 px-4 pt-3 pb-3 text-sm backdrop-blur-sm">
         <span className="flex items-center gap-1.5 text-foreground capitalize">
           <Table2 className="size-3.5" />
           table
@@ -156,7 +156,7 @@ const TableWithCopy: FC<ComponentPropsWithoutRef<"table">> = ({ className, ...pr
           </TooltipIconButton>
         </div>
       </div>
-      <div className="w-full overflow-x-auto overflow-y-auto max-h-120">
+      <div className="w-full overflow-x-auto">
         <table
           ref={tableRef}
           className={cn("aui-md-table w-full border-collapse", className)}
@@ -303,7 +303,7 @@ const defaultComponents = memoizeMarkdownComponents({
   th: ({ className, ...props }) => (
     <th
       className={cn(
-        "aui-md-th sticky top-0 bg-muted/50 backdrop-blur-xs px-4 py-2 text-start text-sm font-bold text-foreground border-b border-r-none border-border/50 border-b-border last:border-r-0 [[align=center]]:text-center [[align=right]]:text-right",
+        "aui-md-th sticky top-0 bg-muted/75 backdrop-blur-sm px-4 py-2 text-start text-sm font-bold text-foreground border-b-none border-r-none border-border/50 border-b-border last:border-r-0 [[align=center]]:text-center [[align=right]]:text-right",
         className,
       )}
       {...props}
