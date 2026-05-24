@@ -1,7 +1,8 @@
-import { and, eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import { account } from "@/lib/db/schema/better-auth-schema";
 import { auth } from "@/lib/auth/auth";
 import { db } from "@/lib/db/index";
+import { symmetricDecrypt, symmetricEncrypt } from "better-auth/crypto";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -127,7 +128,7 @@ export interface CalendlyInviteesResponse {
 const CALENDLY_API_BASE = "https://api.calendly.com";
 
 export class CalendlyClient {
-  constructor(private readonly accessToken: string) {}
+  constructor(private readonly accessToken: string) { }
 
   private async request<T>(path: string, options: RequestInit = {}): Promise<T> {
     const res = await fetch(`${CALENDLY_API_BASE}${path}`, {
@@ -223,40 +224,115 @@ export class CalendlyClient {
 }
 
 // ---------------------------------------------------------------------------
-// Factory: resolve decrypted access token via auth.api and return a ready client
+// Token helpers: Better Auth's auth.api.getAccessToken throws on refresh failure
+// instead of returning null, causing unhandled 500s. We handle decryption and
+// refresh directly so failures return null cleanly.
+// ---------------------------------------------------------------------------
+
+function isLikelyEncrypted(token: string): boolean {
+  if (token.startsWith("$ba$")) return true;
+  return token.length % 2 === 0 && /^[0-9a-f]+$/i.test(token);
+}
+
+async function decryptToken(token: string): Promise<string> {
+  const key = process.env.BETTER_AUTH_SECRET!;
+  if (!isLikelyEncrypted(token)) return token;
+  return symmetricDecrypt({ key, data: token });
+}
+
+async function encryptToken(token: string): Promise<string> {
+  const key = process.env.BETTER_AUTH_SECRET!;
+  return symmetricEncrypt({ key, data: token });
+}
+
+async function refreshCalendlyToken(
+  accountId: string,
+  encryptedRefreshToken: string
+): Promise<string | null> {
+  const refreshToken = await decryptToken(encryptedRefreshToken);
+
+  const res = await fetch("https://auth.calendly.com/oauth/token", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({
+      grant_type: "refresh_token",
+      refresh_token: refreshToken,
+      client_id: process.env.CALENDLY_CLIENT_ID!,
+      client_secret: process.env.CALENDLY_CLIENT_SECRET!,
+    }),
+  });
+
+  if (!res.ok) return null;
+
+  const data = await res.json() as {
+    access_token: string;
+    refresh_token?: string;
+    expires_in?: number;
+  };
+
+  if (!data.access_token) return null;
+
+  const newAccessToken = await encryptToken(data.access_token);
+  const newRefreshToken = data.refresh_token
+    ? await encryptToken(data.refresh_token)
+    : encryptedRefreshToken;
+  const newExpiresAt = data.expires_in
+    ? new Date(Date.now() + data.expires_in * 1000)
+    : null;
+
+  await db
+    .update(account)
+    .set({
+      accessToken: newAccessToken,
+      refreshToken: newRefreshToken,
+      ...(newExpiresAt && { accessTokenExpiresAt: newExpiresAt }),
+    })
+    .where(eq(account.id, accountId));
+
+  return data.access_token;
+}
+
+async function resolveCalendlyToken(userId: string): Promise<string | null> {
+  const [calendlyAccount] = await db
+    .select()
+    .from(account)
+    .where(and(eq(account.userId, userId), eq(account.providerId, "calendly")))
+    .orderBy(desc(account.updatedAt))
+    .limit(1);
+
+  if (!calendlyAccount?.accessToken) return null;
+
+  const isExpiredOrExpiringSoon =
+    calendlyAccount.accessTokenExpiresAt != null &&
+    calendlyAccount.accessTokenExpiresAt.getTime() <= Date.now() + 60_000;
+
+  if (isExpiredOrExpiringSoon) {
+    if (!calendlyAccount.refreshToken) return null;
+    return refreshCalendlyToken(calendlyAccount.id, calendlyAccount.refreshToken);
+  }
+
+  return decryptToken(calendlyAccount.accessToken);
+}
+
+// ---------------------------------------------------------------------------
+// Factory: resolve decrypted access token and return a ready client
 // ---------------------------------------------------------------------------
 
 /**
- * Creates a CalendlyClient for the current request by fetching the decrypted
- * Calendly access token through Better Auth (handles encryptOAuthTokens).
- * Auto-refreshes when accessTokenExpiresAt shows expiry within 60s.
+ * Creates a CalendlyClient for the current request.
+ * Auto-refreshes when the token is expiring within 60s.
  * Returns null if Calendly is not connected.
  */
 export async function getCalendlyClient(
   headers: Headers
 ): Promise<CalendlyClient | null> {
-  const tokenData = await auth.api.getAccessToken({
-    headers,
-    body: { providerId: "calendly" },
-  });
+  const session = await auth.api.getSession({ headers });
+  if (!session?.user?.id) return null;
 
-  if (!tokenData?.accessToken) return null;
+  const accessToken = await resolveCalendlyToken(session.user.id);
+  if (!accessToken) return null;
 
-  const isExpiredOrExpiringSoon =
-    tokenData.accessTokenExpiresAt != null &&
-    tokenData.accessTokenExpiresAt.getTime() <= Date.now() + 60_000;
-
-  if (isExpiredOrExpiringSoon) {
-    const refreshed = await auth.api.refreshToken({
-      headers,
-      body: { providerId: "calendly" },
-    });
-    if (refreshed?.accessToken) {
-      return new CalendlyClient(refreshed.accessToken);
-    }
-  }
-
-  return new CalendlyClient(tokenData.accessToken);
+  return new CalendlyClient(accessToken);
 }
 
 /**
@@ -266,12 +342,10 @@ export async function getCalendlyClient(
 export async function getCalendlyClientForUser(
   userId: string
 ): Promise<CalendlyClient | null> {
-  const tokenData = await auth.api.getAccessToken({
-    body: { providerId: "calendly", userId },
-  });
+  const accessToken = await resolveCalendlyToken(userId);
+  if (!accessToken) return null;
 
-  if (!tokenData?.accessToken) return null;
-  return new CalendlyClient(tokenData.accessToken);
+  return new CalendlyClient(accessToken);
 }
 
 /**
