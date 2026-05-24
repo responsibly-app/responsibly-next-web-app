@@ -1,7 +1,7 @@
 "use client";
 
 import type { Toolkit } from "@assistant-ui/react";
-import { DownloadIcon, LoaderCircleIcon, AlertCircleIcon } from "lucide-react";
+import { DownloadIcon, LoaderCircleIcon, AlertCircleIcon, ExternalLinkIcon } from "lucide-react";
 import {
   FileRoot,
   FileIconDisplay,
@@ -19,6 +19,58 @@ type GenerateFileResult = {
   sizeBytes: number;
   error?: string;
 };
+
+const fileActionButtonClass = cn(
+  "shrink-0 rounded-md p-1 text-muted-foreground transition-colors",
+  "hover:bg-accent hover:text-accent-foreground cursor-pointer",
+);
+
+type FileActionButtonsProps = {
+  signedUrl: string | null | undefined;
+  filename: string;
+  mimeType: string;
+};
+
+function FileDownloadButton({ signedUrl, filename }: Pick<FileActionButtonsProps, "signedUrl" | "filename">) {
+  return (
+    <button
+      onClick={async () => {
+        if (!signedUrl) return;
+        const res = await fetch(signedUrl);
+        const blob = await res.blob();
+        const objectUrl = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = objectUrl;
+        a.download = filename;
+        a.click();
+        URL.revokeObjectURL(objectUrl);
+      }}
+      className={fileActionButtonClass}
+      title="Download"
+    >
+      <DownloadIcon className="size-4" />
+    </button>
+  );
+}
+
+function FileOpenButton({ signedUrl, mimeType }: Pick<FileActionButtonsProps, "signedUrl" | "mimeType">) {
+  return (
+    <button
+      onClick={async () => {
+        if (!signedUrl) return;
+        const res = await fetch(signedUrl);
+        const blob = await res.blob();
+        const objectUrl = URL.createObjectURL(new Blob([blob], { type: mimeType }));
+        window.open(objectUrl, "_blank", "noopener,noreferrer");
+        setTimeout(() => URL.revokeObjectURL(objectUrl), 60_000);
+      }}
+      className={fileActionButtonClass}
+      title="Open in new tab"
+    >
+      <ExternalLinkIcon className="size-4" />
+    </button>
+  );
+}
 
 function GeneratedFileCard({
   filename,
@@ -40,25 +92,10 @@ function GeneratedFileCard({
           <LoaderCircleIcon className="size-4 animate-spin" />
         </span>
       ) : signedUrl ? (
-        <button
-          onClick={async () => {
-            const res = await fetch(signedUrl);
-            const blob = await res.blob();
-            const objectUrl = URL.createObjectURL(blob);
-            const a = document.createElement("a");
-            a.href = objectUrl;
-            a.download = filename;
-            a.click();
-            URL.revokeObjectURL(objectUrl);
-          }}
-          className={cn(
-            "shrink-0 rounded-md p-1 text-muted-foreground transition-colors",
-            "hover:bg-accent hover:text-accent-foreground",
-            "cursor-pointer",
-          )}
-        >
-          <DownloadIcon className="size-4" />
-        </button>
+        <div className="flex shrink-0 items-center">
+          <FileOpenButton signedUrl={signedUrl} mimeType={mimeType} />
+          <FileDownloadButton signedUrl={signedUrl} filename={filename} />
+        </div>
       ) : (
         <span
           className="shrink-0 p-1 text-destructive/60"

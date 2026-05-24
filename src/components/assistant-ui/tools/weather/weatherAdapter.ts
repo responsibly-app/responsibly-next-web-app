@@ -1,131 +1,63 @@
-// lib/weather/weatherAdapter.ts
+import type { WeatherIconName, WeatherProps } from "./weather";
 
-import type {
-  WeatherConditionCode,
-  WeatherWidgetProps,
-} from "@/components/tool-ui/weather-widget/runtime";
-import { z } from "zod";
-
-/* ------------------------------------------------------------------ */
-/* 1. Condition Code Mapping (Open-Meteo → WeatherConditionCode)     */
-/* ------------------------------------------------------------------ */
-
-const openMeteoCodeMap: Record<number, WeatherConditionCode> = {
-  0: "clear",
-  1: "partly-cloudy",
-  2: "cloudy",
-  3: "overcast",
-  45: "fog",
-  48: "fog",
-  51: "drizzle",
-  53: "drizzle",
-  55: "drizzle",
-  61: "rain",
-  63: "rain",
-  65: "heavy-rain",
-  80: "rain",
-  81: "heavy-rain",
-  82: "heavy-rain",
-  95: "thunderstorm",
-  96: "hail",
-  99: "hail",
-  71: "snow",
-  73: "snow",
-  75: "snow",
-  77: "snow",
-  85: "snow",
-  86: "snow",
+const ICON_MAP: Record<number, WeatherIconName> = {
+  0: "sun",
+  1: "cloud-sun",
+  2: "cloud-sun",
+  3: "cloudy",
+  45: "cloud-fog",
+  48: "cloud-fog",
+  51: "cloud-drizzle",
+  53: "cloud-drizzle",
+  55: "cloud-drizzle",
+  61: "cloud-rain",
+  63: "cloud-rain",
+  65: "cloud-rain-wind",
+  71: "cloud-snow",
+  73: "cloud-snow",
+  75: "cloud-snow",
+  77: "snowflake",
+  80: "cloud-rain",
+  81: "cloud-rain",
+  82: "cloud-rain-wind",
+  85: "cloud-snow",
+  86: "cloud-snow",
+  95: "cloud-lightning",
+  96: "cloud-hail",
+  99: "cloud-hail",
 };
 
-export function mapCondition(code: number): WeatherConditionCode {
-  return openMeteoCodeMap[code] ?? "cloudy";
-}
+const CONDITION_MAP: Record<number, string> = {
+  0: "Clear Sky",
+  1: "Mainly Clear",
+  2: "Partly Cloudy",
+  3: "Overcast",
+  45: "Foggy",
+  48: "Foggy",
+  51: "Light Drizzle",
+  53: "Drizzle",
+  55: "Heavy Drizzle",
+  61: "Light Rain",
+  63: "Rain",
+  65: "Heavy Rain",
+  71: "Light Snow",
+  73: "Snow",
+  75: "Heavy Snow",
+  77: "Snow Grains",
+  80: "Rain Showers",
+  81: "Rain Showers",
+  82: "Heavy Showers",
+  85: "Snow Showers",
+  86: "Heavy Snow Showers",
+  95: "Thunderstorm",
+  96: "Thunderstorm w/ Hail",
+  99: "Thunderstorm w/ Hail",
+};
 
-/* ------------------------------------------------------------------ */
-/* 2. Helper — derive localTimeOfDay (0..1)                           */
-/* ------------------------------------------------------------------ */
-
-function deriveLocalTimeOfDay(timezone: string): number {
-  const now = new Date();
-  const local = new Date(now.toLocaleString("en-US", { timeZone: timezone }));
-
-  const seconds =
-    local.getHours() * 3600 + local.getMinutes() * 60 + local.getSeconds();
-
-  return seconds / 86400; // 0..1
-}
-
-/* ------------------------------------------------------------------ */
-/* 3. Zod Validation for Final Payload                                */
-/* ------------------------------------------------------------------ */
-
-const WeatherConditionCodeSchema = z.enum([
-  "clear",
-  "partly-cloudy",
-  "cloudy",
-  "overcast",
-  "fog",
-  "drizzle",
-  "rain",
-  "heavy-rain",
-  "thunderstorm",
-  "snow",
-  "sleet",
-  "hail",
-  "windy",
-] as const);
-
-const WeatherWidgetPayloadSchema = z.object({
-  version: z.literal("3.1"),
-  id: z.string(),
-  location: z.object({
-    name: z.string(),
-  }),
-  units: z.object({
-    temperature: z.union([z.literal("celsius"), z.literal("fahrenheit")]),
-  }),
-  current: z.object({
-    temperature: z.number(),
-    tempMin: z.number(),
-    tempMax: z.number(),
-    conditionCode: WeatherConditionCodeSchema,
-    windSpeed: z.number().optional(),
-    precipitationLevel: z
-      .enum(["none", "light", "moderate", "heavy"] as const)
-      .optional(),
-    visibility: z.number().optional(),
-  }),
-  forecast: z
-    .array(
-      z.object({
-        label: z.string(),
-        tempMin: z.number(),
-        tempMax: z.number(),
-        conditionCode: WeatherConditionCodeSchema,
-      }),
-    )
-    .min(1)
-    .max(7),
-  time: z.object({
-    localTimeOfDay: z.number().min(0).max(1),
-  }),
-  updatedAt: z.string(),
-});
-
-/* ------------------------------------------------------------------ */
-/* 4. Main Adapter                                                     */
-/* ------------------------------------------------------------------ */
-
-export async function fetchWeatherWidgetData(
-  city: string,
-): Promise<WeatherWidgetProps> {
-  // 1️⃣ Geocode city
+export async function fetchWeatherWidgetData(city: string): Promise<WeatherProps> {
   const geoRes = await fetch(
-    `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(
-      city,
-    )}&count=1`,
+    `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1`,
   );
-
   const geoData = await geoRes.json();
 
   if (!geoData?.results?.length) {
@@ -134,49 +66,24 @@ export async function fetchWeatherWidgetData(
 
   const { latitude, longitude, name, timezone } = geoData.results[0];
 
-  // 2️⃣ Fetch weather
   const weatherRes = await fetch(
-    `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true&daily=temperature_2m_max,temperature_2m_min,weathercode&timezone=${timezone}`,
+    `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}` +
+      `&current=temperature_2m,apparent_temperature,relative_humidity_2m,wind_speed_10m,wind_gusts_10m,weather_code` +
+      `&timezone=${timezone}`,
   );
-
   const weatherData = await weatherRes.json();
 
-  const current = weatherData.current_weather;
-  const daily = weatherData.daily;
+  const c = weatherData.current;
+  const code: number = c.weather_code ?? 0;
 
-  const forecast = daily.time.slice(0, 5).map((date: string, i: number) => ({
-    label: new Date(date).toLocaleDateString("en-US", {
-      weekday: "short",
-    }),
-    tempMin: daily.temperature_2m_min[i],
-    tempMax: daily.temperature_2m_max[i],
-    conditionCode: mapCondition(daily.weathercode[i]),
-  }));
-
-  const payload = {
-    version: "3.1",
-    id: `weather-${city.toLowerCase()}`,
-    location: { name },
-    units: { temperature: "celsius" },
-    current: {
-      temperature: current.temperature,
-      tempMin: daily.temperature_2m_min[0],
-      tempMax: daily.temperature_2m_max[0],
-      conditionCode: mapCondition(current.weathercode),
-      windSpeed: current.windspeed,
-    },
-    forecast,
-    time: {
-      localTimeOfDay: deriveLocalTimeOfDay(timezone),
-    },
-    updatedAt: new Date().toISOString(),
+  return {
+    temperature: Math.round(c.temperature_2m),
+    feelsLike: Math.round(c.apparent_temperature),
+    humidity: Math.round(c.relative_humidity_2m),
+    windSpeed: Math.round(c.wind_speed_10m),
+    windGust: Math.round(c.wind_gusts_10m),
+    conditions: CONDITION_MAP[code] ?? "Unknown",
+    location: name,
+    icon: ICON_MAP[code] ?? "cloud",
   };
-
-  const parsed = WeatherWidgetPayloadSchema.safeParse(payload);
-
-  if (!parsed.success) {
-    throw new Error("Weather payload validation failed");
-  }
-
-  return parsed.data;
 }
