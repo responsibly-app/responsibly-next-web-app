@@ -1,6 +1,7 @@
 import { createAzure } from "@ai-sdk/azure";
 import { createOpenAI, OpenAILanguageModelResponsesOptions } from "@ai-sdk/openai";
 import { createAnthropic } from "@ai-sdk/anthropic";
+import { createDeepSeek } from "@ai-sdk/deepseek";
 
 const BASE_URL = "https://als-litellm-cnfcftage7dgh9aa.canadacentral-01.azurewebsites.net";
 const API_KEY = process.env.MODEL_API_KEY!;
@@ -40,18 +41,22 @@ const AzureConfig: ProviderConfig = {
 }
 
 // ---------------------------------------------------------------------------------------
-const OpenAI = createOpenAI({
+const OpenAILiteLLM = createOpenAI({
     baseURL: BASE_URL,
     apiKey: API_KEY,
 });
 
+const OpenAI = createOpenAI({
+    apiKey: process.env.OPENAI_API_KEY!,
+});
+
 const OpenAIConfig: ProviderConfig = {
     models: {
-        primaryChatModel: OpenAI("als-gpt-5.4-mini"),
-        fallbackChatModel: OpenAI("als-gpt-5.4-mini"),
-        titleGenerationModel: OpenAI("als-gpt-5.4-mini"),
+        primaryChatModel: OpenAILiteLLM("als-gpt-5.4-mini"),
+        fallbackChatModel: OpenAILiteLLM("als-gpt-5.4-mini"),
+        titleGenerationModel: OpenAILiteLLM("als-gpt-5.4-mini"),
         embeddingModel: OpenAI.embeddingModel("text-embedding-3-small"),
-        imageGenerationModel: OpenAI.image("gpt-image-1-mini")
+        imageGenerationModel: OpenAILiteLLM.image("gpt-image-1-mini")
     },
     providerOptions: {
         openai: {
@@ -86,8 +91,26 @@ const AnthropicConfig: ProviderConfig = {
 
 // ---------------------------------------------------------------------------------------
 
+const DeepSeek = createDeepSeek({
+    // baseURL: BASE_URL,
+    apiKey: process.env.DEEPSEEK_API_KEY!,
+});
 
-export const primaryChatModel = OpenAIConfig.models.primaryChatModel;
+const DeepSeekConfig: ProviderConfig = {
+    models: {
+        primaryChatModel: DeepSeek("deepseek-v4-flash"),
+        fallbackChatModel: DeepSeek("deepseek-v4-flash"),
+        titleGenerationModel: DeepSeek("deepseek-v4-flash"),
+    },
+    providerOptions: {
+        deepseek: { reasoningEffort: "low" },
+    }
+}
+
+// ---------------------------------------------------------------------------------------
+
+
+export const primaryChatModel = DeepSeekConfig.models.primaryChatModel;
 export const fallbackChatModel = OpenAIConfig.models.fallbackChatModel;
 export const titleGenerationModel = OpenAIConfig.models.titleGenerationModel;
 export const embeddingModel = OpenAIConfig.models.embeddingModel;
