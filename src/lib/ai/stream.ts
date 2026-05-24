@@ -28,15 +28,15 @@ export async function createChatStream(session: Session, messages: UIMessage[], 
       .map((p) => p.text)
       .join(" ") ?? "";
 
-  // const [{ context: contextBlock, chunks: ragChunks }, tools] = await Promise.all([
-  //   getRAGContext(lastUserText),
-  //   getTools(session, messages),
-  // ]);
+  const [{ context: contextBlock, chunks: ragChunks }, tools] = await Promise.all([
+    getRAGContext(lastUserText),
+    getTools(session, messages),
+  ]);
 
-  const systemPrompt = buildSystemPrompt(session, "contextBlock");
+  const systemPrompt = buildSystemPrompt(session, contextBlock);
   const model = tier === "primary" ? primaryChatModel : fallbackChatModel;
 
-  // logSelectedTools(Object.keys(tools));
+  logSelectedTools(Object.keys(tools));
 
   const stream = createUIMessageStream({
     execute: async ({ writer }) => {
@@ -45,13 +45,13 @@ export async function createChatStream(session: Session, messages: UIMessage[], 
 
       logLLMInput(messages.length, modelMessages);
 
-      // const allTools: ToolSet = { ...createAgentTools(session), ...createUITools(session) };
+      const allTools: ToolSet = { ...createAgentTools(session), ...createUITools(session) };
 
       const result = streamText({
         model,
         system: systemPrompt,
         messages: modelMessages,
-        // tools: allTools,
+        tools: allTools,
         stopWhen: stepCountIs(15),
         providerOptions: providerOptions,
         onStepFinish: async (step) => {
@@ -60,21 +60,21 @@ export async function createChatStream(session: Session, messages: UIMessage[], 
         },
       });
 
-      // const ragSources = ragChunks.length > 0
-      //   ? Object.values(
-      //     ragChunks.reduce<Record<string, { path: string; topic: string; chunkIds: string[] }>>(
-      //       (acc, c) => {
-      //         if (acc[c.source_path]) {
-      //           acc[c.source_path].chunkIds.push(c.id);
-      //         } else {
-      //           acc[c.source_path] = { path: c.source_path, topic: c.topic, chunkIds: [c.id] };
-      //         }
-      //         return acc;
-      //       },
-      //       {},
-      //     ),
-      //   )
-      //   : undefined;
+      const ragSources = ragChunks.length > 0
+        ? Object.values(
+          ragChunks.reduce<Record<string, { path: string; topic: string; chunkIds: string[] }>>(
+            (acc, c) => {
+              if (acc[c.source_path]) {
+                acc[c.source_path].chunkIds.push(c.id);
+              } else {
+                acc[c.source_path] = { path: c.source_path, topic: c.topic, chunkIds: [c.id] };
+              }
+              return acc;
+            },
+            {},
+          ),
+        )
+        : undefined;
 
       writer.merge(
         result.toUIMessageStream({
@@ -85,7 +85,7 @@ export async function createChatStream(session: Session, messages: UIMessage[], 
                 custom: {
                   usage: (part as any).totalUsage,
                   modelTier: tier,
-                  // ...(ragSources ? { sources: ragSources } : {}),
+                  ...(ragSources ? { sources: ragSources } : {}),
                 },
               };
             if (part.type === "finish-step")
