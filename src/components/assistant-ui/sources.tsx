@@ -17,6 +17,7 @@ import {
   FileIcon,
   DownloadIcon,
   Loader2Icon,
+  ExternalLinkIcon
 } from "lucide-react";
 import { memo, useState, type ComponentProps, type ElementType } from "react";
 import type { StaticImageData } from "next/image";
@@ -239,7 +240,7 @@ function RAGSourceBadge({ path, chunkIds }: RAGSourceItem) {
               className="shrink-0 flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
               onClick={(e) => e.stopPropagation()}
             >
-              <DownloadIcon className="size-3.5" />
+              <ExternalLinkIcon className="size-3.5" />
 
             </a>
           )}
