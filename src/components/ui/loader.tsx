@@ -73,7 +73,7 @@ export function ClassicLoader({
         {[...Array(12)].map((_, i) => (
           <div
             key={i}
-            className="bg-primary absolute animate-[spinner-fade_1.2s_linear_infinite] rounded-full"
+            className="bg-foreground absolute animate-[spinner-fade_1.2s_linear_infinite] rounded-full"
             style={{
               top: "0",
               left: "50%",
@@ -131,7 +131,7 @@ export function PulseDotLoader({
   return (
     <div
       className={cn(
-        "bg-primary animate-[pulse-dot_1.2s_ease-in-out_infinite] rounded-full",
+        "bg-foreground animate-[pulse-dot_1.5s_ease-in-out_infinite] rounded-full",
         sizeClasses[size],
         className
       )}
@@ -172,7 +172,7 @@ export function DotsLoader({
         <div
           key={i}
           className={cn(
-            "bg-primary animate-[bounce-dots_1.4s_ease-in-out_infinite] rounded-full",
+            "bg-foreground animate-[bounce-dots_1.4s_ease-in-out_infinite] rounded-full",
             dotSizes[size]
           )}
           style={{
@@ -266,7 +266,7 @@ export function WaveLoader({
         <div
           key={i}
           className={cn(
-            "bg-primary animate-[wave_1s_ease-in-out_infinite] rounded-full",
+            "bg-foreground animate-[wave_1s_ease-in-out_infinite] rounded-full",
             barWidths[size]
           )}
           style={{
@@ -305,7 +305,7 @@ export function BarsLoader({
         <div
           key={i}
           className={cn(
-            "bg-primary h-full animate-[wave-bars_1.2s_ease-in-out_infinite]",
+            "bg-foreground h-full animate-[wave-bars_1.2s_ease-in-out_infinite]",
             barWidths[size]
           )}
           style={{
@@ -356,7 +356,7 @@ export function TerminalLoader({
       </span>
       <div
         className={cn(
-          "bg-primary animate-[blink_1s_step-end_infinite]",
+          "bg-foreground animate-[blink_1s_step-end_infinite]",
           cursorSizes[size]
         )}
       />

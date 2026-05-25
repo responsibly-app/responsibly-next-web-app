@@ -51,7 +51,7 @@ export async function createChatStream(session: Session, messages: UIMessage[], 
         model,
         system: systemPrompt,
         messages: modelMessages,
-        tools: allTools,
+        tools: tools,
         stopWhen: stepCountIs(15),
         providerOptions: providerOptions,
         onStepFinish: async (step) => {

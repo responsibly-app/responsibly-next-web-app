@@ -8,13 +8,15 @@ import {
 } from "@assistant-ui/react";
 import { TooltipIconButton } from "../../tooltip-icon-button";
 import { TypingLoader } from "@/components/ui/loader";
+import { PulseDotLoader } from "~/src/components/ui/loader";
 
 export const ThinkingIndicator: FC = () => {
     return (
         <AuiIf condition={(s) => s.thread.isRunning && s.message.content.length === 0}>
             <div className="flex items-center gap-2 text-muted-foreground">
                 {/* <LoaderIcon className="size-4 animate-spin" /> */}
-                <span className="text-sm shimmer">Thinking...</span>
+                {/* <span className="text-sm shimmer">Thinking...</span> */}
+                <PulseDotLoader size="md" className="pl-1" />
             </div>
         </AuiIf>
     );
