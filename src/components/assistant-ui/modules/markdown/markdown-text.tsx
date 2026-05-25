@@ -20,6 +20,7 @@ import { SyntaxHighlighter } from "./shiki-highlighter";
 import { MermaidDiagram } from "./mermaid-diagram";
 import { HtmlPreviewDialog } from "./html-preview-dialog";
 import { getLangLabel, getLangExt } from "./language-config";
+import { Loader } from "@/components/ui-custom/loader";
 
 const MarkdownTextImpl = () => {
   // Guard against rendering outside a text/reasoning part context — can occur during
@@ -76,7 +77,7 @@ const CodeHeader: FC<CodeHeaderProps> = ({ language, code, node }) => {
   return (
     <div className="aui-code-header-root sticky top-0 z-10 flex items-center justify-between bg-muted/75 px-4 pt-3 pb-3 text-sm backdrop-blur-sm">
       <span className="aui-code-header-language flex items-center gap-1.5 font-medium text-foreground">
-        {isStreaming ? <Loader2 className="size-3.5 animate-spin" /> : <CodeXml className="size-3.5" />}
+        {isStreaming ? <Loader size="sm" /> : <CodeXml className="size-3.5" />}
         {getLangLabel(language)}
       </span>
       <div className="flex items-center gap-0.5">

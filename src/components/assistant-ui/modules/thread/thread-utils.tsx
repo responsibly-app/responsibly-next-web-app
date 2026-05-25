@@ -7,8 +7,8 @@ import {
     useAuiState
 } from "@assistant-ui/react";
 import { TooltipIconButton } from "../../tooltip-icon-button";
-import { TypingLoader } from "@/components/ui/loader";
-import { PulseDotLoader } from "~/src/components/ui/loader";
+import { TypingLoader } from "@/components/ui-custom/loaders";
+import { PulseDotLoader } from "@/components/ui-custom/loaders";
 
 export const ThinkingIndicator: FC = () => {
     return (
