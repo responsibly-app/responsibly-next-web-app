@@ -2,7 +2,7 @@
 
 import { type Toolkit } from "@assistant-ui/react";
 import { useState } from "react";
-import { QuestionFlow } from "@/components/tool-ui/question-flow";
+import { QuestionFlow } from "@/components/tool-ui/question-flow-input";
 import { Skeleton } from "@/components/ui/skeleton";
 
 type FlowOption = {
