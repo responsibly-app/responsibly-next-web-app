@@ -47,6 +47,8 @@ import { ThreadLoadingSkeleton } from "./modules/thread/thread-loading";
 import { ThreadWelcome } from "./modules/thread/thread-welcome";
 import { ThinkingIndicator, ThreadScrollToBottom } from "./modules/thread/thread-utils";
 import { AssistantCopy, AssistantMore, AssistantReload, AssistantSpeakToggle } from "./modules/thread/assistant-actions";
+// import { SlashComposer } from "./modules/popovers/slash-composer";
+// import { MentionComposer } from "./modules/popovers/mention-composer";
 
 const ENABLE_QUOTE_CONTEXT = true; // set to false to disable quote context injection and rendering
 const MODEL_CONTEXT_WINDOW = 400_000; // 400k tokens ~= 300 pages of text
@@ -134,6 +136,7 @@ const Composer: FC = () => {
   }, []);
 
   return (
+    // <ComposerPrimitive.Unstable_TriggerPopoverRoot>
     <ComposerPrimitive.Root className="aui-composer-root relative flex w-full flex-col">
       <ComposerPrimitive.AttachmentDropzone asChild>
         <div
@@ -154,7 +157,10 @@ const Composer: FC = () => {
           <ComposerAction />
         </div>
       </ComposerPrimitive.AttachmentDropzone>
+      {/* <SlashComposer /> */}
+      {/* <MentionComposer /> */}
     </ComposerPrimitive.Root>
+    // </ComposerPrimitive.Unstable_TriggerPopoverRoot>
   );
 };
 
