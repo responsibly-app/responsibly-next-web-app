@@ -2,11 +2,7 @@
 
 import { memo, type FC } from "react";
 import type { TextMessagePartComponent } from "@assistant-ui/react";
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-expect-error – Unstable_DirectiveFormatter not yet in published types
 import type { Unstable_DirectiveFormatter } from "@assistant-ui/react";
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-expect-error – unstable_defaultDirectiveFormatter not yet in published types
 import { unstable_defaultDirectiveFormatter } from "@assistant-ui/react";
 import { Badge } from "../../badge";
 

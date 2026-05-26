@@ -2,8 +2,6 @@
 
 import { memo, useRef, type ComponentPropsWithoutRef, type FC } from "react";
 import { ComposerPrimitive } from "@assistant-ui/react";
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-expect-error – unstable exports not yet in published types
 import { unstable_defaultDirectiveFormatter, type Unstable_DirectiveFormatter, type Unstable_TriggerItem } from "@assistant-ui/react";
 import { ChevronLeftIcon, ChevronRightIcon, SparklesIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
