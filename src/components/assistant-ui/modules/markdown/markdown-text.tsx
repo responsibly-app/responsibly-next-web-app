@@ -75,7 +75,7 @@ const CodeHeader: FC<CodeHeaderProps> = ({ language, code, node }) => {
   };
 
   return (
-    <div className="aui-code-header-root sticky top-0 z-10 flex items-center justify-between bg-muted/75 px-4 pt-3 pb-3 text-sm backdrop-blur-sm-none">
+    <div className="aui-code-header-root sticky top-0 z-10 flex items-center justify-between bg-muted/75 px-4 pt-3 pb-3 text-sm backdrop-blur-sm">
       <span className="aui-code-header-language flex items-center gap-1.5 font-medium text-foreground">
         {isStreaming ? <Loader size="sm" /> : <CodeXml className="size-3.5" />}
         {getLangLabel(language)}
@@ -143,7 +143,7 @@ const TableWithCopy: FC<ComponentPropsWithoutRef<"table">> = ({ className, ...pr
 
   return (
     <div className="my-5 rounded-2xl overflow-clip">
-      <div className="sticky top-0 z-20 flex items-center justify-between bg-muted/75 px-4 pt-3 pb-3 text-sm backdrop-blur-sm-none">
+      <div className="sticky top-0 z-20 flex items-center justify-between bg-muted/75 px-4 pt-3 pb-3 text-sm backdrop-blur-sm">
         <span className="flex items-center gap-1.5 text-foreground capitalize">
           <Table2 className="size-3.5" />
           table
