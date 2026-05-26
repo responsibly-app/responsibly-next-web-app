@@ -6,7 +6,8 @@ import { previewLinkTool } from "@/components/assistant-ui/tools/link/preview-li
 import { showChartTool } from "@/components/assistant-ui/tools/chart/show-chart";
 import { requestApprovalTool } from "@/components/assistant-ui/tools/approval-card/request-approval";
 import { showDataTableTool } from "@/components/assistant-ui/tools/data-table/show-data-table";
-import { askQuestionFlowTool } from "@/components/assistant-ui/tools/question-flow/ask-question-flow";
+// import { askQuestionFlowTool } from "@/components/assistant-ui/tools/question-flow/ask-question-flow";
+import { askQuestionFlowTool } from "@/components/assistant-ui/tools/question-flow-input/ask-question-flow";
 import { showPlanTool } from "@/components/assistant-ui/tools/plan/plan";
 import { generateFileTool } from "@/components/assistant-ui/tools/generate-file/generate-file";
 import { generateImageTool } from "@/components/assistant-ui/tools/generate-image/generate-image";

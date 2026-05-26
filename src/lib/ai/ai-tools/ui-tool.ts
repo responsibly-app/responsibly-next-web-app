@@ -1,7 +1,8 @@
 import { showChart } from "@/components/assistant-ui/tools/chart/show-chart.server";
 import { requestApproval } from "@/components/assistant-ui/tools/approval-card/request-approval.server";
 import { showDataTable } from "@/components/assistant-ui/tools/data-table/show-data-table.server";
-import { askQuestionFlow } from "@/components/assistant-ui/tools/question-flow/ask-question-flow.server";
+// import { askQuestionFlow } from "@/components/assistant-ui/tools/question-flow/ask-question-flow.server";
+import { askQuestionFlow } from "@/components/assistant-ui/tools/question-flow-input/ask-question-flow.server";
 import { previewLink } from "@/components/assistant-ui/tools/link/preview-link.server";
 import { getWeather } from "@/components/assistant-ui/tools/weather/get-weather.server";
 import { generateFile } from "@/components/assistant-ui/tools/generate-file/generate-file.server";
