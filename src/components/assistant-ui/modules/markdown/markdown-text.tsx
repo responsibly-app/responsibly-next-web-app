@@ -75,7 +75,7 @@ const CodeHeader: FC<CodeHeaderProps> = ({ language, code, node }) => {
   };
 
   return (
-    <div className="aui-code-header-root sticky top-0 z-10 flex items-center justify-between bg-muted/75 px-4 pt-3 pb-3 text-sm backdrop-blur-sm">
+    <div className="aui-code-header-root sticky top-0 z-10 flex items-center justify-between bg-muted/75 px-4 pt-3 pb-3 text-sm backdrop-blur-sm-none">
       <span className="aui-code-header-language flex items-center gap-1.5 font-medium text-foreground">
         {isStreaming ? <Loader size="sm" /> : <CodeXml className="size-3.5" />}
         {getLangLabel(language)}
@@ -143,7 +143,7 @@ const TableWithCopy: FC<ComponentPropsWithoutRef<"table">> = ({ className, ...pr
 
   return (
     <div className="my-5 rounded-2xl overflow-clip">
-      <div className="sticky top-0 z-20 flex items-center justify-between bg-muted/75 px-4 pt-3 pb-3 text-sm backdrop-blur-sm">
+      <div className="sticky top-0 z-20 flex items-center justify-between bg-muted/75 px-4 pt-3 pb-3 text-sm backdrop-blur-sm-none">
         <span className="flex items-center gap-1.5 text-foreground capitalize">
           <Table2 className="size-3.5" />
           table
@@ -304,7 +304,7 @@ const defaultComponents = memoizeMarkdownComponents({
   th: ({ className, ...props }) => (
     <th
       className={cn(
-        "aui-md-th sticky top-0 bg-muted/75 backdrop-blur-sm px-4 py-2 text-start text-sm font-bold text-foreground border-b-none border-r-none border-border/50 border-b-border last:border-r-0 [[align=center]]:text-center [[align=right]]:text-right",
+        "aui-md-th sticky top-0 bg-muted/75 px-4 py-2 text-start text-sm font-bold text-foreground border-b-none border-r-none border-border/50 border-b-border last:border-r-0 [[align=center]]:text-center [[align=right]]:text-right",
         className,
       )}
       {...props}
