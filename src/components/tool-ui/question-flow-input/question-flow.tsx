@@ -458,7 +458,7 @@ function StepBodyContent({
           <Input
             value={freeTextValue ?? ""}
             onChange={(e) => onFreeTextChange?.(e.target.value)}
-            placeholder="Or type your answer..."
+            placeholder="Describe your answer..."
             className="mt-1 rounded-2xl focus-visible:ring-[1px]"
             aria-label="Custom answer"
           />
