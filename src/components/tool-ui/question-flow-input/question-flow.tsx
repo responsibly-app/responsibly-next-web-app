@@ -252,11 +252,8 @@ interface StepContentProps {
   stepKey?: string;
   exitingStepData?: StepBodyData | null;
   transitionDirection?: "forward" | "backward";
-  allowFreeText?: boolean;
   freeTextValue?: string;
   onFreeTextChange?: (value: string) => void;
-  customInputValue?: string;
-  onCustomInputChange?: (value: string) => void;
 }
 
 function StepBodyContent({
@@ -270,11 +267,8 @@ function StepBodyContent({
   id,
   isExiting,
   transitionDirection,
-  allowFreeText,
   freeTextValue,
   onFreeTextChange,
-  customInputValue,
-  onCustomInputChange,
 }: {
   stepKey: string;
   title: string;
@@ -286,11 +280,8 @@ function StepBodyContent({
   id: string;
   isExiting?: boolean;
   transitionDirection?: "forward" | "backward";
-  allowFreeText?: boolean;
   freeTextValue?: string;
   onFreeTextChange?: (value: string) => void;
-  customInputValue?: string;
-  onCustomInputChange?: (value: string) => void;
 }) {
   const optionRefs = useRef<Array<HTMLButtonElement | null>>([]);
   const { titleId, descriptionId } = getQuestionFlowStepIds(id, stepKey);
@@ -456,22 +447,11 @@ function StepBodyContent({
               }}
               onToggle={() => !isExiting && onToggle?.(option.id)}
             />
-            {option.allowCustomInput && isSelected && !isExiting && (
-              <div className="motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-top-1 motion-safe:duration-200 pb-2.5">
-                <Input
-                  autoFocus
-                  value={customInputValue ?? ""}
-                  onChange={(e) => onCustomInputChange?.(e.target.value)}
-                  placeholder="Please specify..."
-                  className="mt-1 rounded-2xl focus-visible:ring-[1px]"
-                />
-              </div>
-            )}
           </Fragment>
         ))}
       </div>
 
-      {allowFreeText && !isExiting && !options.some((o) => o.allowCustomInput && selectedIds.has(o.id)) && (
+      {!isExiting && (
         <div className="flex flex-col gap-1.5 px-1 pt-1">
           <Separator />
           <Input
@@ -505,22 +485,15 @@ function StepContent({
   stepKey,
   exitingStepData,
   transitionDirection = "forward",
-  allowFreeText,
   freeTextValue,
   onFreeTextChange,
-  customInputValue,
-  onCustomInputChange,
 }: StepContentProps) {
   const isTransitioning =
     exitingStepData !== null && exitingStepData !== undefined;
 
-  const customInputOption = options.find(
-    (opt) => opt.allowCustomInput && selectedIds.has(opt.id),
-  );
-  const customInputFilled = (customInputValue?.trim().length ?? 0) > 0;
   const canProceed =
-    (selectedIds.size > 0 && (!customInputOption || customInputFilled)) ||
-    (allowFreeText === true && (freeTextValue?.trim().length ?? 0) > 0);
+    selectedIds.size > 0 ||
+    (freeTextValue?.trim().length ?? 0) > 0;
   const resolvedStepKey = stepKey ?? "current";
   const { titleId, descriptionId } = getQuestionFlowStepIds(
     id,
@@ -590,11 +563,8 @@ function StepContent({
             transitionDirection={
               exitingStepData ? transitionDirection : undefined
             }
-            allowFreeText={allowFreeText}
             freeTextValue={freeTextValue}
             onFreeTextChange={onFreeTextChange}
-            customInputValue={customInputValue}
-            onCustomInputChange={onCustomInputChange}
           />
         </div>
 
@@ -638,20 +608,16 @@ function QuestionFlowProgressive({
   defaultValue,
   onSelect,
   onBack,
-  allowFreeText,
   className,
 }: QuestionFlowProgressiveProps) {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(
     () => new Set(defaultValue ?? []),
   );
   const [freeText, setFreeText] = useState("");
-  const [customInput, setCustomInput] = useState("");
 
   const handleToggle = useCallback(
     (optionId: string) => {
       setFreeText("");
-      const toggledOption = options.find((o) => o.id === optionId);
-      if (!toggledOption?.allowCustomInput) setCustomInput("");
       setSelectedIds((prev) => {
         const next = new Set(prev);
         if (selectionMode === "single") {
@@ -676,40 +642,18 @@ function QuestionFlowProgressive({
 
   const handleFreeTextChange = useCallback((text: string) => {
     setFreeText(text);
-    setCustomInput("");
     setSelectedIds(new Set());
   }, []);
 
-  const handleCustomInputChange = useCallback((text: string) => {
-    setCustomInput(text);
-  }, []);
-
   const handleNext = useCallback(() => {
-    const customOption = options.find(
-      (opt) => opt.allowCustomInput && selectedIds.has(opt.id),
-    );
-    const customText = customInput.trim();
-    const hasCustomInput = !!customOption && !!customText;
-
     const trimmed = freeText.trim();
-    const hasFreeText = allowFreeText === true && !!trimmed;
+    const hasFreeText = !!trimmed;
 
     if (selectedIds.size === 0 && !hasFreeText) return;
-    if (customOption && !customText) return;
 
-    let selection: string[];
-    if (hasCustomInput) {
-      const otherIds = Array.from(selectedIds).filter(
-        (id) => id !== customOption.id,
-      );
-      selection = [...otherIds, customText];
-    } else if (hasFreeText) {
-      selection = [trimmed];
-    } else {
-      selection = Array.from(selectedIds);
-    }
+    const selection = hasFreeText ? [trimmed] : Array.from(selectedIds);
     onSelect?.(selection);
-  }, [allowFreeText, customInput, freeText, onSelect, options, selectedIds]);
+  }, [freeText, onSelect, selectedIds]);
 
   return (
     <StepContent
@@ -726,11 +670,8 @@ function QuestionFlowProgressive({
       showBack={step > 1 && onBack !== undefined}
       isLastStep={false}
       className={className}
-      allowFreeText={allowFreeText}
       freeTextValue={freeText}
       onFreeTextChange={handleFreeTextChange}
-      customInputValue={customInput}
-      onCustomInputChange={handleCustomInputChange}
     />
   );
 }
@@ -745,7 +686,6 @@ function QuestionFlowUpfront({
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string[]>>({});
   const [freeTextAnswers, setFreeTextAnswers] = useState<Record<string, string>>({});
-  const [customInputValues, setCustomInputValues] = useState<Record<string, string>>({});
   const [exitingStepData, setExitingStepData] = useState<StepBodyData | null>(
     null,
   );
@@ -773,10 +713,6 @@ function QuestionFlowUpfront({
     (optionId: string) => {
       const mode = currentStep.selectionMode ?? "single";
       setFreeTextAnswers((prev) => ({ ...prev, [currentStep.id]: "" }));
-      const toggledOption = currentStep.options.find((o) => o.id === optionId);
-      if (!toggledOption?.allowCustomInput) {
-        setCustomInputValues((prev) => ({ ...prev, [currentStep.id]: "" }));
-      }
       setAnswers((prev) => {
         const current = prev[currentStep.id] ?? [];
         let next: string[];
@@ -790,21 +726,13 @@ function QuestionFlowUpfront({
         return { ...prev, [currentStep.id]: next };
       });
     },
-    [currentStep.id, currentStep.options, currentStep.selectionMode],
+    [currentStep.id, currentStep.selectionMode],
   );
 
   const handleFreeTextChange = useCallback(
     (text: string) => {
       setFreeTextAnswers((prev) => ({ ...prev, [currentStep.id]: text }));
-      setCustomInputValues((prev) => ({ ...prev, [currentStep.id]: "" }));
       setAnswers((prev) => ({ ...prev, [currentStep.id]: [] }));
-    },
-    [currentStep.id],
-  );
-
-  const handleCustomInputChange = useCallback(
-    (text: string) => {
-      setCustomInputValues((prev) => ({ ...prev, [currentStep.id]: text }));
     },
     [currentStep.id],
   );
@@ -836,29 +764,11 @@ function QuestionFlowUpfront({
 
   const handleNext = useCallback(() => {
     const freeText = freeTextAnswers[currentStep.id]?.trim();
-    const hasFreeText = currentStep.allowFreeText === true && !!freeText;
-
-    const customOption = currentStep.options.find(
-      (opt) => opt.allowCustomInput && currentSelection.has(opt.id),
-    );
-    const customText = customInputValues[currentStep.id]?.trim();
-    const hasCustomInput = !!customOption && !!customText;
+    const hasFreeText = !!freeText;
 
     if (currentSelection.size === 0 && !hasFreeText) return;
-    if (customOption && !customText) return;
 
-    let stepAnswer: string[];
-    if (hasCustomInput) {
-      const otherIds = Array.from(currentSelection).filter(
-        (id) => id !== customOption.id,
-      );
-      stepAnswer = [...otherIds, customText];
-    } else if (hasFreeText) {
-      stepAnswer = [freeText];
-    } else {
-      stepAnswer = Array.from(currentSelection);
-    }
-
+    const stepAnswer: string[] = hasFreeText ? [freeText] : Array.from(currentSelection);
     const resolvedAnswers = { ...answers, [currentStep.id]: stepAnswer };
 
     if (isLastStep) {
@@ -887,8 +797,7 @@ function QuestionFlowUpfront({
   }, [
     answers,
     currentSelection,
-    currentStep,
-    customInputValues,
+    currentStep.id,
     freeTextAnswers,
     isLastStep,
     onComplete,
@@ -921,11 +830,8 @@ function QuestionFlowUpfront({
       stepKey={currentStep.id}
       exitingStepData={exitingStepData}
       transitionDirection={transitionDirection}
-      allowFreeText={currentStep.allowFreeText}
       freeTextValue={freeTextAnswers[currentStep.id] ?? ""}
       onFreeTextChange={handleFreeTextChange}
-      customInputValue={customInputValues[currentStep.id] ?? ""}
-      onCustomInputChange={handleCustomInputChange}
     />
   );
 }

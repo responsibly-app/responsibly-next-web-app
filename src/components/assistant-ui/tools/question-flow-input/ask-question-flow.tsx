@@ -1,7 +1,7 @@
 "use client";
 
 import { type Toolkit } from "@assistant-ui/react";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { QuestionFlow } from "@/components/tool-ui/question-flow-input";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -74,18 +74,26 @@ function QuestionFlowTool({ args, result, addResult, toolCallId }: any) {
     string,
     string[]
   > | null>(null);
-
-  if (
-    !steps?.length ||
-    steps.some((s: FlowStep) => !s.options?.length || s.options.some((o) => !o.id))
-  )
-    return <QuestionFlowSkeleton />;
+  // Latch: once the first step is valid enough to render, never revert to skeleton.
+  // QuestionFlowUpfront shows one step at a time, so only step[0] needs to be
+  // ready before mounting — later steps will finish streaming before the user
+  // reaches them.
+  const hasShownCard = useRef(false);
 
   const completedAnswers =
     (result as Record<string, string[]> | undefined) ?? localAnswers;
 
+  const firstStep = steps?.[0];
+  const firstStepReady =
+    (firstStep?.options?.length ?? 0) > 0 &&
+    !firstStep!.options.some((o: FlowOption) => !o.id);
+
+  if (firstStepReady) hasShownCard.current = true;
+
+  if (!completedAnswers && !hasShownCard.current) return <QuestionFlowSkeleton />;
+
   if (completedAnswers) {
-    const choice = buildReceipt(steps, completedAnswers);
+    const choice = buildReceipt(steps ?? [], completedAnswers);
     return <QuestionFlow id={id} choice={choice} />;
   }
 
