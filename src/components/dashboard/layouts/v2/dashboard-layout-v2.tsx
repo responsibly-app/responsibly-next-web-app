@@ -25,6 +25,12 @@ export default function DashboardLayoutV2({
     });
   }, []);
 
+  React.useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = prev; };
+  }, []);
+
   return (
     <div className="flex h-screen overflow-hidden">
       <div
