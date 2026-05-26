@@ -18,9 +18,10 @@ export const QuestionFlowStepDefinitionSchema = z.object({
   id: z.string().min(1),
   title: z.string().min(1),
   description: z.string().optional(),
-  options: z.array(QuestionFlowOptionSchema.omit({ icon: true })).min(1),
+  options: z.array(QuestionFlowOptionSchema.omit({ icon: true })),
   selectionMode: z.enum(["single", "multi"]).optional(),
   allowFreeText: z.boolean().optional(),
+  optional: z.boolean().optional(),
 });
 
 export type QuestionFlowStepDefinition = z.infer<

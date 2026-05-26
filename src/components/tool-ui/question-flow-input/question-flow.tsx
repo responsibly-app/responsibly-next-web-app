@@ -254,6 +254,7 @@ interface StepContentProps {
   transitionDirection?: "forward" | "backward";
   freeTextValue?: string;
   onFreeTextChange?: (value: string) => void;
+  optional?: boolean;
 }
 
 function StepBodyContent({
@@ -426,7 +427,7 @@ function StepBodyContent({
         onKeyDown={isExiting ? undefined : handleKeyDown}
       >
         {optionStates.map(({ option, isSelected, isDisabled }, index) => (
-          <Fragment key={option.id}>
+          <Fragment key={index}>
             {index > 0 && (
               <Separator
                 className="transition-opacity [@media(hover:hover)]:[&:has(+_:hover)]:opacity-0 [@media(hover:hover)]:[.peer:hover+&]:opacity-0"
@@ -487,11 +488,13 @@ function StepContent({
   transitionDirection = "forward",
   freeTextValue,
   onFreeTextChange,
+  optional,
 }: StepContentProps) {
   const isTransitioning =
     exitingStepData !== null && exitingStepData !== undefined;
 
   const canProceed =
+    optional === true ||
     selectedIds.size > 0 ||
     (freeTextValue?.trim().length ?? 0) > 0;
   const resolvedStepKey = stepKey ?? "current";
@@ -740,7 +743,7 @@ function QuestionFlowUpfront({
   const handleBack = useCallback(() => {
     if (currentStepIndex > 0) {
       const currentStepData = steps[currentStepIndex];
-      const stepOptions: QuestionFlowOption[] = currentStepData.options.map(
+      const stepOptions: QuestionFlowOption[] = (currentStepData.options ?? []).map(
         (opt) => ({
           ...opt,
           icon: undefined,
@@ -766,7 +769,7 @@ function QuestionFlowUpfront({
     const freeText = freeTextAnswers[currentStep.id]?.trim();
     const hasFreeText = !!freeText;
 
-    if (currentSelection.size === 0 && !hasFreeText) return;
+    if (currentSelection.size === 0 && !hasFreeText && !currentStep.optional) return;
 
     const stepAnswer: string[] = hasFreeText ? [freeText] : Array.from(currentSelection);
     const resolvedAnswers = { ...answers, [currentStep.id]: stepAnswer };
@@ -777,7 +780,7 @@ function QuestionFlowUpfront({
       setAnswers(resolvedAnswers);
 
       const currentStepData = steps[currentStepIndex];
-      const stepOptions: QuestionFlowOption[] = currentStepData.options.map(
+      const stepOptions: QuestionFlowOption[] = (currentStepData.options ?? []).map(
         (opt) => ({ ...opt, icon: undefined }),
       );
 
@@ -806,7 +809,7 @@ function QuestionFlowUpfront({
     currentStepIndex,
   ]);
 
-  const stepOptions: QuestionFlowOption[] = currentStep.options.map((opt) => ({
+  const stepOptions: QuestionFlowOption[] = (currentStep.options ?? []).map((opt) => ({
     ...opt,
     icon: undefined,
   }));
@@ -832,6 +835,7 @@ function QuestionFlowUpfront({
       transitionDirection={transitionDirection}
       freeTextValue={freeTextAnswers[currentStep.id] ?? ""}
       onFreeTextChange={handleFreeTextChange}
+      optional={currentStep.optional}
     />
   );
 }

@@ -12,8 +12,14 @@ const stepSchema = z.object({
   id: z.string().min(1),
   title: z.string().min(1),
   description: z.string().optional(),
-  options: z.array(optionSchema).min(1),
+  options: z.array(optionSchema),
   selectionMode: z.enum(["single", "multi"]).optional(),
+  optional: z
+    .boolean()
+    .optional()
+    .describe(
+      "Set to true when the step can be skipped (e.g. an optional description or notes field). The user can click Next without selecting an option or typing anything.",
+    ),
 });
 
 const meta = {

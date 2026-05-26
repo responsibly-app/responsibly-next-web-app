@@ -18,7 +18,7 @@ type FlowStep = {
   description?: string;
   options: FlowOption[];
   selectionMode?: "single" | "multi";
-  allowFreeText?: boolean;
+  optional?: boolean;
 };
 
 function buildReceipt(steps: FlowStep[], answers: Record<string, string[]>) {
@@ -80,13 +80,19 @@ function QuestionFlowTool({ args, result, addResult, toolCallId }: any) {
   // reaches them.
   const hasShownCard = useRef(false);
 
-  const completedAnswers =
-    (result as Record<string, string[]> | undefined) ?? localAnswers;
+  // Only trust `result` if it has at least one non-empty answer. The AI SDK
+  // may set result = {} when a tool call fails schema validation, which would
+  // otherwise trigger the receipt with no answers.
+  const rawResult = result as Record<string, string[]> | undefined;
+  const resultIsValid =
+    rawResult != null &&
+    Object.values(rawResult).some((v) => Array.isArray(v) && v.length > 0);
+  const completedAnswers = localAnswers ?? (resultIsValid ? rawResult : null);
 
+  // Show card as soon as the first step has an id — options can be empty
+  // (free-text input always covers that case) and will stream in progressively.
   const firstStep = steps?.[0];
-  const firstStepReady =
-    (firstStep?.options?.length ?? 0) > 0 &&
-    !firstStep!.options.some((o: FlowOption) => !o.id);
+  const firstStepReady = !!(firstStep?.id);
 
   if (firstStepReady) hasShownCard.current = true;
 
