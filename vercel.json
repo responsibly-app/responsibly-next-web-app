@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/v1/rest/zoom/process-sync-jobs",
+      "schedule": "*/5 * * * *"
+    }
+  ]
+}

@@ -1,5 +1,7 @@
+import crypto from "crypto";
 import { ORPCError } from "@orpc/server";
 import { and, asc, desc, eq, gte, sql } from "drizzle-orm";
+import { z } from "zod/v3";
 import { db } from "@/lib/db";
 import { member, organization, user } from "@/lib/db/schema/better-auth-schema";
 import {
@@ -8,11 +10,14 @@ import {
   eventQrCode,
   eventRsvp,
 } from "@/lib/db/schema/event-schema";
+import { zoomMeetingSyncJob } from "@/lib/db/schema/zoom-sync-schema";
 import { organizationSettings } from "@/lib/db/schema/org-settings-schema";
 import { authed } from "@/lib/orpc/base";
 import { toZoomTimezone } from "@/lib/utils/timezone";
 import { ROLE_LEVELS, type OrgRole } from "@/lib/auth/hooks/oraganization/permissions";
 import { getZoomClientForUser } from "@/lib/sdks/zoom-client";
+import { processZoomApiSync } from "@/lib/sdks/zoom-api-sync";
+import { ZOOM_MEETING_SETTINGS } from "@/lib/sdks/zoom-config";
 import {
   ListEventsInputSchema,
   ListEventsOutputSchema,
@@ -217,15 +222,7 @@ export const eventRouter = {
             : 60,
           timezone: toZoomTimezone(input.timezone ?? "UTC"),
           agenda: input.description,
-          settings: {
-            join_before_host: false,
-            waiting_room: true,
-            // approval_type 0 = registration required, auto-approve.
-            // Zoom will require participants to register (email collected),
-            // so the webhook carries a registrant_id for reliable identity matching.
-            approval_type: 0,
-            meeting_authentication: true,
-          },
+          settings: ZOOM_MEETING_SETTINGS,
         });
         zoomMeetingId = String(meeting.id);
         zoomJoinUrl = meeting.join_url;
@@ -326,7 +323,7 @@ export const eventRouter = {
             )
             : 60,
           timezone: toZoomTimezone(input.timezone ?? currentEvent?.timezone ?? "UTC"),
-          settings: { join_before_host: true, waiting_room: false, approval_type: 0 },
+          settings: ZOOM_MEETING_SETTINGS,
         });
         updateValues.zoomMeetingId = String(meeting.id);
         updateValues.zoomJoinUrl = meeting.join_url;
@@ -855,6 +852,121 @@ export const eventRouter = {
         .orderBy(asc(eventRsvp.rsvpedAt));
 
       return { rsvps, count: rsvps.length };
+    }),
+
+  /**
+   * Manually trigger a Zoom API attendance sync for an event.
+   * Fetches past meeting participants from the Zoom API and reconciles attendance immediately.
+   * Useful as a fallback when webhooks were unreliable or as a secondary verification pass.
+   */
+  syncZoomAttendance: authed
+    .route({
+      method: "POST",
+      path: "/event/sync-zoom-attendance",
+      summary: "Manually sync Zoom attendance from the past meeting participants API",
+      tags: ["Event"],
+    })
+    .input(z.object({ eventId: z.string(), organizationId: z.string() }))
+    .output(z.object({
+      participantsProcessed: z.number(),
+      newRecordsCreated: z.number(),
+      jobId: z.string(),
+    }))
+    .handler(async ({ input, context }) => {
+      await requireAtLeastRole(input.organizationId, context.session.user.id, "admin");
+
+      const eventRow = await db
+        .select({ zoomMeetingId: event.zoomMeetingId })
+        .from(event)
+        .where(eq(event.id, input.eventId))
+        .limit(1)
+        .then((r) => r[0]);
+
+      if (!eventRow) throw new ORPCError("NOT_FOUND");
+      if (!eventRow.zoomMeetingId) {
+        throw new ORPCError("BAD_REQUEST", { message: "This event has no linked Zoom meeting" });
+      }
+
+      const ownerUserId = await getOrgOwnerUserId(input.organizationId);
+      if (!ownerUserId) {
+        throw new ORPCError("PRECONDITION_FAILED", { message: "No organization owner found" });
+      }
+
+      const zoom = await getZoomClientForUser(ownerUserId);
+      if (!zoom) {
+        throw new ORPCError("PRECONDITION_FAILED", {
+          message: "The organization owner has not connected a Zoom account",
+        });
+      }
+
+      // Upsert the sync job — if the same user already ran a sync for this event,
+      // reset the existing row to re-run rather than failing with a unique constraint error
+      const now = new Date();
+      const newJobId = crypto.randomUUID();
+
+      const [job] = await db
+        .insert(zoomMeetingSyncJob)
+        .values({
+          id: newJobId,
+          eventId: input.eventId,
+          organizationId: input.organizationId,
+          zoomMeetingId: eventRow.zoomMeetingId,
+          scheduledFor: now,
+          status: "running",
+          triggeredBy: context.session.user.id,
+          startedAt: now,
+          createdAt: now,
+        })
+        .onConflictDoUpdate({
+          target: [zoomMeetingSyncJob.eventId, zoomMeetingSyncJob.triggeredBy],
+          set: {
+            scheduledFor: now,
+            status: "running",
+            startedAt: now,
+            completedAt: null,
+            error: null,
+            participantsProcessed: null,
+            newRecordsCreated: null,
+          },
+        })
+        .returning({ id: zoomMeetingSyncJob.id });
+
+      const jobId = job.id;
+
+      try {
+        const result = await processZoomApiSync(
+          jobId,
+          input.eventId,
+          input.organizationId,
+          eventRow.zoomMeetingId,
+          ownerUserId,
+        );
+
+        await db
+          .update(zoomMeetingSyncJob)
+          .set({
+            status: "done",
+            completedAt: new Date(),
+            participantsProcessed: result.participantsProcessed,
+            newRecordsCreated: result.newRecordsCreated,
+          })
+          .where(eq(zoomMeetingSyncJob.id, jobId));
+
+        return { ...result, jobId };
+      } catch (err) {
+        await db
+          .update(zoomMeetingSyncJob)
+          .set({
+            status: "failed",
+            completedAt: new Date(),
+            error: err instanceof Error ? err.message : String(err),
+          })
+          .where(eq(zoomMeetingSyncJob.id, jobId));
+
+        throw new ORPCError("INTERNAL_SERVER_ERROR", {
+          message: err instanceof Error ? err.message : "Zoom API sync failed",
+        });
+      }
     }),
 
   /** Admin/assistant scans a member's QR code to mark them present in-person */

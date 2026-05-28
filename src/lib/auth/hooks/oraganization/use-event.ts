@@ -214,3 +214,16 @@ export function useListRsvps(eventId: string) {
     }),
   );
 }
+
+export function useSyncZoomAttendance() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: { eventId: string; organizationId: string }) =>
+      orpc.event.syncZoomAttendance(input),
+    onSuccess: (_, { eventId }) => {
+      queryClient.invalidateQueries({
+        queryKey: orpcTQUtils.event.getAttendance.queryOptions({ input: { eventId } }).queryKey,
+      });
+    },
+  });
+}
