@@ -46,12 +46,14 @@ export async function createChatStream(session: Session, messages: UIMessage[], 
       logLLMInput(messages.length, modelMessages);
 
       const allTools: ToolSet = { ...createAgentTools(session), ...createUITools(session) };
+      const useAllTools = false;
+      const usableTools = useAllTools ? allTools : tools;
 
       const result = streamText({
         model,
         system: systemPrompt,
         messages: modelMessages,
-        tools: tools,
+        tools: usableTools,
         stopWhen: stepCountIs(15),
         providerOptions: providerOptions,
         onStepFinish: async (step) => {

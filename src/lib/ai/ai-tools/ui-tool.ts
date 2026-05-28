@@ -27,16 +27,16 @@ export const uiToolMeta = [
 ];
 
 type StaticUITools = {
-  [T in (typeof staticUIToolDefs)[number] as T["meta"]["name"]]: T["tool"];
+  [T in (typeof staticUIToolDefs)[number]as T["meta"]["name"]]: T["tool"];
 };
 
 export function createUITools(session: Session): StaticUITools & {
   generate_file: ReturnType<typeof generateFile.create>;
-  generate_image: ReturnType<typeof generateImage.create>;
+  // generate_image: ReturnType<typeof generateImage.create>;
 } {
   return {
     ...Object.fromEntries(staticUIToolDefs.map((t) => [t.meta.name, t.tool])) as StaticUITools,
     generate_file: generateFile.create(session),
-    generate_image: generateImage.create(session),
+    // generate_image: generateImage.create(session),
   };
 }
