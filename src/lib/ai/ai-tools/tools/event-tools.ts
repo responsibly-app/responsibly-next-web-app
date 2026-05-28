@@ -106,7 +106,7 @@ export const createEvent = {
           startAt: z
             .string()
             .describe("ISO 8601 datetime for event start, e.g. 2025-06-15T18:00:00Z"),
-          endAt: z.string().optional().describe("ISO 8601 datetime for event end"),
+          endAt: z.string().describe("ISO 8601 datetime for event end"),
           attendanceMethods: z
             .array(z.enum(["manual", "qr", "zoom"]))
             .optional()
