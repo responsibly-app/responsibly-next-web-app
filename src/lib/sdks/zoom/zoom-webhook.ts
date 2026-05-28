@@ -1,4 +1,5 @@
 import crypto from "crypto";
+import { ZOOM_ATTENDANCE_MODE, ZOOM_API_SYNC_DELAY_MS } from "./zoom-config";
 import { and, eq, isNull } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { member, user } from "@/lib/db/schema/better-auth-schema";
@@ -56,7 +57,7 @@ export interface UrlValidationResponse {
   encryptedToken: string;
 }
 
-type EventRow = { id: string; organizationId: string };
+type EventRow = { id: string; organizationId: string; endAt: Date | null };
 
 // ─── Security ─────────────────────────────────────────────────────────────────
 
@@ -97,7 +98,7 @@ export function verifyHmacSignature(opts: {
 
 async function findEventByMeetingId(meetingId: string): Promise<EventRow | undefined> {
   return db
-    .select({ id: event.id, organizationId: event.organizationId })
+    .select({ id: event.id, organizationId: event.organizationId, endAt: event.endAt })
     .from(event)
     .where(eq(event.zoomMeetingId, meetingId))
     .limit(1)
@@ -172,13 +173,22 @@ async function sumParticipantDuration(eventId: string, participantEmail: string)
  *  - their email maps to an org member
  *  - their total attended time meets or exceeds the minimum threshold
  */
-async function tryAutoMarkAttendance(opts: {
+/**
+ * Attempt to auto-mark a participant as present.
+ * When `durationOverride` is provided (e.g. from the API sync path where duration is
+ * already known), the DB session sum is skipped. Otherwise the webhook session table is queried.
+ */
+export async function tryAutoMarkAttendance(opts: {
   eventId: string;
   organizationId: string;
   participantEmail: string;
+  /** Pre-computed total duration in minutes. If omitted, summed from zoom_participant_session. */
+  durationOverride?: number;
+  /** First join timestamp (for API sync path where no webhook sessions exist). */
+  firstJoinOverride?: Date | null;
 }): Promise<void> {
 
-  const { eventId, organizationId, participantEmail } = opts;
+  const { eventId, organizationId, participantEmail, durationOverride, firstJoinOverride } = opts;
 
   const settings = await findAttendanceSettings(organizationId);
   if (!settings?.zoomAutoMarkPresent) return;
@@ -186,30 +196,32 @@ async function tryAutoMarkAttendance(opts: {
   const memberId = await resolveMemberId(participantEmail, organizationId);
   if (!memberId) return;
 
-  const totalDuration = await sumParticipantDuration(eventId, participantEmail);
+  const totalDuration = durationOverride ?? await sumParticipantDuration(eventId, participantEmail);
   if (totalDuration < (settings.minAttendanceDurationMinutes ?? 0)) return;
 
-  const [memberUserRow, firstSession] = await Promise.all([
-    db
-      .select({ userId: member.userId })
-      .from(member)
-      .where(eq(member.id, memberId))
-      .limit(1)
-      .then((r) => r[0]),
+  const memberUserRow = await db
+    .select({ userId: member.userId })
+    .from(member)
+    .where(eq(member.id, memberId))
+    .limit(1)
+    .then((r) => r[0]);
 
-    db
-      .select({ joinedAt: zoomParticipantSession.joinedAt })
-      .from(zoomParticipantSession)
-      .where(
-        and(
-          eq(zoomParticipantSession.eventId, eventId),
-          eq(zoomParticipantSession.participantEmail, participantEmail),
-        ),
-      )
-      .orderBy(zoomParticipantSession.joinedAt)
-      .limit(1)
-      .then((r) => r[0]),
-  ]);
+  // When called from the API sync path, firstJoinOverride carries the first join time directly.
+  // Otherwise fall back to the earliest webhook session row.
+  const firstJoinedAt = firstJoinOverride !== undefined
+    ? firstJoinOverride
+    : await db
+        .select({ joinedAt: zoomParticipantSession.joinedAt })
+        .from(zoomParticipantSession)
+        .where(
+          and(
+            eq(zoomParticipantSession.eventId, eventId),
+            eq(zoomParticipantSession.participantEmail, participantEmail),
+          ),
+        )
+        .orderBy(zoomParticipantSession.joinedAt)
+        .limit(1)
+        .then((r) => r[0]?.joinedAt ?? null);
 
   await db
     .insert(eventAttendance)
@@ -221,7 +233,7 @@ async function tryAutoMarkAttendance(opts: {
       markedAt: new Date(),
       markedBy: memberUserRow?.userId ?? memberId,
       zoomDuration: totalDuration,
-      zoomFirstJoinedAt: firstSession?.joinedAt ?? null,
+      zoomFirstJoinedAt: firstJoinedAt,
       onlineZoom: true,
     })
     .onConflictDoUpdate({
@@ -229,7 +241,7 @@ async function tryAutoMarkAttendance(opts: {
       set: {
         status: "present",
         zoomDuration: totalDuration,
-        zoomFirstJoinedAt: firstSession?.joinedAt ?? null,
+        zoomFirstJoinedAt: firstJoinedAt,
         onlineZoom: true,
       },
     });
@@ -355,6 +367,19 @@ export async function handleMeetingEnded(
 
 // ─── Dispatcher ───────────────────────────────────────────────────────────────
 
+// ─── Config ───────────────────────────────────────────────────────────────────
+
+/** "webhook" | "api" | "both" — controlled via ZOOM_ATTENDANCE_MODE env var */
+function getAttendanceMode(): "webhook" | "api" | "both" {
+  return ZOOM_ATTENDANCE_MODE;
+}
+
+function getApiSyncDelayMs(): number {
+  return ZOOM_API_SYNC_DELAY_MS;
+}
+
+// ─── Dispatcher ───────────────────────────────────────────────────────────────
+
 /**
  * Route a verified Zoom webhook payload to the correct handler.
  * Call this only after verifyHmacSignature passes.
@@ -367,12 +392,35 @@ export async function dispatchZoomEvent(body: ZoomWebhookPayload): Promise<{ rec
   const meetingId = String(obj.id ?? "");
   if (!meetingId) return { received: true };
 
+  const mode = getAttendanceMode();
+
   // meeting.ended carries no participant — resolve the event and bail early
   if (eventType === "meeting.ended") {
     const eventRow = await findEventByMeetingId(meetingId);
-    if (eventRow) await handleMeetingEnded(obj, eventRow, event_ts);
+    if (!eventRow) return { received: true };
+
+    if (mode === "webhook" || mode === "both") {
+      await handleMeetingEnded(obj, eventRow, event_ts);
+    }
+
+    if (mode === "api" || mode === "both") {
+      // Lazy import to avoid circular dependency with zoom-api-sync
+      const { scheduleZoomApiSync } = await import("@/lib/sdks/zoom/zoom-api-sync");
+      const baseTime = eventRow.endAt ?? (obj.end_time ? new Date(obj.end_time) : new Date(event_ts));
+      await scheduleZoomApiSync({
+        eventId: eventRow.id,
+        organizationId: eventRow.organizationId,
+        zoomMeetingId: meetingId,
+        scheduledFor: new Date(baseTime.getTime() + getApiSyncDelayMs()),
+        triggeredBy: "auto_webhook",
+      });
+    }
+
     return { received: true };
   }
+
+  // For join/left events, only process in webhook or both mode
+  if (mode === "api") return { received: true };
 
   const participant = obj.participant;
   if (!participant) return { received: true };

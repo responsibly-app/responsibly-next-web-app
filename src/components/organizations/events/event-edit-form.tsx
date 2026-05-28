@@ -113,7 +113,7 @@ export function EventEditForm({ event, onClose }: Props) {
         timezone,
         location: location || null,
         startAt: buildDateTimeInTimezone(date, startTime, timezone),
-        endAt: endTime ? buildDateTimeInTimezone(date, endTime, timezone) : null,
+        endAt: buildDateTimeInTimezone(date, endTime, timezone),
         zoomOption,
         zoomMeetingId: zoomOption === "link" ? linkedZoomId : undefined,
         attendanceMethods,
@@ -134,6 +134,7 @@ export function EventEditForm({ event, onClose }: Props) {
     title.trim() &&
     date &&
     startTime &&
+    endTime &&
     !updateEvent.isPending &&
     (zoomOption !== "link" || linkedZoomId.trim());
 
@@ -283,9 +284,7 @@ export function EventEditForm({ event, onClose }: Props) {
             />
           </div>
           <div className="grid gap-2">
-            <Label>
-              End Time <span className="text-muted-foreground font-normal">(optional)</span>
-            </Label>
+            <Label>End Time</Label>
             <Input
               type="time"
               value={endTime}

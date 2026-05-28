@@ -11,9 +11,11 @@ import {
   Monitor,
   Blend,
   Pencil,
+  RefreshCw,
   Users,
   ClipboardList,
 } from "lucide-react";
+import { toast } from "sonner";
 import { JoinMeetingButton } from "./join-meeting-button";
 import { EventEditForm } from "./event-edit-form";
 import { EventRsvpList } from "./event-rsvp-list";
@@ -23,7 +25,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useGetEvent, useGetRsvpStatus, useListRsvps, useToggleRsvp } from "@/lib/auth/hooks";
+import { useGetEvent, useGetRsvpStatus, useListRsvps, useSyncZoomAttendance, useToggleRsvp } from "@/lib/auth/hooks";
 import { ROLE_LEVELS, type OrgRole } from "@/lib/auth/hooks/oraganization/permissions";
 import { formatEventDateTime, formatEventTime, tzAbbr } from "@/lib/utils/timezone";
 import { useTabSearchParam } from "@/lib/hooks/use-tab-search-param";
@@ -63,6 +65,8 @@ export function EventDetailPage({ eventId }: Props) {
 
   const isAdmin = canEditEvent(event?.userRole);
   const isManager = canViewRsvpList(event?.userRole);
+
+  const syncZoom = useSyncZoomAttendance();
 
   // Preload rsvp list so the card has data ready when rendered
   useListRsvps(isInPersonOrHybrid && isManager ? eventId : "");
@@ -172,6 +176,33 @@ export function EventDetailPage({ eventId }: Props) {
                   {rsvpStatus.totalCount}
                 </Badge>
               )}
+            </Button>
+          )}
+          {isAdmin && event.zoomMeetingId && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() =>
+                syncZoom.mutate(
+                  { eventId: event.id, organizationId: event.organizationId },
+                  {
+                    onSuccess: (data) =>
+                      toast.success(
+                        `Sync complete — ${data.participantsProcessed} participant${data.participantsProcessed === 1 ? "" : "s"} processed, ${data.newRecordsCreated} new record${data.newRecordsCreated === 1 ? "" : "s"} created.`,
+                      ),
+                    onError: (err) =>
+                      toast.error(err?.message ?? "Zoom attendance sync failed."),
+                  },
+                )
+              }
+              disabled={syncZoom.isPending}
+            >
+              {syncZoom.isPending ? (
+                <Spinner className="mr-1.5 size-3.5" data-icon="inline-start" />
+              ) : (
+                <RefreshCw className="mr-1.5 size-3.5" />
+              )}
+              Sync Zoom Attendance
             </Button>
           )}
         </div>

@@ -32,7 +32,7 @@ export function useCreateEvent() {
       timezone?: string;
       location?: string;
       startAt: string;
-      endAt?: string;
+      endAt: string;
       zoomOption?: "none" | "create" | "link";
       zoomMeetingId?: string;
       attendanceMethods?: ("manual" | "qr" | "zoom")[];
@@ -60,7 +60,7 @@ export function useUpdateEvent() {
       timezone?: string;
       location?: string | null;
       startAt?: string;
-      endAt?: string | null;
+      endAt: string | null;
       zoomOption?: "none" | "create" | "link";
       zoomMeetingId?: string | null;
       attendanceMethods?: ("manual" | "qr" | "zoom")[];
@@ -213,4 +213,17 @@ export function useListRsvps(eventId: string) {
       enabled: !!eventId,
     }),
   );
+}
+
+export function useSyncZoomAttendance() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: { eventId: string; organizationId: string }) =>
+      orpc.event.syncZoomAttendance(input),
+    onSuccess: (_, { eventId }) => {
+      queryClient.invalidateQueries({
+        queryKey: orpcTQUtils.event.getAttendance.queryOptions({ input: { eventId } }).queryKey,
+      });
+    },
+  });
 }
