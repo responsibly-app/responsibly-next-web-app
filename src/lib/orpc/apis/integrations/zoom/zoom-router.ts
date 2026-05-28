@@ -1,19 +1,19 @@
 import { z } from "zod/v3";
 import { ORPCError } from "@orpc/server";
 import { authed, zoomAuthed, pub } from "@/lib/orpc/base";
-import { isZoomConnected } from "@/lib/sdks/zoom-client";
+import { isZoomConnected } from "@/lib/sdks/zoom/zoom-client";
 import {
     handleUrlValidation,
     verifyHmacSignature,
     dispatchZoomEvent,
     type ZoomWebhookPayload,
-} from "@/lib/sdks/zoom-webhook";
+} from "@/lib/sdks/zoom/zoom-webhook";
 import {
     processPendingSyncJobs,
     findOrphanedMeetings,
     scheduleZoomApiSync,
-} from "@/lib/sdks/zoom-api-sync";
-import { ZOOM_ATTENDANCE_MODE, ZOOM_API_SYNC_DELAY_MS } from "@/lib/sdks/zoom-config";
+} from "@/lib/sdks/zoom/zoom-api-sync";
+import { ZOOM_ATTENDANCE_MODE, ZOOM_API_SYNC_DELAY_MS } from "@/lib/sdks/zoom/zoom-config";
 import {
     CreateMeetingInputSchema,
     ListMeetingsInputSchema,

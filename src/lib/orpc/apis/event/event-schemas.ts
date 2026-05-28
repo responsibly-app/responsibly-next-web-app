@@ -38,7 +38,7 @@ export const CreateEventInputSchema = z.object({
   timezone: z.string().default("UTC"),
   location: z.string().optional(),
   startAt: z.string().datetime(),
-  endAt: z.string().datetime().optional(),
+  endAt: z.string().datetime(),
   // Zoom: "none" = no Zoom, "create" = auto-create meeting, "link" = provide existing ID
   zoomOption: ZoomOptionSchema.optional().default("none"),
   zoomMeetingId: z.string().optional(), // used when zoomOption = "link"
@@ -63,7 +63,7 @@ export const UpdateEventInputSchema = z.object({
   timezone: z.string().optional(),
   location: z.string().nullable().optional(),
   startAt: z.string().datetime().optional(),
-  endAt: z.string().datetime().nullable().optional(),
+  endAt: z.string().datetime().nullable(),
   zoomOption: ZoomOptionSchema.optional(),
   zoomMeetingId: z.string().nullable().optional(),
   attendanceMethods: z.array(AttendanceMethodSchema).optional(),

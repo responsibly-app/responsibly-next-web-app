@@ -15,9 +15,9 @@ import { organizationSettings } from "@/lib/db/schema/org-settings-schema";
 import { authed } from "@/lib/orpc/base";
 import { toZoomTimezone } from "@/lib/utils/timezone";
 import { ROLE_LEVELS, type OrgRole } from "@/lib/auth/hooks/oraganization/permissions";
-import { getZoomClientForUser } from "@/lib/sdks/zoom-client";
-import { processZoomApiSync } from "@/lib/sdks/zoom-api-sync";
-import { ZOOM_MEETING_SETTINGS } from "@/lib/sdks/zoom-config";
+import { getZoomClientForUser } from "@/lib/sdks/zoom/zoom-client";
+import { processZoomApiSync } from "@/lib/sdks/zoom/zoom-api-sync";
+import { ZOOM_MEETING_SETTINGS } from "@/lib/sdks/zoom/zoom-config";
 import {
   ListEventsInputSchema,
   ListEventsOutputSchema,
@@ -215,11 +215,9 @@ export const eventRouter = {
           topic: input.title,
           type: 2,
           start_time: toZoomLocalTime(input.startAt, input.timezone ?? "UTC"),
-          duration: input.endAt
-            ? Math.round(
-              (new Date(input.endAt).getTime() - new Date(input.startAt).getTime()) / 60000,
-            )
-            : 60,
+          duration: Math.round(
+            (new Date(input.endAt).getTime() - new Date(input.startAt).getTime()) / 60000,
+          ),
           timezone: toZoomTimezone(input.timezone ?? "UTC"),
           agenda: input.description,
           settings: ZOOM_MEETING_SETTINGS,
@@ -312,16 +310,14 @@ export const eventRouter = {
           .then((r) => r[0]);
 
         const startAt = input.startAt ?? currentEvent?.startAt?.toISOString() ?? "";
-        const endAt = input.endAt ?? currentEvent?.endAt?.toISOString();
+        const endAt = input.endAt ?? currentEvent?.endAt?.toISOString() ?? "";
         const meeting = await zoom.createMeeting({
           topic: input.title ?? currentEvent?.title ?? "Meeting",
           type: 2,
           start_time: toZoomLocalTime(startAt, input.timezone ?? currentEvent?.timezone ?? "UTC"),
-          duration: endAt
-            ? Math.round(
-              (new Date(endAt).getTime() - new Date(startAt).getTime()) / 60000,
-            )
-            : 60,
+          duration: Math.round(
+            (new Date(endAt).getTime() - new Date(startAt).getTime()) / 60000,
+          ),
           timezone: toZoomTimezone(input.timezone ?? currentEvent?.timezone ?? "UTC"),
           settings: ZOOM_MEETING_SETTINGS,
         });

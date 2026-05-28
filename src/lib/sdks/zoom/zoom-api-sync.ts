@@ -8,8 +8,8 @@ import {
   zoomMeetingSyncJob,
   zoomApiParticipantRecord,
 } from "@/lib/db/schema/zoom-sync-schema";
-import { getZoomClientForUser } from "@/lib/sdks/zoom-client";
-import { tryAutoMarkAttendance } from "@/lib/sdks/zoom-webhook";
+import { getZoomClientForUser } from "@/lib/sdks/zoom/zoom-client";
+import { tryAutoMarkAttendance } from "@/lib/sdks/zoom/zoom-webhook";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 

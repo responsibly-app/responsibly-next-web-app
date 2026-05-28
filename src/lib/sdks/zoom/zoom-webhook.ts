@@ -405,7 +405,7 @@ export async function dispatchZoomEvent(body: ZoomWebhookPayload): Promise<{ rec
 
     if (mode === "api" || mode === "both") {
       // Lazy import to avoid circular dependency with zoom-api-sync
-      const { scheduleZoomApiSync } = await import("@/lib/sdks/zoom-api-sync");
+      const { scheduleZoomApiSync } = await import("@/lib/sdks/zoom/zoom-api-sync");
       const baseTime = eventRow.endAt ?? (obj.end_time ? new Date(obj.end_time) : new Date(event_ts));
       await scheduleZoomApiSync({
         eventId: eventRow.id,
