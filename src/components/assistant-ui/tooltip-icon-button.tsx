@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 export type TooltipIconButtonProps = ComponentPropsWithRef<typeof Button> & {
-  tooltip: string;
+  tooltip?: string;
   side?: "top" | "bottom" | "left" | "right";
 };
 
@@ -36,7 +36,11 @@ export const TooltipIconButton = forwardRef<
             <span className="aui-sr-only sr-only">{tooltip}</span>
           </Button>
         </TooltipTrigger>
-        <TooltipContent side={side}>{tooltip}</TooltipContent>
+        {tooltip && (
+          <TooltipContent side={side}>
+            <p>{tooltip}</p>
+          </TooltipContent>
+        )}
       </Tooltip>
     </TooltipProvider>
   );

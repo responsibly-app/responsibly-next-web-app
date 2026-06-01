@@ -52,9 +52,11 @@ export const generateFile = {
             .describe("Raw text content — use for txt, html, or pre-serialized csv/json strings"),
         }),
       ),
-      execute: async ({ filename, format, rows, content }) => {
+      execute: async ({ filename, format, rows, content }, context) => {
         let fileContent: string;
         let mimeType: string;
+
+        const signal = context.abortSignal
 
         switch (format) {
           case "csv":

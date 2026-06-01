@@ -3,7 +3,7 @@ import {
   ComposerAttachments,
   UserMessageAttachments,
 } from "@/components/assistant-ui/attachment";
-import { MarkdownText } from "@/components/assistant-ui/markdown-text";
+import { MarkdownText } from "~/src/components/assistant-ui/modules/markdown/markdown-text";
 import {
   Reasoning,
   ReasoningContent,
@@ -47,8 +47,10 @@ import { ThreadLoadingSkeleton } from "./modules/thread/thread-loading";
 import { ThreadWelcome } from "./modules/thread/thread-welcome";
 import { ThinkingIndicator, ThreadScrollToBottom } from "./modules/thread/thread-utils";
 import { AssistantCopy, AssistantMore, AssistantReload, AssistantSpeakToggle } from "./modules/thread/assistant-actions";
+// import { SlashComposer } from "./modules/popovers/slash-composer";
+// import { MentionComposer } from "./modules/popovers/mention-composer";
 
-const ENABLE_QUOTE_CONTEXT = false; // set to false to disable quote context injection and rendering
+const ENABLE_QUOTE_CONTEXT = true; // set to false to disable quote context injection and rendering
 const MODEL_CONTEXT_WINDOW = 400_000; // 400k tokens ~= 300 pages of text
 
 export const Thread: FC = () => {
@@ -85,7 +87,7 @@ export const Thread: FC = () => {
             </ThreadPrimitive.Messages>
           </div>
 
-          <ThreadPrimitive.ViewportFooter className="aui-thread-viewport-footer sticky bottom-0 mt-auto flex flex-col gap-4 overflow-visible rounded-t-(--composer-radius) bg-background/70 pb-4 md:pb-6">
+          <ThreadPrimitive.ViewportFooter className="aui-thread-viewport-footer sticky bottom-0 z-20 mt-auto flex flex-col gap-4 overflow-visible rounded-t-(--composer-radius) bg-background/70 pb-4 md:pb-6">
             <ThreadScrollToBottom />
             <Composer />
           </ThreadPrimitive.ViewportFooter>
@@ -111,26 +113,38 @@ const ThreadEmptyContent: FC = () => {
   return <ThreadWelcome />;
 };
 
+function warnInvalidFiles(files: File[]) {
+  const wrongType = files.filter((f) => !isFileTypeAccepted(f.type));
+  if (wrongType.length === 0) return;
+  for (const f of wrongType) {
+    const ext = f.name.split(".").pop()?.toUpperCase() ?? "unknown";
+    toast.error("File format not supported", {
+      description: `${f.name} (${ext}) — Supported formats: JPEG, PNG, GIF, WebP, PDF, TXT, Markdown, CSV.`,
+    });
+  }
+}
+
 const Composer: FC = () => {
   const handlePaste = useCallback((e: React.ClipboardEvent) => {
     const files = Array.from(e.clipboardData?.files ?? []);
-    if (files.length === 0) return;
-    const invalid = files.filter((f) => !isFileTypeAccepted(f.type));
-    if (invalid.length === 0) return;
-    toast.error("File format not supported", {
-      description: "Supported formats: JPEG, PNG, GIF, WebP, PDF, TXT, Markdown, CSV.",
-    });
-    if (invalid.length === files.length) e.preventDefault();
+    if (files.length > 0) warnInvalidFiles(files);
+  }, []);
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    const files = Array.from(e.dataTransfer?.files ?? []);
+    if (files.length > 0) warnInvalidFiles(files);
   }, []);
 
   return (
+    // <ComposerPrimitive.Unstable_TriggerPopoverRoot>
     <ComposerPrimitive.Root className="aui-composer-root relative flex w-full flex-col">
-      {ENABLE_QUOTE_CONTEXT && <ComposerQuotePreview />}
       <ComposerPrimitive.AttachmentDropzone asChild>
         <div
           data-slot="aui_composer-shell"
           className="flex w-full flex-col gap-2 rounded-(--composer-radius) border border-ring/50 bg-card/50 backdrop-blur-sm p-(--composer-padding) transition-shadow focus-within:border-ring/75 focus-within:ring-1 focus-within:ring-ring/20 data-[dragging=true]:border-ring data-[dragging=true]:border-dashed data-[dragging=true]:bg-accent/50"
+          onDropCapture={handleDrop}
         >
+          {ENABLE_QUOTE_CONTEXT && <ComposerQuotePreview />}
           <ComposerAttachments />
           <ComposerPrimitive.Input
             placeholder="Send a message..."
@@ -143,7 +157,10 @@ const Composer: FC = () => {
           <ComposerAction />
         </div>
       </ComposerPrimitive.AttachmentDropzone>
+      {/* <SlashComposer /> */}
+      {/* <MentionComposer /> */}
     </ComposerPrimitive.Root>
+    // </ComposerPrimitive.Unstable_TriggerPopoverRoot>
   );
 };
 
@@ -262,11 +279,6 @@ const AssistantMessage: FC = () => {
         className="wrap-break-word px-2 text-foreground leading-relaxed"
       >
         <MessagePartErrorBoundary>
-          {ENABLE_QUOTE_CONTEXT && (
-            <MessagePrimitive.Quote>
-              {(quote) => <QuoteBlock {...quote} />}
-            </MessagePrimitive.Quote>
-          )}
           <MessagePrimitive.GroupedParts
             groupBy={(part) => {
               if (part.type === "reasoning")
@@ -283,7 +295,7 @@ const AssistantMessage: FC = () => {
                 case "group-reasoning": {
                   const running = part.status.type === "running";
                   return (
-                    <ReasoningRoot defaultOpen={running}>
+                    <ReasoningRoot defaultOpen={false} variant="ghost">
                       <ReasoningTrigger active={running} />
                       <ReasoningContent aria-busy={running}>
                         <ReasoningText>{children}</ReasoningText>
@@ -340,6 +352,11 @@ const UserMessage: FC = () => {
 
       <div className="aui-user-message-content-wrapper relative col-start-2 min-w-0">
         <div className="aui-user-message-content wrap-break-word peer rounded-2xl bg-muted px-4 py-2.5 text-foreground empty:hidden">
+          {ENABLE_QUOTE_CONTEXT && (
+            <MessagePrimitive.Quote>
+              {(quote) => <QuoteBlock {...quote} />}
+            </MessagePrimitive.Quote>
+          )}
           <MessagePrimitive.Parts />
         </div>
         <div className="aui-user-action-bar-wrapper absolute inset-s-0 top-1/2 -translate-x-full -translate-y-1/2 pe-2 peer-empty:hidden rtl:translate-x-full">

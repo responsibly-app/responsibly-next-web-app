@@ -63,12 +63,16 @@ export function AssistantReload() {
 }
 
 function MessageDate() {
-    const createdAt = useAuiState((s) => s.message.createdAt);
-    if (!createdAt) return null;
+    const createdAtRaw = useAuiState((s) => {
+        const customCreatedAt = (s.message as any).metadata?.custom?._createdAt as string | undefined;
+        if (customCreatedAt) return customCreatedAt;
+        return s.message.createdAt?.getTime() ?? null;
+    });
+    if (!createdAtRaw) return null;
+    const createdAt = new Date(createdAtRaw);
     const formatted = new Intl.DateTimeFormat(undefined, {
         dateStyle: "medium",
         timeStyle: "short",
-        timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
     }).format(createdAt);
     return (
         <div className="px-2 py-1.5 text-xs text-muted-foreground select-text">
@@ -91,11 +95,11 @@ export function AssistantMore() {
             <ActionBarMorePrimitive.Content
                 side="bottom"
                 align="start"
-                className="aui-action-bar-more-content z-50 min-w-32 overflow-hidden rounded-md border bg-popover p-1 text-popover-foreground shadow-md"
+                className="aui-action-bar-more-content z-50 min-w-32 overflow-hidden rounded-xl border bg-popover p-1 text-popover-foreground shadow-md"
             >
                 <MessageDate />
                 <ActionBarPrimitive.ExportMarkdown asChild>
-                    <ActionBarMorePrimitive.Item className="aui-action-bar-more-item flex cursor-pointer select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground">
+                    <ActionBarMorePrimitive.Item className="aui-action-bar-more-item flex cursor-pointer select-none items-center gap-2 rounded-lg px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground">
                         <DownloadIcon className="size-4" />
                         Export as Markdown
                     </ActionBarMorePrimitive.Item>

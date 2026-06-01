@@ -90,7 +90,7 @@ function SelectionToolbarRoot({
     <SelectionToolbarPrimitive.Root
       data-slot="selection-toolbar"
       className={cn(
-        "flex items-center gap-1 rounded-lg border bg-popover px-1 py-1 shadow-md",
+        "flex items-center gap-1 rounded-2xl border bg-popover px-1 py-1 shadow-md",
         className,
       )}
       {...props}
@@ -107,7 +107,7 @@ function SelectionToolbarQuote({
     <SelectionToolbarPrimitive.Quote
       data-slot="selection-toolbar-quote"
       className={cn(
-        "flex items-center gap-1.5 rounded-md px-2.5 py-1 text-popover-foreground text-sm transition-colors hover:bg-accent",
+        "flex items-center gap-1.5 rounded-2xl px-2.5 py-1 text-popover-foreground text-sm transition-colors hover:bg-accent",
         className,
       )}
       {...props}
@@ -115,7 +115,7 @@ function SelectionToolbarQuote({
       {children ?? (
         <>
           <QuoteIcon className="size-3.5" />
-          Quote
+          Ask about this
         </>
       )}
     </SelectionToolbarPrimitive.Quote>
@@ -165,7 +165,7 @@ function ComposerQuotePreviewRoot({
     <ComposerPrimitive.Quote
       data-slot="composer-quote"
       className={cn(
-        "mx-3 mt-2 flex items-start gap-2 rounded-lg bg-muted/60 px-3 py-2",
+        "flex items-start gap-2 rounded-t-2xl bg-muted/80 backdrop-blur-md px-3 py-2",
         className,
       )}
       {...props}
@@ -211,7 +211,7 @@ function ComposerQuotePreviewDismiss({
   ...props
 }: ComponentProps<typeof ComposerPrimitive.QuoteDismiss>) {
   const defaultClassName =
-    "shrink-0 rounded-sm p-0.5 text-muted-foreground/70 transition-colors hover:bg-accent hover:text-foreground";
+    "shrink-0 rounded-full p-0.5 text-muted-foreground/70 border border-border transition-colors hover:bg-accent hover:text-foreground";
 
   return (
     <ComposerPrimitive.QuoteDismiss
@@ -226,7 +226,7 @@ function ComposerQuotePreviewDismiss({
           aria-label="Dismiss quote"
           className={cn(defaultClassName, className)}
         >
-          <XIcon className="size-3.5" />
+          <XIcon className="size-4" />
         </button>
       )}
     </ComposerPrimitive.QuoteDismiss>

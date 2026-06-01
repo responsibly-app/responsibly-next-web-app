@@ -1,12 +1,19 @@
 import { z } from "zod/v3";
+import { ORPCError } from "@orpc/server";
 import { authed, zoomAuthed, pub } from "@/lib/orpc/base";
-import { isZoomConnected } from "@/lib/sdks/zoom-client";
+import { isZoomConnected } from "@/lib/sdks/zoom/zoom-client";
 import {
     handleUrlValidation,
     verifyHmacSignature,
     dispatchZoomEvent,
     type ZoomWebhookPayload,
-} from "@/lib/sdks/zoom-webhook";
+} from "@/lib/sdks/zoom/zoom-webhook";
+import {
+    processPendingSyncJobs,
+    findOrphanedMeetings,
+    scheduleZoomApiSync,
+} from "@/lib/sdks/zoom/zoom-api-sync";
+import { ZOOM_ATTENDANCE_MODE, ZOOM_API_SYNC_DELAY_MS } from "@/lib/sdks/zoom/zoom-config";
 import {
     CreateMeetingInputSchema,
     ListMeetingsInputSchema,
@@ -101,9 +108,56 @@ export const zoomRouter = {
                 return { error: "Invalid signature" };
             }
 
-            debugLog("zoomWebhookRequests", 
+            debugLog("zoomWebhookRequests",
                 "Received Zoom webhook event:", JSON.stringify(input, null, 2));
 
             return dispatchZoomEvent(input as ZoomWebhookPayload);
+        }),
+
+    /**
+     * Cron endpoint: process pending Zoom API sync jobs and auto-detect orphaned meetings.
+     * Called by Vercel Cron (GET) or manually (POST). Protected by CRON_SECRET.
+     */
+    processSyncJobs: pub
+        .route({
+            method: "GET",
+            path: "/zoom/process-sync-jobs",
+            summary: "Process pending Zoom API attendance sync jobs (cron)",
+            tags: ["Zoom"],
+        })
+        .output(z.any())
+        .handler(async ({ context }) => {
+            const secret = process.env.CRON_SECRET ?? "";
+            if (secret) {
+                const auth = context.headers.get("authorization") ?? "";
+                const token = auth.startsWith("Bearer ") ? auth.slice(7) : auth;
+                if (token !== secret) throw new ORPCError("UNAUTHORIZED");
+            }
+
+            if (ZOOM_ATTENDANCE_MODE === "webhook") {
+                return { skipped: true, reason: "ZOOM_ATTENDANCE_MODE=webhook" };
+            }
+
+            const delayMs = ZOOM_API_SYNC_DELAY_MS;
+
+            let orphansScheduled = 0;
+            try {
+                const orphans = await findOrphanedMeetings(delayMs);
+                for (const orphan of orphans) {
+                    await scheduleZoomApiSync({
+                        eventId: orphan.id,
+                        organizationId: orphan.organizationId,
+                        zoomMeetingId: orphan.zoomMeetingId,
+                        scheduledFor: new Date(orphan.endAt.getTime() + delayMs),
+                        triggeredBy: "auto_cron",
+                    });
+                    orphansScheduled++;
+                }
+            } catch {
+                // Non-fatal — continue to process already-pending jobs
+            }
+
+            const result = await processPendingSyncJobs(10);
+            return { orphansScheduled, ...result };
         }),
 };

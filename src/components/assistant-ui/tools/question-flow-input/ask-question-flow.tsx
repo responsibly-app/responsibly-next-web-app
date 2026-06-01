@@ -1,0 +1,122 @@
+"use client";
+
+import { type Toolkit } from "@assistant-ui/react";
+import { useState, useRef } from "react";
+import { QuestionFlow } from "@/components/tool-ui/question-flow-input";
+import { Skeleton } from "@/components/ui/skeleton";
+
+type FlowOption = {
+  id: string;
+  label: string;
+  description?: string;
+  disabled?: boolean;
+};
+
+type FlowStep = {
+  id: string;
+  title: string;
+  description?: string;
+  options: FlowOption[];
+  selectionMode?: "single" | "multi";
+  optional?: boolean;
+};
+
+function buildReceipt(steps: FlowStep[], answers: Record<string, string[]>) {
+  const summary = steps.map((step) => {
+    const selectedIds = answers[step.id] ?? [];
+    const value = selectedIds
+      .map((id) => {
+        const matched = step.options.find((opt) => opt.id === id);
+        return matched ? matched.label : id;
+      })
+      .join(", ");
+    return { label: step.title, value: value || "—" };
+  });
+  const title = steps.length === 1 ? steps[0].title : "Your selections";
+  return { title, summary };
+}
+
+function QuestionFlowSkeleton() {
+  return (
+    <div className="flex w-full min-w-80 max-w-md flex-col gap-3">
+      <div className="bg-card flex w-full flex-col gap-4 rounded-2xl border p-5 shadow-xs">
+        <div className="flex flex-col gap-2">
+          <Skeleton className="h-3 w-16" />
+          <Skeleton className="h-1.5 w-full rounded-full" />
+        </div>
+        <div className="flex flex-col gap-2 mt-1">
+          <Skeleton className="h-5 w-3/4" />
+          <Skeleton className="h-4 w-1/2" />
+        </div>
+        <div className="flex flex-col gap-0 px-1">
+          {[0, 1, 2].map((i) => (
+            <div key={i} className="py-3">
+              <div className="flex items-center gap-3">
+                <Skeleton className="size-4 shrink-0 rounded-full" />
+                <Skeleton className="h-4 w-full" style={{ width: `${55 + i * 15}%` }} />
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="flex items-center justify-end pt-2">
+          <Skeleton className="h-9 w-20 rounded-full" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function QuestionFlowTool({ args, result, addResult, toolCallId }: any) {
+  const id = `question-flow-${toolCallId}`;
+  const steps = (args as { steps: FlowStep[] }).steps;
+  const [localAnswers, setLocalAnswers] = useState<Record<
+    string,
+    string[]
+  > | null>(null);
+  // Latch: once the first step is valid enough to render, never revert to skeleton.
+  // QuestionFlowUpfront shows one step at a time, so only step[0] needs to be
+  // ready before mounting — later steps will finish streaming before the user
+  // reaches them.
+  const hasShownCard = useRef(false);
+
+  // Only trust `result` if it has at least one non-empty answer. The AI SDK
+  // may set result = {} when a tool call fails schema validation, which would
+  // otherwise trigger the receipt with no answers.
+  const rawResult = result as Record<string, string[]> | undefined;
+  const resultIsValid =
+    rawResult != null &&
+    Object.values(rawResult).some((v) => Array.isArray(v) && v.length > 0);
+  const completedAnswers = localAnswers ?? (resultIsValid ? rawResult : null);
+
+  // Show card as soon as the first step has an id — options can be empty
+  // (free-text input always covers that case) and will stream in progressively.
+  const firstStep = steps?.[0];
+  const firstStepReady = !!(firstStep?.id);
+
+  if (firstStepReady) hasShownCard.current = true;
+
+  if (!completedAnswers && !hasShownCard.current) return <QuestionFlowSkeleton />;
+
+  if (completedAnswers) {
+    const choice = buildReceipt(steps ?? [], completedAnswers);
+    return <QuestionFlow id={id} choice={choice} />;
+  }
+
+  return (
+    <QuestionFlow
+      id={id}
+      steps={steps}
+      onComplete={(answers: Record<string, string[]>) => {
+        setLocalAnswers(answers);
+        addResult(answers);
+      }}
+    />
+  );
+}
+
+export const askQuestionFlowTool: Toolkit["ask_question_flow"] = {
+  type: "human",
+  parameters: { type: "object" as const, additionalProperties: true },
+  render: (props) => <QuestionFlowTool {...props} />,
+};

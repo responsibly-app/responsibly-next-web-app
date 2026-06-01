@@ -1,5 +1,5 @@
 import type { Session } from "@/lib/orpc/context";
-import type { UIMessage } from "ai";
+import type { ToolSet, UIMessage } from "ai";
 import {
   convertToModelMessages,
   createUIMessageStream,
@@ -7,15 +7,17 @@ import {
   stepCountIs,
   streamText,
 } from "ai";
-import { primaryChatModel, fallbackChatModel } from "./models";
+import { primaryChatModel, fallbackChatModel, providerOptions } from "./models";
 import { buildSystemPrompt } from "./system-prompt";
 import { getRAGContext } from "./get-rag-context";
 import { getTools } from "./get-tools";
 import { trackUsage, type ModelTier } from "./quota";
 import { prepareUiMessages } from "./message-utils";
 import { logLLMInput, logLLMStepOutput, logSelectedTools } from "./logger";
+import { createAgentTools } from "./ai-tools/agent-tools";
+import { createUITools } from "./ai-tools/ui-tool";
 
-const MAX_CONTEXT_MESSAGES = 30;
+const MAX_CONTEXT_MESSAGES = 10;
 
 export async function createChatStream(session: Session, messages: UIMessage[], tier: ModelTier) {
   const lastUserText =
@@ -43,15 +45,17 @@ export async function createChatStream(session: Session, messages: UIMessage[], 
 
       logLLMInput(messages.length, modelMessages);
 
+      const allTools: ToolSet = { ...createAgentTools(session), ...createUITools(session) };
+      const useAllTools = false;
+      const usableTools = useAllTools ? allTools : tools;
+
       const result = streamText({
         model,
         system: systemPrompt,
         messages: modelMessages,
-        tools,
+        tools: usableTools,
         stopWhen: stepCountIs(15),
-        providerOptions: {
-          azure: { reasoningEffort: "low" },
-        },
+        providerOptions: providerOptions,
         onStepFinish: async (step) => {
           await trackUsage(session.user.id, step.usage, tier);
           logLLMStepOutput(step, step.stepNumber);

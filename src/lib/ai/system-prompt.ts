@@ -36,7 +36,7 @@ function dateContext(): string {
     const now = new Date();
     const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
     const formatted = now.toLocaleString("en-US", { timeZone: timezone, dateStyle: "full", timeStyle: "short" });
-    return `Current date and time: ${formatted} (${timezone}).`;
+    return `Current date and time: ${formatted} (timezone: ${timezone}).`;
 }
 
 function ragContext(contextBlock: string): string {

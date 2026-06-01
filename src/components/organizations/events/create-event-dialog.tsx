@@ -117,7 +117,7 @@ export function CreateEventDialog({ open, onOpenChange, organizationId }: Props)
         timezone,
         location: location || undefined,
         startAt: buildDateTimeInTimezone(date, startTime, timezone),
-        endAt: endTime ? buildDateTimeInTimezone(date, endTime, timezone) : undefined,
+        endAt: buildDateTimeInTimezone(date, endTime, timezone),
         zoomOption,
         zoomMeetingId: zoomOption === "link" ? linkedZoomId : undefined,
         attendanceMethods,
@@ -139,6 +139,7 @@ export function CreateEventDialog({ open, onOpenChange, organizationId }: Props)
     title.trim() &&
     date &&
     startTime &&
+    endTime &&
     !createEvent.isPending &&
     (zoomOption !== "link" || linkedZoomId.trim());
 
@@ -308,9 +309,7 @@ export function CreateEventDialog({ open, onOpenChange, organizationId }: Props)
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="event-end-time">
-                End Time <span className="text-muted-foreground font-normal">(optional)</span>
-              </Label>
+              <Label htmlFor="event-end-time">End Time</Label>
               <Input
                 id="event-end-time"
                 type="time"

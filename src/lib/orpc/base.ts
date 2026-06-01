@@ -2,7 +2,7 @@ import { ORPCError, os } from "@orpc/server";
 import { eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { user } from "@/lib/db/schema/better-auth-schema";
-import { getZoomClientForUser, type ZoomClient } from "@/lib/sdks/zoom-client";
+import { getZoomClientForUser, type ZoomClient } from "@/lib/sdks/zoom/zoom-client";
 import { getCalendlyClientForUser, type CalendlyClient } from "@/lib/sdks/calendly-client";
 import type { Context, Session } from "./context";
 

@@ -9,7 +9,6 @@ import { genericOAuthPlugin } from "./genericOAuthPlugin";
 // import { agentAuthPlugin } from "./agentAuthPlugin";
 
 export const serverPlugins = [
-    nextCookies(),
     admin(),
     jwt(),
     bearer(),
@@ -20,5 +19,6 @@ export const serverPlugins = [
     organizationPlugin,
     genericOAuthPlugin,
     // agentAuthPlugin,
+    nextCookies(), // This plugin should be last as it will attempt to parse cookies on every request
 ] as const satisfies BetterAuthPlugin[]
 

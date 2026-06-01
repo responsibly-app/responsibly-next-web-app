@@ -127,7 +127,7 @@ export interface CalendlyInviteesResponse {
 const CALENDLY_API_BASE = "https://api.calendly.com";
 
 export class CalendlyClient {
-  constructor(private readonly accessToken: string) {}
+  constructor(private readonly accessToken: string) { }
 
   private async request<T>(path: string, options: RequestInit = {}): Promise<T> {
     const res = await fetch(`${CALENDLY_API_BASE}${path}`, {

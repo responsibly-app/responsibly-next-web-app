@@ -108,6 +108,7 @@ export const chatRouter = {
         parent_id: m.parentId,
         format: m.format,
         content: m.content,
+        createdAt: m.createdAt,
       }));
     }),
 
