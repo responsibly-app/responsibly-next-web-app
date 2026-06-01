@@ -81,7 +81,7 @@ function AssistantModalImpl() {
         className={cn(
           "aui-root fixed z-50 flex flex-col overflow-hidden bg-popover text-popover-foreground outline-none",
           "inset-0 transition-[opacity,transform] duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]",
-          "sm:inset-auto sm:right-4 sm:bottom-17.5 sm:h-150 sm:w-100 sm:rounded-4xl sm:border sm:shadow-md",
+          "sm:inset-auto sm:right-4 sm:bottom-17.5 sm:h-150 sm:w-100 sm:rounded-4xl sm:border-2 sm:border-input sm:shadow-md",
           "[&_.aui-thread-root]:bg-inherit [&_.aui-thread-root_.aui-thread-viewport-footer]:bg-inherit",
           open
             ? "opacity-100 translate-y-0"
