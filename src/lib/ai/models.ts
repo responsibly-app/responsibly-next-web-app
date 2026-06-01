@@ -3,8 +3,8 @@ import { createOpenAI, OpenAILanguageModelResponsesOptions } from "@ai-sdk/opena
 import { createAnthropic } from "@ai-sdk/anthropic";
 import { createDeepSeek } from "@ai-sdk/deepseek";
 
-const BASE_URL = "https://als-litellm-cnfcftage7dgh9aa.canadacentral-01.azurewebsites.net";
-const API_KEY = process.env.MODEL_API_KEY!;
+const LITELLM_BASE_URL = "https://als-litellm-cnfcftage7dgh9aa.canadacentral-01.azurewebsites.net";
+const LITELLM_API_KEY = process.env.LITELLM_MODEL_API_KEY!;
 
 interface ProviderConfig {
     models: {
@@ -42,8 +42,8 @@ const AzureConfig: ProviderConfig = {
 
 // ---------------------------------------------------------------------------------------
 const OpenAILiteLLM = createOpenAI({
-    baseURL: BASE_URL,
-    apiKey: API_KEY,
+    baseURL: LITELLM_BASE_URL,
+    apiKey: LITELLM_API_KEY,
 });
 
 const OpenAI = createOpenAI({
@@ -72,8 +72,8 @@ const OpenAIConfig: ProviderConfig = {
 // ---------------------------------------------------------------------------------------
 
 const Anthropic = createAnthropic({
-    baseURL: BASE_URL,
-    apiKey: API_KEY,
+    baseURL: LITELLM_BASE_URL,
+    apiKey: LITELLM_API_KEY,
 });
 
 const AnthropicConfig: ProviderConfig = {
