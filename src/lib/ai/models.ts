@@ -103,7 +103,7 @@ const DeepSeekConfig: ProviderConfig = {
         titleGenerationModel: DeepSeek("deepseek-v4-flash"),
     },
     providerOptions: {
-        deepseek: { reasoningEffort: "low" },
+        // deepseek: { reasoningEffort: "low" },
     }
 }
 
@@ -111,8 +111,8 @@ const DeepSeekConfig: ProviderConfig = {
 
 
 export const primaryChatModel = DeepSeekConfig.models.primaryChatModel;
-export const fallbackChatModel = OpenAIConfig.models.fallbackChatModel;
-export const titleGenerationModel = OpenAIConfig.models.titleGenerationModel;
+export const fallbackChatModel = DeepSeekConfig.models.fallbackChatModel;
+export const titleGenerationModel = DeepSeekConfig.models.titleGenerationModel;
 export const embeddingModel = OpenAIConfig.models.embeddingModel;
 export const imageGenerationModel = OpenAIConfig.models.imageGenerationModel;
-export const providerOptions = OpenAIConfig.providerOptions;
+export const providerOptions = DeepSeekConfig.providerOptions;
