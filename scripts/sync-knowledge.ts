@@ -194,9 +194,9 @@ async function main() {
   if (!supabaseUrl || !supabaseKey) {
     throw new Error("Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_SECRET_KEY in .env.local");
   }
-  if (!process.env.AZURE_FOUNDRY_RESOURCE_NAME || !process.env.AZURE_FOUNDRY_API_KEY) {
-    throw new Error("Missing AZURE_FOUNDRY_RESOURCE_NAME or AZURE_FOUNDRY_API_KEY in .env.local");
-  }
+  // if (!process.env.AZURE_FOUNDRY_RESOURCE_NAME || !process.env.AZURE_FOUNDRY_API_KEY) {
+  //   throw new Error("Missing AZURE_FOUNDRY_RESOURCE_NAME or AZURE_FOUNDRY_API_KEY in .env.local");
+  // }
 
   const supabase = createClient(supabaseUrl, supabaseKey);
 
