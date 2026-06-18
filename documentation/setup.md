@@ -29,3 +29,14 @@
   ---
 
   `pnpm add orval -D`
+
+---
+RESET
+
+rm -rf node_modules
+rm -rf .next
+rm pnpm-lock.yaml
+
+pnpm install
+
+---

@@ -8,7 +8,7 @@ interface SetWebhookResult {
 export class TelegramBotClient {
   private readonly base: string;
 
-  constructor(private readonly token: string) {
+  constructor(protected readonly token: string) {
     this.base = `${TELEGRAM_API}/bot${token}`;
   }
 
@@ -41,8 +41,19 @@ export class TelegramBotClient {
     return res.json() as Promise<SetWebhookResult>;
   }
 
-  async sendMessage(chatId: number, text: string): Promise<void> {
-    await this.call("sendMessage", { chat_id: chatId, text });
+  async sendMessage(chatId: number, text: string, options?: { parse_mode?: "HTML" | "Markdown" | "MarkdownV2" }): Promise<void> {
+    await this.call("sendMessage", { chat_id: chatId, text, ...options });
+  }
+
+  async sendDocument(chatId: number, file: { name: string; buffer: Buffer; mimeType: string }, caption?: string): Promise<void> {
+    const formData = new FormData();
+    formData.append("chat_id", String(chatId));
+    formData.append("document", new Blob([new Uint8Array(file.buffer)], { type: file.mimeType }), file.name);
+    if (caption) formData.append("caption", caption);
+
+    const res = await fetch(`${this.base}/sendDocument`, { method: "POST", body: formData });
+    const data = await res.json() as { ok: boolean; description?: string };
+    if (!data.ok) throw new Error(`Telegram API error [sendDocument]: ${data.description ?? "unknown"}`);
   }
 
   async getProfilePhotoUrl(userId: number): Promise<string | null> {
