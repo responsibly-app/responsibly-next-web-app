@@ -6,6 +6,7 @@ import { organizationRouter } from "./apis/organization/organization-router";
 import { orgSettingsRouter } from "./apis/organization/org-settings-router";
 import { eventRouter } from "./apis/event/event-router";
 import { telegramRouter } from "./apis/integrations/telegram/telegram-router";
+import { adminTelegramRouter } from "./apis/integrations/admin-telegram/admin-telegram-router";
 import { invitesRouter } from "./apis/personal/invites-router";
 import { pointsRouter } from "./apis/personal/points-router";
 import { amasRouter } from "./apis/personal/amas-router";
@@ -21,6 +22,7 @@ export const appRouter = {
     zoom: zoomRouter,
     calendly: calendlyRouter,
     telegram: telegramRouter,
+    adminTelegram: adminTelegramRouter,
   },
   personal: {
     invites: invitesRouter,
